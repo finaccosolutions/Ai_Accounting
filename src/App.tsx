@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { AppProvider } from './contexts/AppContext';
 import { useAuth } from './hooks/useAuth';
 import { useCompany } from './hooks/useCompany';
 import { AuthForm } from './components/auth/AuthForm';
@@ -82,8 +83,12 @@ const AppContent: React.FC = () => {
     return <AuthForm />;
   }
 
-  // User is authenticated, show the main app
-  return <AuthenticatedApp />;
+  // User is authenticated, show the main app wrapped with AppProvider
+  return (
+    <AppProvider>
+      <AuthenticatedApp />
+    </AppProvider>
+  );
 };
 
 function App() {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useCompany } from './useCompany';
+import { useFinancialYears } from './useFinancialYears';
 import { generateAIInsights } from '../lib/gemini';
 import toast from 'react-hot-toast';
 
@@ -29,6 +30,7 @@ export interface AIInsight {
 
 export const useDashboard = () => {
   const { currentCompany } = useCompany();
+  const { selectedFinancialYears, currentFinancialYear } = useFinancialYears();
   const [stats, setStats] = useState<DashboardStats>({
     totalIncome: 0,
     totalExpense: 0,
@@ -45,15 +47,16 @@ export const useDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (currentCompany) {
+    if (currentCompany && selectedFinancialYears.length > 0) {
       loadDashboardData();
     }
-  }, [currentCompany]);
+  }, [currentCompany, selectedFinancialYears]);
 
   const loadDashboardData = async () => {
     try {
-      if (!currentCompany) return;
+      if (!currentCompany || selectedFinancialYears.length === 0) return;
 
+      setLoading(true);
       await Promise.all([
         loadFinancialStats(),
         loadAIInsights(),
@@ -68,58 +71,60 @@ export const useDashboard = () => {
 
   const loadFinancialStats = async () => {
     try {
-      if (!currentCompany) return;
+      if (!currentCompany || selectedFinancialYears.length === 0) return;
+
+      // Calculate dashboard data for selected financial years
+      for (const fyId of selectedFinancialYears) {
+        await supabase.rpc('calculate_dashboard_data', {
+          company_uuid: currentCompany.id,
+          financial_year_uuid: fyId
+        });
+      }
+
+      // Get aggregated dashboard data
+      const { data: dashboardData } = await supabase
+        .from('dashboard_data')
+        .select('data_type, amount')
+        .eq('company_id', currentCompany.id)
+        .in('financial_year_id', selectedFinancialYears)
+        .eq('period_date', new Date().toISOString().split('T')[0]);
 
       // Get voucher statistics
       const { data: voucherStats } = await supabase
         .from('vouchers')
         .select('status, total_amount')
-        .eq('company_id', currentCompany.id);
-
-      // Get ledger balances
-      const { data: ledgerBalances } = await supabase
-        .from('ledgers')
-        .select('name, current_balance, ledger_type')
         .eq('company_id', currentCompany.id)
-        .eq('is_active', true);
+        .in('financial_year_id', selectedFinancialYears);
 
-      // Calculate stats from real data
+      // Aggregate data by type
+      const aggregatedData: Record<string, number> = {};
+      dashboardData?.forEach(item => {
+        aggregatedData[item.data_type] = (aggregatedData[item.data_type] || 0) + item.amount;
+      });
+
+      // Calculate voucher stats
       const totalVouchers = voucherStats?.length || 0;
       const pendingVouchers = voucherStats?.filter(v => v.status === 'draft').length || 0;
 
-      // Calculate income and expense from vouchers
-      const totalIncome = voucherStats
-        ?.filter(v => v.status === 'posted')
-        .reduce((sum, v) => {
-          // This is simplified - in real app, you'd check voucher type and entries
-          return sum + (v.total_amount > 0 ? v.total_amount : 0);
-        }, 0) || 0;
+      // Calculate GST payable from ledgers
+      const { data: gstLedgers } = await supabase
+        .from('ledgers')
+        .select('current_balance')
+        .eq('company_id', currentCompany.id)
+        .in('financial_year_id', selectedFinancialYears)
+        .ilike('name', '%gst%');
 
-      const totalExpense = voucherStats
-        ?.filter(v => v.status === 'posted')
-        .reduce((sum, v) => {
-          // This is simplified - in real app, you'd check voucher type and entries
-          return sum + (v.total_amount < 0 ? Math.abs(v.total_amount) : 0);
-        }, 0) || 0;
-
-      // Get specific ledger balances
-      const cashBalance = ledgerBalances?.find(l => l.name.toLowerCase().includes('cash'))?.current_balance || 0;
-      const bankBalance = ledgerBalances?.find(l => l.name.toLowerCase().includes('bank'))?.current_balance || 0;
-      const gstPayable = ledgerBalances?.filter(l => l.name.toLowerCase().includes('gst')).reduce((sum, l) => sum + l.current_balance, 0) || 0;
-
-      // Calculate receivables and payables
-      const outstandingReceivables = ledgerBalances?.filter(l => l.ledger_type === 'asset' && l.current_balance > 0).reduce((sum, l) => sum + l.current_balance, 0) || 0;
-      const outstandingPayables = ledgerBalances?.filter(l => l.ledger_type === 'liability' && l.current_balance > 0).reduce((sum, l) => sum + l.current_balance, 0) || 0;
+      const gstPayable = gstLedgers?.reduce((sum, ledger) => sum + ledger.current_balance, 0) || 0;
 
       setStats({
-        totalIncome,
-        totalExpense,
-        profit: totalIncome - totalExpense,
+        totalIncome: aggregatedData.total_income || 0,
+        totalExpense: aggregatedData.total_expense || 0,
+        profit: aggregatedData.profit || 0,
         gstPayable,
-        outstandingReceivables,
-        outstandingPayables,
-        cashBalance,
-        bankBalance,
+        outstandingReceivables: aggregatedData.receivables || 0,
+        outstandingPayables: aggregatedData.payables || 0,
+        cashBalance: aggregatedData.cash_balance || 0,
+        bankBalance: aggregatedData.bank_balance || 0,
         totalVouchers,
         pendingVouchers,
       });
@@ -130,7 +135,7 @@ export const useDashboard = () => {
 
   const loadAIInsights = async () => {
     try {
-      if (!currentCompany) return;
+      if (!currentCompany || selectedFinancialYears.length === 0) return;
 
       // Load existing insights from database
       const { data: dbInsights, error } = await supabase
@@ -166,13 +171,14 @@ export const useDashboard = () => {
 
   const generateNewInsights = async () => {
     try {
-      if (!currentCompany) return;
+      if (!currentCompany || selectedFinancialYears.length === 0) return;
 
       // Get recent data for AI analysis
       const { data: recentVouchers } = await supabase
         .from('vouchers')
         .select('*')
         .eq('company_id', currentCompany.id)
+        .in('financial_year_id', selectedFinancialYears)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -180,6 +186,7 @@ export const useDashboard = () => {
         .from('ledgers')
         .select('*')
         .eq('company_id', currentCompany.id)
+        .in('financial_year_id', selectedFinancialYears)
         .eq('is_active', true);
 
       // Generate insights using Gemini AI
@@ -187,6 +194,7 @@ export const useDashboard = () => {
         vouchers: recentVouchers,
         ledgers: ledgers,
         stats: stats,
+        financialYears: selectedFinancialYears,
       });
 
       // Save new insights to database

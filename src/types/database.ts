@@ -151,6 +151,111 @@ export interface Database {
           created_at?: string;
         };
       };
+      financial_years: {
+        Row: {
+          id: string;
+          company_id: string;
+          year_name: string;
+          start_date: string;
+          end_date: string;
+          is_current: boolean;
+          is_closed: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          year_name: string;
+          start_date: string;
+          end_date: string;
+          is_current?: boolean;
+          is_closed?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          year_name?: string;
+          start_date?: string;
+          end_date?: string;
+          is_current?: boolean;
+          is_closed?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      user_permissions: {
+        Row: {
+          id: string;
+          user_id: string;
+          company_id: string;
+          financial_year_id: string;
+          module: string;
+          permission: string;
+          granted: boolean;
+          granted_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          company_id: string;
+          financial_year_id: string;
+          module: string;
+          permission: string;
+          granted?: boolean;
+          granted_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          company_id?: string;
+          financial_year_id?: string;
+          module?: string;
+          permission?: string;
+          granted?: boolean;
+          granted_by?: string | null;
+          created_at?: string;
+        };
+      };
+      dashboard_data: {
+        Row: {
+          id: string;
+          company_id: string;
+          financial_year_id: string;
+          data_type: string;
+          amount: number;
+          period_type: string;
+          period_date: string;
+          calculated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          financial_year_id: string;
+          data_type: string;
+          amount?: number;
+          period_type?: string;
+          period_date: string;
+          calculated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          financial_year_id?: string;
+          data_type?: string;
+          amount?: number;
+          period_type?: string;
+          period_date?: string;
+          calculated_at?: string;
+        };
+      };
       ledger_groups: {
         Row: {
           id: string;
@@ -187,6 +292,7 @@ export interface Database {
         Row: {
           id: string;
           company_id: string;
+          financial_year_id: string | null;
           name: string;
           group_id: string | null;
           ledger_type: 'asset' | 'liability' | 'income' | 'expense';
@@ -209,6 +315,7 @@ export interface Database {
         Insert: {
           id?: string;
           company_id: string;
+          financial_year_id?: string | null;
           name: string;
           group_id?: string | null;
           ledger_type: 'asset' | 'liability' | 'income' | 'expense';
@@ -231,6 +338,7 @@ export interface Database {
         Update: {
           id?: string;
           company_id?: string;
+          financial_year_id?: string | null;
           name?: string;
           group_id?: string | null;
           ledger_type?: 'asset' | 'liability' | 'income' | 'expense';
@@ -281,6 +389,7 @@ export interface Database {
         Row: {
           id: string;
           company_id: string;
+          financial_year_id: string | null;
           name: string;
           group_id: string | null;
           unit: string;
@@ -298,6 +407,7 @@ export interface Database {
         Insert: {
           id?: string;
           company_id: string;
+          financial_year_id?: string | null;
           name: string;
           group_id?: string | null;
           unit?: string;
@@ -315,6 +425,7 @@ export interface Database {
         Update: {
           id?: string;
           company_id?: string;
+          financial_year_id?: string | null;
           name?: string;
           group_id?: string | null;
           unit?: string;
@@ -421,6 +532,7 @@ export interface Database {
         Row: {
           id: string;
           company_id: string;
+          financial_year_id: string | null;
           voucher_type_id: string | null;
           voucher_number: string;
           voucher_date: string;
@@ -437,6 +549,7 @@ export interface Database {
         Insert: {
           id?: string;
           company_id: string;
+          financial_year_id?: string | null;
           voucher_type_id?: string | null;
           voucher_number: string;
           voucher_date: string;
@@ -453,6 +566,7 @@ export interface Database {
         Update: {
           id?: string;
           company_id?: string;
+          financial_year_id?: string | null;
           voucher_type_id?: string | null;
           voucher_number?: string;
           voucher_date?: string;
@@ -610,6 +724,20 @@ export interface Database {
       setup_default_company_data: {
         Args: {
           company_uuid: string;
+        };
+        Returns: void;
+      };
+      create_default_financial_year: {
+        Args: {
+          company_uuid: string;
+          start_date?: string;
+        };
+        Returns: string;
+      };
+      calculate_dashboard_data: {
+        Args: {
+          company_uuid: string;
+          financial_year_uuid?: string;
         };
         Returns: void;
       };

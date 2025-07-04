@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building, Save, ArrowLeft } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useCompany } from '../../hooks/useCompany';
@@ -45,36 +45,73 @@ const getStatesForCountry = (countryCode: string) => {
   }
 };
 
+// Storage key for form data persistence
+const FORM_DATA_KEY = 'companySetupFormData';
+
 export const CompanySetup: React.FC<CompanySetupProps> = ({ onBack }) => {
   const { createCompany, loading } = useCompany();
-  const [formData, setFormData] = useState({
-    name: '',
-    mailing_name: '',
-    gstin: '',
-    pan: '',
-    tan: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    country: 'IN',
-    phone: '',
-    email: '',
-    website: '',
-    financial_year_start: '2024-04-01',
-    currency: 'INR',
-    decimal_places: 2,
-    enable_inventory: true,
-    enable_multi_currency: false,
-    enable_cost_center: false,
-    auto_voucher_numbering: true,
-    enable_audit_trail: true,
+  
+  // Initialize form data from localStorage or defaults
+  const [formData, setFormData] = useState(() => {
+    const savedData = localStorage.getItem(FORM_DATA_KEY);
+    if (savedData) {
+      try {
+        return JSON.parse(savedData);
+      } catch (error) {
+        console.error('Error parsing saved form data:', error);
+      }
+    }
+    
+    return {
+      name: '',
+      mailing_name: '',
+      gstin: '',
+      pan: '',
+      tan: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      country: 'IN',
+      phone: '',
+      email: '',
+      website: '',
+      financial_year_start: '2024-04-01',
+      currency: 'INR',
+      decimal_places: 2,
+      enable_inventory: true,
+      enable_multi_currency: false,
+      enable_cost_center: false,
+      auto_voucher_numbering: true,
+      enable_audit_trail: true,
+    };
   });
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(FORM_DATA_KEY, JSON.stringify(formData));
+  }, [formData]);
+
+  // Clear saved data when component unmounts after successful creation
+  useEffect(() => {
+    return () => {
+      // Only clear if we're not just switching focus
+      const shouldClear = sessionStorage.getItem('companyCreated') === 'true';
+      if (shouldClear) {
+        localStorage.removeItem(FORM_DATA_KEY);
+        sessionStorage.removeItem('companyCreated');
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await createCompany(formData);
     if (result.data) {
+      // Mark that company was successfully created
+      sessionStorage.setItem('companyCreated', 'true');
+      // Clear the saved form data
+      localStorage.removeItem(FORM_DATA_KEY);
       // Company created successfully, onBack will be called automatically
       // since the useCompany hook will update currentCompany
     }
@@ -88,6 +125,14 @@ export const CompanySetup: React.FC<CompanySetupProps> = ({ onBack }) => {
     }));
   };
 
+  const handleCancel = () => {
+    // Clear saved form data when user cancels
+    localStorage.removeItem(FORM_DATA_KEY);
+    if (onBack) {
+      onBack();
+    }
+  };
+
   const availableStates = getStatesForCountry(formData.country);
 
   return (
@@ -99,7 +144,7 @@ export const CompanySetup: React.FC<CompanySetupProps> = ({ onBack }) => {
           <div className="flex items-center space-x-4 mb-4">
             {onBack && (
               <button
-                onClick={onBack}
+                onClick={handleCancel}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -455,7 +500,7 @@ export const CompanySetup: React.FC<CompanySetupProps> = ({ onBack }) => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={onBack}
+                  onClick={handleCancel}
                 >
                   Cancel
                 </Button>

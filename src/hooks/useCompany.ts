@@ -190,18 +190,68 @@ export const useCompany = () => {
       setLoading(true);
       setError(null);
 
+      // First, ensure the user has a profile record
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, role')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('🏢 createCompany: Profile check error:', profileError);
+        throw new Error('Failed to verify user profile');
+      }
+
+      // If no profile exists, create one
+      if (!profile) {
+        console.log('🏢 createCompany: Creating user profile...');
+        const { error: createProfileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email || '',
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            role: 'admin' // Set default role to admin for company creation
+          });
+
+        if (createProfileError) {
+          console.error('🏢 createCompany: Profile creation error:', createProfileError);
+          throw new Error('Failed to create user profile');
+        }
+      }
+
+      // Prepare company data with explicit user references
+      const companyInsertData = {
+        ...companyData,
+        created_by: user.id,
+        user_id: user.id,
+      };
+
+      console.log('🏢 createCompany: Inserting company with data:', companyInsertData);
+
+      // Create the company
       const { data: company, error: companyError } = await supabase
         .from('companies')
-        .insert({
-          ...companyData,
-          created_by: user.id,
-          user_id: user.id, // ✅ Include user_id to satisfy RLS policy
-        })
+        .insert(companyInsertData)
         .select()
         .single();
 
-      if (companyError) throw companyError;
+      if (companyError) {
+        console.error('🏢 createCompany: Company creation error:', companyError);
+        
+        // Provide more specific error messages based on the error
+        if (companyError.code === '42501') {
+          throw new Error('Permission denied. Your account may not have the required permissions to create companies.');
+        } else if (companyError.message?.includes('row-level security')) {
+          throw new Error('Security policy violation. Please ensure your profile is properly set up.');
+        } else {
+          throw new Error(companyError.message || 'Failed to create company');
+        }
+      }
 
+      console.log('🏢 createCompany: Company created successfully:', company);
+
+      // Create the company-user relationship
       const { error: userError } = await supabase
         .from('company_users')
         .insert({
@@ -210,15 +260,23 @@ export const useCompany = () => {
           role: 'admin',
         });
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error('🏢 createCompany: Company user creation error:', userError);
+        // Don't throw here as the company is already created
+        console.warn('Company created but failed to create user relationship');
+      } else {
+        console.log('🏢 createCompany: Company user relationship created successfully');
+      }
 
       // Set up default company data
       try {
         await supabase.rpc('setup_default_company_data', {
           company_uuid: company.id
         });
+        console.log('🏢 createCompany: Default company data setup completed');
       } catch (setupError) {
         console.error('🏢 createCompany: Error setting up default data:', setupError);
+        // Don't throw here as the company is already created
       }
 
       await loadUserCompanies();
@@ -233,7 +291,7 @@ export const useCompany = () => {
     } catch (error: any) {
       console.error('🏢 createCompany: Error:', error);
       setError('Failed to create company.');
-      toast.error(error.message);
+      toast.error(error.message || 'Failed to create company');
       return { data: null, error };
     } finally {
       setLoading(false);
