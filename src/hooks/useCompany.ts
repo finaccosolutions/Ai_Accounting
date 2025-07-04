@@ -68,8 +68,6 @@ export const useCompany = () => {
       if (!companyUsers || companyUsers.length === 0) {
         console.log('🏢 loadUserCompanies: No company memberships found');
         setCompanies([]);
-        setCurrentCompany(null);
-        setUserRole(null);
         setError(null);
         setLoading(false);
         return;
@@ -92,27 +90,19 @@ export const useCompany = () => {
         console.log('🏢 loadUserCompanies: Successfully loaded companies:', userCompanies?.map(c => c.name));
         setCompanies(userCompanies || []);
         setError(null);
-
-        // IMPORTANT: Never auto-restore company from localStorage
-        // Always force user to select company from CompanySelector
-        console.log('🏢 loadUserCompanies: Not auto-restoring company - user must select from CompanySelector');
-        setCurrentCompany(null);
-        setUserRole(null);
       }
     } catch (error: any) {
       console.error('🏢 loadUserCompanies: Error:', error);
       setError('An unexpected error occurred.');
       toast.error('Error loading companies');
       setCompanies([]);
-      setCurrentCompany(null);
-      setUserRole(null);
     } finally {
       setLoading(false);
     }
   };
 
   const switchCompany = async (companyId: string) => {
-    console.log('🏢 switchCompany: Switching to company:', companyId);
+    console.log('🏢 switchCompany: Starting switch to company:', companyId);
     
     try {
       if (!user) {
@@ -148,10 +138,19 @@ export const useCompany = () => {
       console.log('🏢 switchCompany: Found user role:', companyUser.role);
 
       // Set the current company and role
-      console.log('🏢 switchCompany: Setting current company and role...');
+      console.log('🏢 switchCompany: About to set current company and role...');
+      console.log('🏢 switchCompany: Company object to set:', company);
+      
       setCurrentCompany(company);
+      console.log('🏢 switchCompany: setCurrentCompany called with:', company);
+      
       setUserRole(companyUser.role);
+      console.log('🏢 switchCompany: setUserRole called with:', companyUser.role);
+      
       localStorage.setItem('currentCompanyId', companyId);
+      
+      // Force a small delay to ensure state updates
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       console.log('🏢 switchCompany: Successfully switched to company:', company.name);
       console.log('🏢 switchCompany: Current company state after switch:', {
@@ -321,6 +320,7 @@ export const useCompany = () => {
     }
   };
 
+  // Debug log for current state
   console.log('🏢 useCompany: Current state:', {
     companiesCount: companies.length,
     currentCompany: currentCompany?.name || 'None',

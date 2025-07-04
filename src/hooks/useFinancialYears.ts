@@ -1,3 +1,4 @@
+// src/hooks/useFinancialYears.ts
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Database } from '../types/database';
@@ -8,6 +9,7 @@ type FinancialYear = Database['public']['Tables']['financial_years']['Row'];
 
 export const useFinancialYears = () => {
   const { currentCompany } = useCompany();
+  console.log('🗓️ useFinancialYears: Rendered with currentCompany:', currentCompany?.id); // Debugging log
   const [financialYears, setFinancialYears] = useState<FinancialYear[]>([]);
   const [currentFinancialYear, setCurrentFinancialYear] = useState<FinancialYear | null>(null);
   const [selectedFinancialYears, setSelectedFinancialYears] = useState<string[]>([]);

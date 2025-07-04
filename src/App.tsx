@@ -27,8 +27,9 @@ const AuthenticatedApp: React.FC = () => {
   const [showCompanySetup, setShowCompanySetup] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
-  console.log('🏢 App state:', {
+  console.log('🏢 AuthenticatedApp: Received currentCompany from useCompany hook:', {
     currentCompany: currentCompany?.name || 'None',
+    currentCompanyId: currentCompany?.id || 'None',
     companyLoading,
     showCompanySetup
   });

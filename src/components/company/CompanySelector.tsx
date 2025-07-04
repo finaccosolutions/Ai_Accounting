@@ -3,6 +3,7 @@ import { Building, Plus, ChevronRight, Calendar, MapPin, Globe, Sparkles, Trendi
 import { Button } from '../ui/Button';
 import { useCompany } from '../../hooks/useCompany';
 import { Header } from '../ui/Header';
+import toast from 'react-hot-toast';
 
 interface CompanySelectorProps {
   onCreateCompany: () => void;
@@ -13,30 +14,47 @@ export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompan
   const [hoveredCompany, setHoveredCompany] = useState<string | null>(null);
   const [switchingCompany, setSwitchingCompany] = useState<string | null>(null);
 
-  // In CompanySelector.tsx
-const handleCompanySelect = async (companyId: string) => {
-  console.log('🏢 CompanySelector: User clicked on company:', companyId);
-  
-  const company = companies.find(c => c.id === companyId);
-  if (!company) {
-    console.error('Company not found');
-    return;
-  }
-
-  setSwitchingCompany(companyId);
-  
-  try {
-    const { success } = await switchCompany(companyId);
-    if (success) {
-      console.log('Company switch successful - should now show FinancialYearSelector');
-      // The parent component should detect this change and show the next step
+  const handleCompanySelect = async (companyId: string) => {
+    console.log('🏢 CompanySelector: handleCompanySelect function triggered!');
+    console.log('🏢 CompanySelector: User clicked on company:', companyId);
+    
+    const company = companies.find(c => c.id === companyId);
+    if (!company) {
+      console.error('🏢 CompanySelector: Company not found');
+      toast.error('Company not found');
+      return;
     }
-  } catch (error) {
-    console.error('Error switching company:', error);
-  } finally {
-    setSwitchingCompany(null);
-  }
-};
+
+    console.log('🏢 CompanySelector: Found company:', company.name);
+    
+    // Show loading toast
+    const loadingToastId = toast.loading(`Switching to ${company.name}...`);
+    setSwitchingCompany(companyId);
+    
+    try {
+      console.log('🏢 CompanySelector: About to call switchCompany...');
+      const result = await switchCompany(companyId);
+      
+      console.log('🏢 CompanySelector: switchCompany returned:', result);
+      
+      if (result.success) {
+        console.log('🏢 CompanySelector: Company switch successful - should now show FinancialYearSelector');
+        toast.dismiss(loadingToastId);
+        toast.success(`Successfully switched to ${company.name}`);
+        // The parent component should detect this change and show the next step
+      } else {
+        toast.dismiss(loadingToastId);
+        toast.error('Failed to switch company');
+        console.error('🏢 CompanySelector: Company switch failed:', result.error);
+      }
+    } catch (error) {
+      console.error('🏢 CompanySelector: Error switching company:', error);
+      toast.dismiss(loadingToastId);
+      toast.error('Error switching company: ' + (error as Error).message);
+    } finally {
+      setSwitchingCompany(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
