@@ -28,6 +28,13 @@ const AuthenticatedApp: React.FC = () => {
   const [showCompanySetup, setShowCompanySetup] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
+  console.log('🏢 App state:', {
+    currentCompany: currentCompany?.name || 'None',
+    selectedFYs: selectedFinancialYears.length,
+    companyLoading,
+    fyLoading
+  });
+
   // Show loading while companies are being loaded
   if (companyLoading || fyLoading) {
     return (
@@ -48,7 +55,7 @@ const AuthenticatedApp: React.FC = () => {
         onSuccess={() => {
           setShowCompanySetup(false);
           // After company creation, the useCompany hook will automatically set currentCompany
-          // and we'll proceed to the main dashboard
+          // and we'll proceed to the financial year selector
         }}
       />
     );
@@ -64,8 +71,9 @@ const AuthenticatedApp: React.FC = () => {
     return (
       <FinancialYearSelector 
         onContinue={() => {
-          // This will be called when user selects financial years
+          console.log('✅ Financial years selected, proceeding to dashboard');
           // The component will automatically proceed to dashboard
+          // No need to do anything here as the selectedFinancialYears will update
         }}
         onChangeCompany={() => {
           // Reset company selection to show company selector

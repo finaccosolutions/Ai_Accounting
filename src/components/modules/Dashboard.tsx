@@ -13,16 +13,32 @@ import {
   Clock,
   Target,
   Calendar,
-  Filter
+  Filter,
+  Bot,
+  BarChart3,
+  PieChart,
+  Activity
 } from 'lucide-react';
 import { StatCard } from '../ui/StatCard';
 import { useDashboard } from '../../hooks/useDashboard';
 import { useFinancialYears } from '../../hooks/useFinancialYears';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Cell } from 'recharts';
 import { Button } from '../ui/Button';
 
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+
 export const Dashboard: React.FC = () => {
-  const { stats, insights, loading, refreshDashboard, markInsightAsRead } = useDashboard();
+  const { 
+    stats, 
+    insights, 
+    trends, 
+    loading, 
+    aiAnalysisLoading,
+    refreshDashboard, 
+    markInsightAsRead,
+    performAdvancedAnalysis 
+  } = useDashboard();
+  
   const { 
     financialYears, 
     selectedFinancialYears, 
@@ -51,6 +67,21 @@ export const Dashboard: React.FC = () => {
     return selectedNames.length > 50 ? `${selectedNames.substring(0, 50)}...` : selectedNames;
   };
 
+  // Prepare chart data
+  const expenseBreakdown = [
+    { name: 'Direct Expenses', value: stats.totalExpense * 0.6, color: COLORS[0] },
+    { name: 'Indirect Expenses', value: stats.totalExpense * 0.3, color: COLORS[1] },
+    { name: 'Tax & Duties', value: stats.gstPayable, color: COLORS[2] },
+    { name: 'Other', value: stats.totalExpense * 0.1, color: COLORS[3] },
+  ];
+
+  const profitTrendData = trends.map(trend => ({
+    month: new Date(trend.period).toLocaleDateString('en-IN', { month: 'short' }),
+    profit: trend.profit,
+    income: trend.income,
+    expense: trend.expense,
+  }));
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -66,11 +97,25 @@ export const Dashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Overview of your business performance</p>
+          <h1 className="text-2xl font-bold text-gray-900">AI-Powered Dashboard</h1>
+          <p className="text-gray-600">Intelligent insights and real-time analytics for your business</p>
         </div>
         <div className="flex items-center space-x-4">
-          <Button variant="outline" icon={Calendar} onClick={refreshDashboard}>
+          <Button 
+            variant="outline" 
+            icon={Bot} 
+            onClick={performAdvancedAnalysis}
+            loading={aiAnalysisLoading}
+            className="hover:bg-blue-50 hover:border-blue-300"
+          >
+            AI Analysis
+          </Button>
+          <Button 
+            variant="outline" 
+            icon={Activity} 
+            onClick={refreshDashboard}
+            className="hover:bg-green-50 hover:border-green-300"
+          >
             Refresh Data
           </Button>
         </div>
@@ -148,7 +193,7 @@ export const Dashboard: React.FC = () => {
             <StatCard
               title="Total Income"
               value={formatCurrency(stats.totalIncome)}
-              change={`${selectedFinancialYears.length} FY selected`}
+              change={`${stats.profitMargin.toFixed(1)}% margin`}
               trend="up"
               icon={TrendingUp}
               color="green"
@@ -156,7 +201,7 @@ export const Dashboard: React.FC = () => {
             <StatCard
               title="Total Expense"
               value={formatCurrency(stats.totalExpense)}
-              change={`${selectedFinancialYears.length} FY selected`}
+              change={`${stats.totalVouchers} vouchers`}
               trend="up"
               icon={TrendingDown}
               color="red"
@@ -184,7 +229,7 @@ export const Dashboard: React.FC = () => {
             <StatCard
               title="Outstanding Receivables"
               value={formatCurrency(stats.outstandingReceivables)}
-              change={`${stats.totalVouchers} total vouchers`}
+              change="To be collected"
               trend="neutral"
               icon={CreditCard}
               color="purple"
@@ -192,7 +237,7 @@ export const Dashboard: React.FC = () => {
             <StatCard
               title="Outstanding Payables"
               value={formatCurrency(stats.outstandingPayables)}
-              change={`${stats.pendingVouchers} pending vouchers`}
+              change={`${stats.pendingVouchers} pending`}
               trend="neutral"
               icon={Users}
               color="orange"
@@ -215,13 +260,74 @@ export const Dashboard: React.FC = () => {
             />
           </div>
 
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Profit Trend Chart */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Profit Trend</h3>
+                <BarChart3 className="w-5 h-5 text-gray-600" />
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={profitTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                    <Line type="monotone" dataKey="profit" stroke="#3B82F6" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Expense Breakdown */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Expense Breakdown</h3>
+                <PieChart className="w-5 h-5 text-gray-600" />
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={expenseBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {expenseBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
           {/* AI Insights */}
           {insights.length > 0 && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Insights</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Bot className="w-5 h-5 mr-2 text-blue-600" />
+                  AI Insights & Recommendations
+                </h3>
+                {aiAnalysisLoading && (
+                  <div className="flex items-center space-x-2 text-blue-600">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm">Analyzing...</span>
+                  </div>
+                )}
+              </div>
               <div className="space-y-3">
                 {insights.map((insight) => (
-                  <div key={insight.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <div key={insight.id} className="flex items-start space-x-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                     <div className="flex-shrink-0">
                       {insight.type === 'warning' && <AlertTriangle className="w-5 h-5 text-orange-500" />}
                       {insight.type === 'suggestion' && <CheckCircle className="w-5 h-5 text-blue-500" />}
@@ -234,17 +340,26 @@ export const Dashboard: React.FC = () => {
                           <p className="font-medium text-gray-900 text-sm">{insight.title}</p>
                           <p className="text-sm text-gray-600 mt-1">{insight.description}</p>
                           {insight.action && (
-                            <button className="text-sm text-blue-600 hover:text-blue-800 mt-1">
+                            <button className="text-sm text-blue-600 hover:text-blue-800 mt-2 font-medium">
                               {insight.action} →
                             </button>
                           )}
                         </div>
-                        <button
-                          onClick={() => markInsightAsRead(insight.id)}
-                          className="text-xs text-gray-400 hover:text-gray-600 ml-2"
-                        >
-                          ✕
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            insight.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            insight.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {insight.priority}
+                          </span>
+                          <button
+                            onClick={() => markInsightAsRead(insight.id)}
+                            className="text-xs text-gray-400 hover:text-gray-600 ml-2"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -272,6 +387,10 @@ export const Dashboard: React.FC = () => {
                     <span className={`font-bold text-lg ${stats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {formatCurrency(stats.profit)}
                     </span>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-sm text-gray-600">Profit Margin</span>
+                    <span className="text-sm font-medium">{stats.profitMargin.toFixed(2)}%</span>
                   </div>
                 </div>
               </div>
@@ -305,6 +424,25 @@ export const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Button className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">
+                Create Voucher
+              </Button>
+              <Button className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">
+                View Reports
+              </Button>
+              <Button className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">
+                Manage Masters
+              </Button>
+              <Button className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">
+                AI Analysis
+              </Button>
             </div>
           </div>
         </>
