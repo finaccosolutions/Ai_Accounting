@@ -26,8 +26,8 @@ export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompan
       // Switch to the selected company
       await switchCompany(companyId);
       
+      console.log('🏢 CompanySelector: Company switch completed successfully');
       // The App component will automatically detect the company change and show FinancialYearSelector
-      console.log('🏢 CompanySelector: Company switch completed, App should now show FinancialYearSelector');
     } catch (error) {
       console.error('🏢 CompanySelector: Error switching company:', error);
     } finally {

@@ -92,14 +92,41 @@ export const useCompany = () => {
         console.log('🏢 loadUserCompanies: Successfully loaded companies:', userCompanies?.map(c => c.name));
         setCompanies(userCompanies || []);
         setError(null);
-      }
 
-      // Don't auto-select any company - let user choose
-      setCurrentCompany(null);
-      setUserRole(null);
-      
-      // Clear any stored company selection
-      localStorage.removeItem('currentCompanyId');
+        // Try to restore previously selected company from localStorage
+        const storedCompanyId = localStorage.getItem('currentCompanyId');
+        console.log('🏢 loadUserCompanies: Stored company ID from localStorage:', storedCompanyId);
+
+        if (storedCompanyId && userCompanies) {
+          // Find the stored company in the loaded companies
+          const storedCompany = userCompanies.find(c => c.id === storedCompanyId);
+          
+          if (storedCompany) {
+            // Find the user's role for this company
+            const companyUser = companyUsers.find(cu => cu.company_id === storedCompanyId);
+            
+            if (companyUser) {
+              console.log('🏢 loadUserCompanies: Restoring previously selected company:', storedCompany.name);
+              setCurrentCompany(storedCompany);
+              setUserRole(companyUser.role);
+            } else {
+              console.log('🏢 loadUserCompanies: User role not found for stored company, clearing selection');
+              localStorage.removeItem('currentCompanyId');
+              setCurrentCompany(null);
+              setUserRole(null);
+            }
+          } else {
+            console.log('🏢 loadUserCompanies: Stored company not found in user companies, clearing selection');
+            localStorage.removeItem('currentCompanyId');
+            setCurrentCompany(null);
+            setUserRole(null);
+          }
+        } else {
+          console.log('🏢 loadUserCompanies: No stored company ID or no companies loaded');
+          setCurrentCompany(null);
+          setUserRole(null);
+        }
+      }
     } catch (error: any) {
       console.error('🏢 loadUserCompanies: Error:', error);
       setError('An unexpected error occurred.');
@@ -124,6 +151,13 @@ export const useCompany = () => {
       setLoading(true);
       setError(null);
 
+      // Get the company details and user role
+      const company = companies.find(c => c.id === companyId);
+      if (!company) {
+        console.error('🏢 switchCompany: Company not found in companies list');
+        throw new Error('Company not found');
+      }
+
       const { data: companyUser, error } = await supabase
         .from('company_users')
         .select('role')
@@ -137,22 +171,18 @@ export const useCompany = () => {
         throw error;
       }
 
-      const company = companies.find(c => c.id === companyId);
-      if (!company) {
-        console.error('🏢 switchCompany: Company not found in companies list');
-        throw new Error('Company not found');
-      }
-
       console.log('🏢 switchCompany: Setting current company and role:', {
         companyName: company.name,
         role: companyUser.role
       });
 
+      // Set the current company and role
       setCurrentCompany(company);
       setUserRole(companyUser.role);
       localStorage.setItem('currentCompanyId', companyId);
       
       console.log('🏢 switchCompany: Successfully switched to company:', company.name);
+      console.log('🏢 switchCompany: Current company state after switch:', company);
       
       // Show a more informative success message
       toast.success(`Selected ${company.name}. Loading financial years...`);
@@ -317,6 +347,7 @@ export const useCompany = () => {
   console.log('🏢 useCompany: Current state:', {
     companiesCount: companies.length,
     currentCompany: currentCompany?.name || 'None',
+    currentCompanyId: currentCompany?.id || 'None',
     userRole,
     loading,
     error

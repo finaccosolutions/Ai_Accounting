@@ -14,9 +14,12 @@ export const useFinancialYears = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (currentCompany) {
-      console.log('🗓️ useFinancialYears: Company changed to:', currentCompany.name);
-      console.log('🗓️ useFinancialYears: Loading financial years for company ID:', currentCompany.id);
+    console.log('🗓️ useFinancialYears: useEffect triggered');
+    console.log('🗓️ useFinancialYears: currentCompany:', currentCompany);
+    console.log('🗓️ useFinancialYears: currentCompany?.id:', currentCompany?.id);
+    
+    if (currentCompany?.id) {
+      console.log('🗓️ useFinancialYears: Company found, loading financial years for:', currentCompany.name);
       loadFinancialYears();
     } else {
       // Reset state when no company is selected
@@ -30,12 +33,13 @@ export const useFinancialYears = () => {
 
   const loadFinancialYears = async () => {
     try {
-      if (!currentCompany) {
-        console.log('🗓️ loadFinancialYears: No current company, returning early');
+      if (!currentCompany?.id) {
+        console.log('🗓️ loadFinancialYears: No current company ID, returning early');
         return;
       }
 
       console.log('🗓️ loadFinancialYears: Starting to load for company:', currentCompany.name);
+      console.log('🗓️ loadFinancialYears: Company ID:', currentCompany.id);
       setLoading(true);
 
       const { data, error } = await supabase
@@ -87,7 +91,7 @@ export const useFinancialYears = () => {
 
   const createDefaultFinancialYear = async () => {
     try {
-      if (!currentCompany) {
+      if (!currentCompany?.id) {
         console.log('🗓️ createDefaultFinancialYear: No current company');
         return;
       }
@@ -140,7 +144,7 @@ export const useFinancialYears = () => {
 
   const createFinancialYear = async (fyData: Database['public']['Tables']['financial_years']['Insert']) => {
     try {
-      if (!currentCompany) throw new Error('No company selected');
+      if (!currentCompany?.id) throw new Error('No company selected');
 
       console.log('🗓️ createFinancialYear: Creating new FY:', fyData.year_name);
       setLoading(true);
@@ -182,7 +186,7 @@ export const useFinancialYears = () => {
 
   const setCurrentFY = async (fyId: string) => {
     try {
-      if (!currentCompany) throw new Error('No company selected');
+      if (!currentCompany?.id) throw new Error('No company selected');
 
       console.log('🗓️ setCurrentFY: Setting current FY to:', fyId);
 
@@ -236,6 +240,7 @@ export const useFinancialYears = () => {
 
   console.log('🗓️ useFinancialYears: Current state:', {
     currentCompany: currentCompany?.name || 'None',
+    currentCompanyId: currentCompany?.id || 'None',
     financialYearsCount: financialYears.length,
     currentFinancialYear: currentFinancialYear?.year_name || 'None',
     selectedCount: selectedFinancialYears.length,
