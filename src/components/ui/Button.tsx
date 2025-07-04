@@ -8,7 +8,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: LucideIcon;
   iconPosition?: 'left' | 'right';
   loading?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  as?: 'button' | 'span';
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -20,22 +21,23 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   className,
   disabled,
+  as = 'button',
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 transform active:scale-95';
   
   const variants = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
-    ghost: 'text-gray-700 hover:bg-gray-50 focus:ring-gray-500',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
+    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-lg hover:shadow-xl',
+    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 shadow-lg hover:shadow-xl',
+    outline: 'border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:ring-blue-500 shadow-md hover:shadow-lg',
+    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-lg hover:shadow-xl'
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base'
+    sm: 'px-3 py-2 text-sm',
+    md: 'px-4 py-2.5 text-sm',
+    lg: 'px-6 py-3.5 text-base'
   };
 
   const iconSizes = {
@@ -44,13 +46,15 @@ export const Button: React.FC<ButtonProps> = ({
     lg: 'w-5 h-5'
   };
 
+  const Component = as;
+
   return (
-    <button
+    <Component
       className={clsx(
         baseClasses,
         variants[variant],
         sizes[size],
-        (disabled || loading) && 'opacity-50 cursor-not-allowed',
+        (disabled || loading) && 'opacity-50 cursor-not-allowed transform-none',
         className
       )}
       disabled={disabled || loading}
@@ -69,6 +73,6 @@ export const Button: React.FC<ButtonProps> = ({
       {Icon && !loading && iconPosition === 'right' && (
         <Icon className={clsx(iconSizes[size], children ? 'ml-2' : '')} />
       )}
-    </button>
+    </Component>
   );
 };

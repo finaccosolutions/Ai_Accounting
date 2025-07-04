@@ -7,13 +7,15 @@ interface LayoutProps {
   currentModule: string;
   setCurrentModule: (module: string) => void;
   onShowCompanySelector: () => void;
+  onToggleAIChat: () => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ 
   children, 
   currentModule, 
   setCurrentModule,
-  onShowCompanySelector 
+  onShowCompanySelector,
+  onToggleAIChat
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -23,12 +25,14 @@ export const Layout: React.FC<LayoutProps> = ({
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
         onShowCompanySelector={onShowCompanySelector}
+        onToggleAIChat={onToggleAIChat}
       />
       <div className="flex">
         <Sidebar 
           currentModule={currentModule} 
           setCurrentModule={setCurrentModule}
           isOpen={sidebarOpen}
+          onToggleAIChat={onToggleAIChat}
         />
         <main className={`flex-1 p-6 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'} mt-16`}>
           {children}

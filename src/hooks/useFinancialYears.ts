@@ -16,12 +16,20 @@ export const useFinancialYears = () => {
   useEffect(() => {
     if (currentCompany) {
       loadFinancialYears();
+    } else {
+      // Reset state when no company is selected
+      setFinancialYears([]);
+      setCurrentFinancialYear(null);
+      setSelectedFinancialYears([]);
+      setLoading(false);
     }
   }, [currentCompany]);
 
   const loadFinancialYears = async () => {
     try {
       if (!currentCompany) return;
+
+      setLoading(true);
 
       const { data, error } = await supabase
         .from('financial_years')
@@ -37,11 +45,18 @@ export const useFinancialYears = () => {
       const current = data?.find(fy => fy.is_current);
       if (current) {
         setCurrentFinancialYear(current);
-        setSelectedFinancialYears([current.id]);
+        // Don't auto-select any financial years - let user choose
       } else if (data && data.length > 0) {
-        // If no current FY is set, use the latest one
+        // If no current FY is set, mark the latest one as current
         setCurrentFinancialYear(data[0]);
+      }
+
+      // If there's only one financial year, auto-select it
+      if (data && data.length === 1) {
         setSelectedFinancialYears([data[0].id]);
+      } else {
+        // Don't auto-select any financial years
+        setSelectedFinancialYears([]);
       }
     } catch (error: any) {
       console.error('Error loading financial years:', error);
@@ -54,6 +69,16 @@ export const useFinancialYears = () => {
   const createFinancialYear = async (fyData: Database['public']['Tables']['financial_years']['Insert']) => {
     try {
       if (!currentCompany) throw new Error('No company selected');
+
+      setLoading(true);
+
+      // If this is set as current, unset other current FYs first
+      if (fyData.is_current) {
+        await supabase
+          .from('financial_years')
+          .update({ is_current: false })
+          .eq('company_id', currentCompany.id);
+      }
 
       const { data, error } = await supabase
         .from('financial_years')
@@ -72,6 +97,8 @@ export const useFinancialYears = () => {
     } catch (error: any) {
       toast.error(error.message);
       return { data: null, error };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,7 +123,6 @@ export const useFinancialYears = () => {
       if (error) throw error;
 
       setCurrentFinancialYear(data);
-      setSelectedFinancialYears([fyId]);
       toast.success('Current financial year updated');
       return { data, error: null };
     } catch (error: any) {

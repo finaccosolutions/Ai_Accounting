@@ -43,21 +43,12 @@ export const useCompany = () => {
       setLoading(true);
       setError(null);
 
-      // Increase timeout and add better error handling
-      const companiesPromise = supabase
+      // Get user's company memberships
+      const { data: companyUsers, error: companyUsersError } = await supabase
         .from('company_users')
         .select('company_id, role')
         .eq('user_id', user.id)
         .eq('is_active', true);
-
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Company query timeout')), 15000)
-      );
-
-      const { data: companyUsers, error: companyUsersError } = await Promise.race([
-        companiesPromise, 
-        timeoutPromise
-      ]) as any;
 
       console.log('🏢 loadUserCompanies: Company users query result:', {
         data: companyUsers,
@@ -67,19 +58,8 @@ export const useCompany = () => {
 
       if (companyUsersError) {
         console.error('🏢 loadUserCompanies: Error loading company users:', companyUsersError);
-        
-        // Handle specific RLS policy errors
-        if (companyUsersError.message?.includes('infinite recursion')) {
-          setError('Database configuration error. Please contact support.');
-          toast.error('Database configuration error. Please contact support.');
-        } else if (companyUsersError.message?.includes('permission denied')) {
-          setError('Access denied. Please check your permissions.');
-          toast.error('Access denied. Please check your permissions.');
-        } else {
-          setError('Failed to load companies. Please try again.');
-          toast.error('Failed to load companies. Please try again.');
-        }
-        
+        setError('Failed to load companies. Please try again.');
+        toast.error('Failed to load companies. Please try again.');
         setCompanies([]);
         setLoading(false);
         return;
@@ -114,30 +94,16 @@ export const useCompany = () => {
         setError(null);
       }
 
-      // Check for stored current company
-      const storedCompanyId = localStorage.getItem('currentCompanyId');
-      if (storedCompanyId && userCompanies) {
-        const storedCompany = userCompanies.find(c => c.id === storedCompanyId);
-        if (storedCompany) {
-          const companyUser = companyUsers.find(cu => cu.company_id === storedCompanyId);
-          setCurrentCompany(storedCompany);
-          setUserRole(companyUser?.role || null);
-        } else {
-          // Clear invalid stored company
-          localStorage.removeItem('currentCompanyId');
-        }
-      }
+      // Don't auto-select any company - let user choose
+      setCurrentCompany(null);
+      setUserRole(null);
+      
+      // Clear any stored company selection
+      localStorage.removeItem('currentCompanyId');
     } catch (error: any) {
       console.error('🏢 loadUserCompanies: Error:', error);
-      
-      if (error.message === 'Company query timeout') {
-        setError('Request timed out. Please check your connection and try again.');
-        toast.error('Request timed out. Please try again.');
-      } else {
-        setError('An unexpected error occurred.');
-        toast.error('Error loading companies');
-      }
-      
+      setError('An unexpected error occurred.');
+      toast.error('Error loading companies');
       setCompanies([]);
       setCurrentCompany(null);
       setUserRole(null);
@@ -279,6 +245,7 @@ export const useCompany = () => {
         // Don't throw here as the company is already created
       }
 
+      // Reload companies and auto-select the new company
       await loadUserCompanies();
       
       // Automatically switch to the new company

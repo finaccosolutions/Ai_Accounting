@@ -13,12 +13,12 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 
 const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'accountant', 'owner', 'viewer'] },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'accountant', 'owner', 'viewer', 'auditor'] },
   { id: 'vouchers', label: 'Voucher Entry', icon: FileText, roles: ['admin', 'accountant'] },
   { id: 'masters', label: 'Master Management', icon: Database, roles: ['admin', 'accountant'] },
-  { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'accountant', 'owner', 'auditor'] },
+  { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'accountant', 'owner', 'auditor', 'viewer'] },
   { id: 'import', label: 'Smart Import', icon: Upload, roles: ['admin', 'accountant'] },
-  { id: 'audit', label: 'Auditor Panel', icon: Shield, roles: ['admin', 'auditor'] },
+  { id: 'audit', label: 'Audit Panel', icon: Shield, roles: ['admin', 'auditor'] },
   { id: 'users', label: 'User Management', icon: Users, roles: ['admin'] },
   { id: 'settings', label: 'Settings', icon: Settings, roles: ['admin'] },
 ];
@@ -27,9 +27,15 @@ interface SidebarProps {
   currentModule: string;
   setCurrentModule: (module: string) => void;
   isOpen: boolean;
+  onToggleAIChat: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentModule, setCurrentModule, isOpen }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ 
+  currentModule, 
+  setCurrentModule, 
+  isOpen, 
+  onToggleAIChat 
+}) => {
   const { user } = useAuth();
 
   const filteredMenuItems = menuItems.filter(item => 
@@ -65,15 +71,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentModule, setCurrentModul
       </div>
       
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-gradient-to-r from-blue-50 to-emerald-50">
-        <div className="flex items-center space-x-3 p-3 bg-white rounded-lg shadow-sm">
+        <button
+          onClick={onToggleAIChat}
+          className="w-full flex items-center space-x-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+        >
           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full flex items-center justify-center">
             <Bot className="w-4 h-4 text-white" />
           </div>
-          <div>
+          <div className="text-left">
             <p className="text-sm font-medium text-gray-900">AI Assistant</p>
             <p className="text-xs text-gray-500">Always here to help</p>
           </div>
-        </div>
+        </button>
       </div>
     </aside>
   );
