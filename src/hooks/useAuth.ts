@@ -51,14 +51,22 @@ export const useAuth = () => {
     // Load user profile in background
     const loadUserProfile = async (authUser: User) => {
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', authUser.id)
-          .single();
+          .maybeSingle();
+
+        if (error) {
+          console.log('🔐 Error loading profile:', error);
+          return;
+        }
 
         if (mounted && profile) {
+          console.log('🔐 Profile loaded successfully');
           setUser({ ...authUser, profile });
+        } else {
+          console.log('🔐 No profile found for user, user can still continue');
         }
       } catch (error) {
         console.log('🔐 Profile not found or error loading profile, user can still continue');

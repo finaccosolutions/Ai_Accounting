@@ -62,6 +62,7 @@ export interface Database {
           auto_voucher_numbering: boolean;
           enable_audit_trail: boolean;
           created_by: string | null;
+          user_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -90,6 +91,7 @@ export interface Database {
           auto_voucher_numbering?: boolean;
           enable_audit_trail?: boolean;
           created_by?: string | null;
+          user_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -118,6 +120,7 @@ export interface Database {
           auto_voucher_numbering?: boolean;
           enable_audit_trail?: boolean;
           created_by?: string | null;
+          user_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };

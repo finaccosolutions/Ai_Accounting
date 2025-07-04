@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
-import { Menu, X, User, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, ChevronDown, Calculator, Building } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCompany } from '../../hooks/useCompany';
 
 interface HeaderProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
+  sidebarOpen?: boolean;
+  setSidebarOpen?: (open: boolean) => void;
+  onShowCompanySelector?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  sidebarOpen, 
+  setSidebarOpen,
+  onShowCompanySelector 
+}) => {
   const { user, signOut } = useAuth();
   const { currentCompany } = useCompany();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -37,17 +42,26 @@ export const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) =
     <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between relative z-50">
       {/* Left side - Menu toggle and company info */}
       <div className="flex items-center space-x-4">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-        >
-          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        {setSidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+          >
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        )}
+        
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-emerald-600 rounded-lg flex items-center justify-center">
+            <Calculator className="w-5 h-5 text-white" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900">AccounTech</h1>
+        </div>
         
         {currentCompany && (
-          <div className="hidden sm:block">
-            <h1 className="text-lg font-semibold text-gray-900">{currentCompany.name}</h1>
-            <p className="text-xs text-gray-500">Financial Year: {new Date(currentCompany.financial_year_start).getFullYear()}-{new Date(currentCompany.financial_year_start).getFullYear() + 1}</p>
+          <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
+            <Building className="w-4 h-4" />
+            <span>{currentCompany.name}</span>
           </div>
         )}
       </div>
@@ -109,6 +123,19 @@ export const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) =
 
                 {/* Menu items */}
                 <div className="py-1">
+                  {onShowCompanySelector && (
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        onShowCompanySelector();
+                      }}
+                      className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Building size={16} />
+                      <span>Switch Company</span>
+                    </button>
+                  )}
+                  
                   <button
                     onClick={() => {
                       setUserMenuOpen(false);

@@ -5,6 +5,7 @@ import { useAuth } from './hooks/useAuth';
 import { useCompany } from './hooks/useCompany';
 import { AuthForm } from './components/auth/AuthForm';
 import { CompanySelector } from './components/company/CompanySelector';
+import { CompanySetup } from './components/company/CompanySetup';
 import { Layout } from './components/ui/Layout';
 import { Dashboard } from './components/modules/Dashboard';
 import { VoucherEntry } from './components/modules/VoucherEntry';
@@ -17,6 +18,7 @@ import { useState } from 'react';
 const AuthenticatedApp: React.FC = () => {
   const { currentCompany, loading: companyLoading } = useCompany();
   const [currentModule, setCurrentModule] = useState('dashboard');
+  const [showCompanySetup, setShowCompanySetup] = useState(false);
 
   // Show loading while companies are being loaded
   if (companyLoading) {
@@ -30,9 +32,14 @@ const AuthenticatedApp: React.FC = () => {
     );
   }
 
+  // If showing company setup
+  if (showCompanySetup) {
+    return <CompanySetup onBack={() => setShowCompanySetup(false)} />;
+  }
+
   // If user but no company selected, show company selector
   if (!currentCompany) {
-    return <CompanySelector />;
+    return <CompanySelector onCreateCompany={() => setShowCompanySetup(true)} />;
   }
 
   const renderCurrentModule = () => {
@@ -48,7 +55,11 @@ const AuthenticatedApp: React.FC = () => {
   };
 
   return (
-    <Layout currentModule={currentModule} setCurrentModule={setCurrentModule}>
+    <Layout 
+      currentModule={currentModule} 
+      setCurrentModule={setCurrentModule}
+      onShowCompanySelector={() => setShowCompanySetup(true)}
+    >
       {renderCurrentModule()}
     </Layout>
   );

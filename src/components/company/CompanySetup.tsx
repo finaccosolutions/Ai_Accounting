@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Building, Save, ArrowLeft } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useCompany } from '../../hooks/useCompany';
+import { Header } from '../ui/Header';
 
 interface CompanySetupProps {
   onBack?: () => void;
@@ -73,8 +74,9 @@ export const CompanySetup: React.FC<CompanySetupProps> = ({ onBack }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await createCompany(formData);
-    if (result.data && onBack) {
-      onBack();
+    if (result.data) {
+      // Company created successfully, onBack will be called automatically
+      // since the useCompany hook will update currentCompany
     }
   };
 
@@ -89,8 +91,10 @@ export const CompanySetup: React.FC<CompanySetupProps> = ({ onBack }) => {
   const availableStates = getStatesForCountry(formData.country);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      
+      <div className="max-w-7xl mx-auto p-4 pt-8">
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
             {onBack && (

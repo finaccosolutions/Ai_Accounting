@@ -122,6 +122,9 @@ export const useCompany = () => {
           const companyUser = companyUsers.find(cu => cu.company_id === storedCompanyId);
           setCurrentCompany(storedCompany);
           setUserRole(companyUser?.role || null);
+        } else {
+          // Clear invalid stored company
+          localStorage.removeItem('currentCompanyId');
         }
       }
     } catch (error: any) {
@@ -192,6 +195,7 @@ export const useCompany = () => {
         .insert({
           ...companyData,
           created_by: user.id,
+          user_id: user.id, // ✅ Include user_id to satisfy RLS policy
         })
         .select()
         .single();
@@ -218,6 +222,12 @@ export const useCompany = () => {
       }
 
       await loadUserCompanies();
+      
+      // Automatically switch to the new company
+      setCurrentCompany(company);
+      setUserRole('admin');
+      localStorage.setItem('currentCompanyId', company.id);
+      
       toast.success('Company created successfully');
       return { data: company, error: null };
     } catch (error: any) {
