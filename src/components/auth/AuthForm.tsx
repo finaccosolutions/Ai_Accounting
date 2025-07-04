@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Bot, User, Phone } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../hooks/useAuth';
+import { EnvDebug } from '../debug/EnvDebug';
 
 export const AuthForm: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -10,6 +11,7 @@ export const AuthForm: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   const { signIn, signUp, loading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,6 +26,8 @@ export const AuthForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 flex items-center justify-center p-4">
+      {showDebug && <EnvDebug />}
+      
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
@@ -33,6 +37,14 @@ export const AuthForm: React.FC = () => {
           </div>
           <h2 className="text-3xl font-bold text-gray-900">AI Accounting Software</h2>
           <p className="mt-2 text-gray-600">Smarter than traditional accounting systems</p>
+          
+          {/* Debug Toggle Button */}
+          <button
+            onClick={() => setShowDebug(!showDebug)}
+            className="mt-2 text-xs text-gray-500 hover:text-gray-700"
+          >
+            {showDebug ? 'Hide' : 'Show'} Debug Info
+          </button>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
