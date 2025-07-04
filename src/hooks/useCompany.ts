@@ -13,6 +13,7 @@ export const useCompany = () => {
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('🏢 useCompany: useEffect triggered, user:', user?.email || 'No user');
@@ -25,6 +26,7 @@ export const useCompany = () => {
       setCompanies([]);
       setCurrentCompany(null);
       setUserRole(null);
+      setError(null);
       setLoading(false);
     }
   }, [user]);
@@ -38,17 +40,24 @@ export const useCompany = () => {
         return;
       }
 
-      console.log('🏢 loadUserCompanies: Setting loading to true');
       setLoading(true);
+      setError(null);
 
-      console.log('🏢 loadUserCompanies: Fetching company_users for user:', user.id);
-      
-      // Get user's company memberships
-      const { data: companyUsers, error: companyUsersError } = await supabase
+      // Increase timeout and add better error handling
+      const companiesPromise = supabase
         .from('company_users')
         .select('company_id, role')
         .eq('user_id', user.id)
         .eq('is_active', true);
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Company query timeout')), 15000)
+      );
+
+      const { data: companyUsers, error: companyUsersError } = await Promise.race([
+        companiesPromise, 
+        timeoutPromise
+      ]) as any;
 
       console.log('🏢 loadUserCompanies: Company users query result:', {
         data: companyUsers,
@@ -58,69 +67,78 @@ export const useCompany = () => {
 
       if (companyUsersError) {
         console.error('🏢 loadUserCompanies: Error loading company users:', companyUsersError);
+        
+        // Handle specific RLS policy errors
+        if (companyUsersError.message?.includes('infinite recursion')) {
+          setError('Database configuration error. Please contact support.');
+          toast.error('Database configuration error. Please contact support.');
+        } else if (companyUsersError.message?.includes('permission denied')) {
+          setError('Access denied. Please check your permissions.');
+          toast.error('Access denied. Please check your permissions.');
+        } else {
+          setError('Failed to load companies. Please try again.');
+          toast.error('Failed to load companies. Please try again.');
+        }
+        
         setCompanies([]);
         setLoading(false);
         return;
       }
 
       if (!companyUsers || companyUsers.length === 0) {
-        console.log('🏢 loadUserCompanies: No company memberships found, user needs to create/join a company');
+        console.log('🏢 loadUserCompanies: No company memberships found');
         setCompanies([]);
         setCurrentCompany(null);
         setUserRole(null);
+        setError(null);
         setLoading(false);
         return;
       }
 
-      console.log('🏢 loadUserCompanies: Found company memberships, fetching company details...');
-      
       // Get company details
       const companyIds = companyUsers.map(cu => cu.company_id);
-      console.log('🏢 loadUserCompanies: Company IDs to fetch:', companyIds);
       
       const { data: userCompanies, error: companiesError } = await supabase
         .from('companies')
         .select('*')
         .in('id', companyIds);
 
-      console.log('🏢 loadUserCompanies: Companies query result:', {
-        data: userCompanies,
-        error: companiesError,
-        count: userCompanies?.length || 0
-      });
-
       if (companiesError) {
         console.error('🏢 loadUserCompanies: Error loading companies:', companiesError);
+        setError('Failed to load company details.');
         toast.error('Error loading companies');
         setCompanies([]);
       } else {
         console.log('🏢 loadUserCompanies: Successfully loaded companies:', userCompanies?.map(c => c.name));
         setCompanies(userCompanies || []);
+        setError(null);
       }
 
-      // Check if there's a stored current company
+      // Check for stored current company
       const storedCompanyId = localStorage.getItem('currentCompanyId');
-      console.log('🏢 loadUserCompanies: Stored company ID from localStorage:', storedCompanyId);
-      
       if (storedCompanyId && userCompanies) {
         const storedCompany = userCompanies.find(c => c.id === storedCompanyId);
-        console.log('🏢 loadUserCompanies: Found stored company:', storedCompany?.name || 'Not found');
-        
         if (storedCompany) {
           const companyUser = companyUsers.find(cu => cu.company_id === storedCompanyId);
-          console.log('🏢 loadUserCompanies: Setting current company and role:', {
-            company: storedCompany.name,
-            role: companyUser?.role
-          });
           setCurrentCompany(storedCompany);
           setUserRole(companyUser?.role || null);
         }
       }
     } catch (error: any) {
-      console.error('🏢 loadUserCompanies: Unexpected error:', error);
-      toast.error('Error loading companies');
+      console.error('🏢 loadUserCompanies: Error:', error);
+      
+      if (error.message === 'Company query timeout') {
+        setError('Request timed out. Please check your connection and try again.');
+        toast.error('Request timed out. Please try again.');
+      } else {
+        setError('An unexpected error occurred.');
+        toast.error('Error loading companies');
+      }
+      
+      setCompanies([]);
+      setCurrentCompany(null);
+      setUserRole(null);
     } finally {
-      console.log('🏢 loadUserCompanies: Setting loading to false');
       setLoading(false);
     }
   };
@@ -131,7 +149,9 @@ export const useCompany = () => {
     try {
       if (!user) return;
 
-      // Get company details and user role
+      setLoading(true);
+      setError(null);
+
       const { data: companyUser, error } = await supabase
         .from('company_users')
         .select('role')
@@ -145,14 +165,16 @@ export const useCompany = () => {
       const company = companies.find(c => c.id === companyId);
       if (!company) throw new Error('Company not found');
 
-      console.log('🏢 switchCompany: Successfully switched to:', company.name);
       setCurrentCompany(company);
       setUserRole(companyUser.role);
       localStorage.setItem('currentCompanyId', companyId);
       toast.success(`Switched to ${company.name}`);
     } catch (error: any) {
-      console.error('🏢 switchCompany: Error switching company:', error);
+      console.error('🏢 switchCompany: Error:', error);
+      setError('Failed to switch company.');
       toast.error('Error switching company');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -163,8 +185,8 @@ export const useCompany = () => {
       if (!user) throw new Error('No user logged in');
 
       setLoading(true);
+      setError(null);
 
-      // Create company
       const { data: company, error: companyError } = await supabase
         .from('companies')
         .insert({
@@ -176,9 +198,6 @@ export const useCompany = () => {
 
       if (companyError) throw companyError;
 
-      console.log('🏢 createCompany: Company created successfully:', company.name);
-
-      // Add user as admin
       const { error: userError } = await supabase
         .from('company_users')
         .insert({
@@ -189,25 +208,21 @@ export const useCompany = () => {
 
       if (userError) throw userError;
 
-      console.log('🏢 createCompany: User added as admin');
-
       // Set up default company data
-      const { error: setupError } = await supabase.rpc('setup_default_company_data', {
-        company_uuid: company.id
-      });
-
-      if (setupError) {
+      try {
+        await supabase.rpc('setup_default_company_data', {
+          company_uuid: company.id
+        });
+      } catch (setupError) {
         console.error('🏢 createCompany: Error setting up default data:', setupError);
-        // Don't fail the company creation for this
-      } else {
-        console.log('🏢 createCompany: Default data setup completed');
       }
 
       await loadUserCompanies();
       toast.success('Company created successfully');
       return { data: company, error: null };
     } catch (error: any) {
-      console.error('🏢 createCompany: Error creating company:', error);
+      console.error('🏢 createCompany: Error:', error);
+      setError('Failed to create company.');
       toast.error(error.message);
       return { data: null, error };
     } finally {
@@ -216,9 +231,10 @@ export const useCompany = () => {
   };
 
   const updateCompany = async (companyId: string, updates: Database['public']['Tables']['companies']['Update']) => {
-    console.log('🏢 updateCompany: Updating company:', companyId);
-    
     try {
+      setLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from('companies')
         .update(updates)
@@ -236,9 +252,12 @@ export const useCompany = () => {
       toast.success('Company updated successfully');
       return { data, error: null };
     } catch (error: any) {
-      console.error('🏢 updateCompany: Error updating company:', error);
+      console.error('🏢 updateCompany: Error:', error);
+      setError('Failed to update company.');
       toast.error(error.message);
       return { data: null, error };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -246,7 +265,8 @@ export const useCompany = () => {
     companiesCount: companies.length,
     currentCompany: currentCompany?.name || 'None',
     userRole,
-    loading
+    loading,
+    error
   });
 
   return {
@@ -254,6 +274,7 @@ export const useCompany = () => {
     currentCompany,
     userRole,
     loading,
+    error,
     switchCompany,
     createCompany,
     updateCompany,

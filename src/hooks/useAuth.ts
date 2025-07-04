@@ -19,187 +19,232 @@ export const useAuth = () => {
     let mounted = true;
     console.log('🔐 useAuth: useEffect mounted, initializing...');
 
+    const clearAuthState = () => {
+      if (mounted) {
+        console.log('🔐 clearAuthState: Clearing all auth state');
+        setUser(null);
+        setSession(null);
+        setLoading(false);
+        // Clear any stored data
+        localStorage.removeItem('currentCompanyId');
+      }
+    };
+
     const loadUserProfile = async (authUser: User): Promise<void> => {
       try {
-        console.log('🔐 loadUserProfile: Starting profile load for user:', {
-          id: authUser.id,
-          email: authUser.email,
-          emailConfirmed: authUser.email_confirmed_at,
-          createdAt: authUser.created_at
-        });
+        console.log('🔐 loadUserProfile: Starting profile load for user:', authUser.email);
         
-        console.log('🔐 loadUserProfile: About to execute Supabase profile query...');
-        console.log('🔐 loadUserProfile: Query details:', {
-          table: 'profiles',
-          filter: `id = ${authUser.id}`,
-          operation: 'select(*).maybeSingle()'
-        });
-        
-        const { data: profile, error } = await supabase
+        // Increase timeout to 30 seconds for better reliability
+        const profilePromise = supabase
           .from('profiles')
           .select('*')
           .eq('id', authUser.id)
           .maybeSingle();
 
-        console.log('🔐 loadUserProfile: Supabase profile query completed!');
-        console.log('🔐 loadUserProfile: Query result:', {
-          profile: profile ? {
-            id: profile.id,
-            email: profile.email,
-            fullName: profile.full_name,
-            role: profile.role,
-            isActive: profile.is_active,
-            createdAt: profile.created_at
-          } : null,
-          error: error ? {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          } : null
-        });
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Profile query timeout')), 30000)
+        );
+
+        const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+
+        console.log('🔐 loadUserProfile: Query result:', { profile, error });
 
         if (error) {
+          if (error.message === 'Profile query timeout') {
+            console.error('🔐 loadUserProfile: Profile query timed out');
+            // Still set the user even if profile loading times out
+            if (mounted) {
+              console.log('🔐 loadUserProfile: Setting user without profile due to timeout');
+              setUser(authUser);
+            }
+            return;
+          }
+          
           console.error('🔐 loadUserProfile: Error loading profile:', error);
-          // Don't throw error for missing profile, it's normal for new users
-        } else if (!profile) {
-          console.log('🔐 loadUserProfile: No profile found - this is normal for new users');
+          // If profile doesn't exist, create one
+          if (error.code === 'PGRST116' || error.message.includes('No rows found')) {
+            console.log('🔐 loadUserProfile: No profile found, creating one...');
+            await createUserProfile(authUser);
+            return;
+          }
+          
+          // For other errors, still set the user without profile
+          if (mounted) {
+            console.log('🔐 loadUserProfile: Setting user without profile due to error');
+            setUser(authUser);
+          }
+          return;
         }
 
-        console.log('🔐 loadUserProfile: Profile processing result:', {
-          profileFound: !!profile,
-          mounted: mounted,
-          willSetUser: mounted
-        });
-        
         if (mounted) {
           const userWithProfile = { ...authUser, profile: profile || undefined };
-          console.log('🔐 loadUserProfile: Setting user with profile:', {
-            userId: userWithProfile.id,
-            userEmail: userWithProfile.email,
-            hasProfile: !!userWithProfile.profile,
-            profileRole: userWithProfile.profile?.role || 'None'
-          });
+          console.log('🔐 loadUserProfile: Setting user with profile');
           setUser(userWithProfile);
-          console.log('🔐 loadUserProfile: User state updated successfully');
-        } else {
-          console.log('🔐 loadUserProfile: Component unmounted, skipping user state update');
         }
       } catch (error) {
-        console.error('🔐 loadUserProfile: Unexpected error in try-catch:', error);
-        console.error('🔐 loadUserProfile: Error stack:', (error as Error).stack);
+        console.error('🔐 loadUserProfile: Unexpected error:', error);
         // Still set the user even if profile loading fails
         if (mounted) {
-          console.log('🔐 loadUserProfile: Setting user without profile due to error');
+          console.log('🔐 loadUserProfile: Setting user without profile due to unexpected error');
           setUser(authUser);
-          console.log('🔐 loadUserProfile: User state updated (without profile)');
         }
       }
     };
 
-    // Centralized function to handle all auth events
-    const handleAuthEvent = async (session: Session | null, eventType: string = 'unknown') => {
-      if (!mounted) {
-        console.log('🔐 handleAuthEvent: Component unmounted, skipping auth event:', eventType);
-        return;
+    const createUserProfile = async (authUser: User): Promise<void> => {
+      try {
+        console.log('🔐 createUserProfile: Creating profile for user:', authUser.email);
+        
+        const profileData = {
+          id: authUser.id,
+          email: authUser.email!,
+          full_name: authUser.user_metadata?.full_name || authUser.email!.split('@')[0],
+          mobile_number: authUser.user_metadata?.mobile_number || null,
+          role: 'accountant' as const,
+        };
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .insert(profileData)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('🔐 createUserProfile: Error creating profile:', error);
+          // Set user without profile if creation fails
+          if (mounted) {
+            setUser(authUser);
+          }
+          return;
+        }
+
+        console.log('🔐 createUserProfile: Profile created successfully');
+        if (mounted) {
+          const userWithProfile = { ...authUser, profile };
+          setUser(userWithProfile);
+        }
+      } catch (error) {
+        console.error('🔐 createUserProfile: Error:', error);
+        if (mounted) {
+          setUser(authUser);
+        }
       }
+    };
+
+    const handleAuthError = async (error: any): Promise<boolean> => {
+      console.log('🔐 handleAuthError: Checking error:', error);
+      
+      // Check for refresh token errors or invalid session errors
+      if (error?.message?.includes('refresh_token_not_found') || 
+          error?.message?.includes('Invalid Refresh Token') ||
+          error?.message?.includes('Refresh Token Not Found') ||
+          error?.code === 'refresh_token_not_found') {
+        
+        console.log('🔐 handleAuthError: Invalid refresh token detected, clearing session');
+        
+        try {
+          // Force sign out to clear invalid session
+          await supabase.auth.signOut();
+          clearAuthState();
+          toast.error('Your session has expired. Please sign in again.');
+          return true; // Error was handled
+        } catch (signOutError) {
+          console.error('🔐 handleAuthError: Error during forced sign out:', signOutError);
+          clearAuthState();
+          return true; // Still handled, just clear state
+        }
+      }
+      
+      return false; // Error was not handled
+    };
+
+    const handleAuthEvent = async (session: Session | null, eventType: string = 'unknown') => {
+      if (!mounted) return;
 
       console.log(`🔐 handleAuthEvent: Processing ${eventType} event...`, {
         hasSession: !!session,
         hasUser: !!session?.user,
-        userEmail: session?.user?.email || 'None',
-        sessionId: session?.access_token ? 'Present' : 'None'
+        userEmail: session?.user?.email || 'None'
       });
       
       try {
-        console.log('🔐 handleAuthEvent: Setting session state...');
         setSession(session);
-        console.log('🔐 handleAuthEvent: Session state updated');
         
         if (session?.user) {
-          console.log('🔐 handleAuthEvent: User found in session, calling loadUserProfile...');
+          console.log('🔐 handleAuthEvent: User found, loading profile...');
           await loadUserProfile(session.user);
-          console.log('🔐 handleAuthEvent: loadUserProfile call completed');
         } else {
           console.log('🔐 handleAuthEvent: No session or user, clearing user state');
           if (mounted) {
-            console.log('🔐 handleAuthEvent: Setting user to null');
             setUser(null);
-            console.log('🔐 handleAuthEvent: User state cleared');
           }
         }
       } catch (error) {
         console.error(`🔐 handleAuthEvent: Error in ${eventType}:`, error);
-        console.error(`🔐 handleAuthEvent: Error stack:`, (error as Error).stack);
-        if (mounted) {
-          console.log('🔐 handleAuthEvent: Setting user to null due to error');
-          setUser(null);
-          console.log('🔐 handleAuthEvent: User state cleared due to error');
+        
+        // Try to handle the error
+        const errorHandled = await handleAuthError(error);
+        
+        if (!errorHandled && mounted) {
+          // Set user without profile if there's an unhandled error
+          if (session?.user) {
+            setUser(session.user);
+          } else {
+            setUser(null);
+          }
         }
       } finally {
         if (mounted) {
           console.log(`🔐 handleAuthEvent: ${eventType} complete, setting loading to false`);
           setLoading(false);
-          console.log(`🔐 handleAuthEvent: Loading state updated to false`);
-        } else {
-          console.log(`🔐 handleAuthEvent: Component unmounted, skipping loading state update`);
         }
       }
     };
 
-    // Get initial session
     const getInitialSession = async () => {
       try {
         console.log('🔐 getInitialSession: Getting initial session...');
         
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        console.log('🔐 getInitialSession: Supabase getSession result:', {
+        console.log('🔐 getInitialSession: Result:', {
           hasSession: !!session,
           hasUser: !!session?.user,
           userEmail: session?.user?.email || 'None',
-          error: error ? {
-            message: error.message,
-            status: error.status
-          } : null
+          error: error?.message
         });
         
         if (error) {
-          console.error('🔐 getInitialSession: Error getting initial session:', error);
-          if (mounted) {
-            console.log('🔐 getInitialSession: Setting loading to false due to error');
+          console.error('🔐 getInitialSession: Error:', error);
+          
+          // Try to handle the error
+          const errorHandled = await handleAuthError(error);
+          
+          if (!errorHandled && mounted) {
             setLoading(false);
-            console.log('🔐 getInitialSession: Loading state updated to false');
           }
           return;
         }
 
-        console.log('🔐 getInitialSession: Calling handleAuthEvent with initial session...');
         await handleAuthEvent(session, 'initial_session');
-        console.log('🔐 getInitialSession: handleAuthEvent completed');
       } catch (error) {
         console.error('🔐 getInitialSession: Unexpected error:', error);
-        console.error('🔐 getInitialSession: Error stack:', (error as Error).stack);
-        if (mounted) {
-          console.log('🔐 getInitialSession: Setting states to default due to unexpected error');
-          setUser(null);
-          setLoading(false);
-          console.log('🔐 getInitialSession: States updated to default');
+        
+        // Try to handle the error
+        const errorHandled = await handleAuthError(error);
+        
+        if (!errorHandled && mounted) {
+          clearAuthState();
         }
       }
     };
 
-    console.log('🔐 useAuth: Calling getInitialSession...');
     getInitialSession();
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) {
-        console.log('🔐 onAuthStateChange: Component unmounted, ignoring event:', event);
-        return;
-      }
+      if (!mounted) return;
 
       console.log('🔐 onAuthStateChange: Auth state changed:', {
         event,
@@ -208,16 +253,19 @@ export const useAuth = () => {
         userEmail: session?.user?.email || 'None'
       });
       
-      console.log('🔐 onAuthStateChange: Calling handleAuthEvent...');
+      // Handle sign out events immediately
+      if (event === 'SIGNED_OUT') {
+        clearAuthState();
+        return;
+      }
+      
       await handleAuthEvent(session, `auth_${event}`);
-      console.log('🔐 onAuthStateChange: handleAuthEvent completed');
     });
 
     return () => {
-      console.log('🔐 useAuth: Cleaning up, setting mounted to false...');
+      console.log('🔐 useAuth: Cleaning up...');
       mounted = false;
       subscription.unsubscribe();
-      console.log('🔐 useAuth: Cleanup completed');
     };
   }, []);
 
@@ -225,7 +273,6 @@ export const useAuth = () => {
     try {
       console.log('🔐 signUp: Starting sign up process for:', email);
       setLoading(true);
-      console.log('🔐 signUp: Loading state set to true');
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -238,17 +285,6 @@ export const useAuth = () => {
         },
       });
 
-      console.log('🔐 signUp: Supabase signUp result:', {
-        hasUser: !!data.user,
-        userEmail: data.user?.email || 'None',
-        emailConfirmed: data.user?.email_confirmed_at,
-        hasSession: !!data.session,
-        error: error ? {
-          message: error.message,
-          status: error.status
-        } : null
-      });
-
       if (error) throw error;
 
       if (data.user && !data.user.email_confirmed_at) {
@@ -257,80 +293,70 @@ export const useAuth = () => {
         toast.success('Account created successfully');
       }
 
-      console.log('🔐 signUp: Sign up successful');
       return { data, error: null };
     } catch (error: any) {
-      console.error('🔐 signUp: Sign up error:', error);
+      console.error('🔐 signUp: Error:', error);
       toast.error(error.message);
-      console.log('🔐 signUp: Setting loading to false due to error');
       setLoading(false);
-      console.log('🔐 signUp: Loading state updated to false');
       return { data: null, error };
     }
-    // Note: Don't set loading to false on success as auth state change will handle it
   };
 
   const signIn = async (email: string, password: string) => {
     try {
       console.log('🔐 signIn: Starting sign in process for:', email);
       setLoading(true);
-      console.log('🔐 signIn: Loading state set to true');
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log('🔐 signIn: Supabase signInWithPassword result:', {
-        hasUser: !!data.user,
-        userEmail: data.user?.email || 'None',
-        hasSession: !!data.session,
-        error: error ? {
-          message: error.message,
-          status: error.status
-        } : null
-      });
-
       if (error) throw error;
 
       toast.success('Signed in successfully');
-      console.log('🔐 signIn: Sign in successful');
       return { data, error: null };
     } catch (error: any) {
-      console.error('🔐 signIn: Sign in error:', error);
-      toast.error(error.message);
-      console.log('🔐 signIn: Setting loading to false due to error');
+      console.error('🔐 signIn: Error:', error);
+      
+      // Handle auth errors during sign in
+      const errorHandled = await handleAuthError(error);
+      if (!errorHandled) {
+        toast.error(error.message);
+      }
+      
       setLoading(false);
-      console.log('🔐 signIn: Loading state updated to false');
       return { data: null, error };
     }
-    // Note: Don't set loading to false on success as auth state change will handle it
   };
 
   const signOut = async () => {
     try {
       console.log('🔐 signOut: Starting sign out process');
       setLoading(true);
-      console.log('🔐 signOut: Loading state set to true');
       
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      // Clear stored company data
+      localStorage.removeItem('currentCompanyId');
+      
       toast.success('Signed out successfully');
-      console.log('🔐 signOut: Sign out successful');
     } catch (error: any) {
-      console.error('🔐 signOut: Sign out error:', error);
-      toast.error(error.message);
-      console.log('🔐 signOut: Setting loading to false due to error');
+      console.error('🔐 signOut: Error:', error);
+      // Even if sign out fails, clear local state
+      setUser(null);
+      setSession(null);
+      localStorage.removeItem('currentCompanyId');
       setLoading(false);
-      console.log('🔐 signOut: Loading state updated to false');
+      
+      // Don't show error toast for sign out failures, just log them
+      console.warn('Sign out failed, but local state cleared');
     }
-    // Note: Don't set loading to false on success as auth state change will handle it
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
     try {
-      console.log('🔐 updateProfile: Starting profile update');
       if (!user) throw new Error('No user logged in');
 
       const { data, error } = await supabase
@@ -340,37 +366,59 @@ export const useAuth = () => {
         .select()
         .single();
 
-      console.log('🔐 updateProfile: Supabase update result:', {
-        hasData: !!data,
-        error: error ? {
-          message: error.message,
-          code: error.code
-        } : null
-      });
-
       if (error) throw error;
 
-      console.log('🔐 updateProfile: Updating user state with new profile');
       setUser({ ...user, profile: data });
-      console.log('🔐 updateProfile: User state updated');
       toast.success('Profile updated successfully');
       return { data, error: null };
     } catch (error: any) {
-      console.error('🔐 updateProfile: Profile update error:', error);
+      console.error('🔐 updateProfile: Error:', error);
       toast.error(error.message);
       return { data: null, error };
     }
   };
 
-  // Debug logging
+  // Add a helper function to handle auth errors in other hooks
+  const handleAuthError = async (error: any): Promise<boolean> => {
+    console.log('🔐 handleAuthError: Checking error:', error);
+    
+    // Check for refresh token errors or invalid session errors
+    if (error?.message?.includes('refresh_token_not_found') || 
+        error?.message?.includes('Invalid Refresh Token') ||
+        error?.message?.includes('Refresh Token Not Found') ||
+        error?.code === 'refresh_token_not_found') {
+      
+      console.log('🔐 handleAuthError: Invalid refresh token detected, clearing session');
+      
+      try {
+        // Force sign out to clear invalid session
+        await supabase.auth.signOut();
+        setUser(null);
+        setSession(null);
+        setLoading(false);
+        localStorage.removeItem('currentCompanyId');
+        toast.error('Your session has expired. Please sign in again.');
+        return true; // Error was handled
+      } catch (signOutError) {
+        console.error('🔐 handleAuthError: Error during forced sign out:', signOutError);
+        setUser(null);
+        setSession(null);
+        setLoading(false);
+        localStorage.removeItem('currentCompanyId');
+        return true; // Still handled, just clear state
+      }
+    }
+    
+    return false; // Error was not handled
+  };
+
   console.log('🔐 useAuth: Current state:', {
     hasUser: !!user,
     userEmail: user?.email || 'None',
     hasProfile: !!user?.profile,
     profileRole: user?.profile?.role || 'None',
     loading,
-    sessionExists: !!session,
-    sessionUserId: session?.user?.id || 'None'
+    sessionExists: !!session
   });
 
   return {
@@ -381,5 +429,6 @@ export const useAuth = () => {
     signIn,
     signOut,
     updateProfile,
+    handleAuthError, // Export for use in other hooks
   };
 };
