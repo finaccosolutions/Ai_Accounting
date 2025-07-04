@@ -40,6 +40,8 @@ export interface Database {
         Row: {
           id: string;
           name: string;
+          mailing_name: string | null;
+          country: string;
           gstin: string | null;
           pan: string | null;
           tan: string | null;
@@ -66,6 +68,8 @@ export interface Database {
         Insert: {
           id?: string;
           name: string;
+          mailing_name?: string | null;
+          country?: string;
           gstin?: string | null;
           pan?: string | null;
           tan?: string | null;
@@ -92,6 +96,8 @@ export interface Database {
         Update: {
           id?: string;
           name?: string;
+          mailing_name?: string | null;
+          country?: string;
           gstin?: string | null;
           pan?: string | null;
           tan?: string | null;

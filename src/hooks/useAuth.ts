@@ -18,31 +18,89 @@ export const useAuth = () => {
   useEffect(() => {
     let mounted = true;
 
+    const loadUserProfile = async (authUser: User): Promise<void> => {
+      try {
+        console.log('🔐 useAuth: Loading profile for user:', authUser.email);
+        
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('🔐 useAuth: Error loading profile:', error);
+          // Don't throw error for missing profile, it's normal for new users
+        }
+
+        console.log('🔐 useAuth: Profile loaded:', profile ? 'Profile found' : 'No profile');
+        
+        if (mounted) {
+          setUser({ ...authUser, profile: profile || undefined });
+        }
+      } catch (error) {
+        console.error('🔐 useAuth: Error loading profile:', error);
+        // Still set the user even if profile loading fails
+        if (mounted) {
+          setUser(authUser);
+        }
+      }
+    };
+
+    // Centralized function to handle all auth events
+    const handleAuthEvent = async (session: Session | null, eventType: string = 'unknown') => {
+      if (!mounted) {
+        console.log('🔐 useAuth: Component unmounted, skipping auth event');
+        return;
+      }
+
+      console.log(`🔐 useAuth: Processing ${eventType} event...`);
+      
+      try {
+        setSession(session);
+        
+        if (session?.user) {
+          console.log('🔐 useAuth: User found, loading profile for:', session.user.email);
+          await loadUserProfile(session.user);
+        } else {
+          console.log('🔐 useAuth: No session, clearing user state');
+          if (mounted) {
+            setUser(null);
+          }
+        }
+      } catch (error) {
+        console.error(`🔐 useAuth: Error in ${eventType}:`, error);
+        if (mounted) {
+          setUser(null);
+        }
+      } finally {
+        if (mounted) {
+          console.log(`🔐 useAuth: ${eventType} complete, setting loading to false`);
+          setLoading(false);
+        }
+      }
+    };
+
     // Get initial session
     const getInitialSession = async () => {
       try {
+        console.log('🔐 useAuth: Getting initial session...');
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('🔐 useAuth: Error getting initial session:', error);
           if (mounted) {
             setLoading(false);
           }
           return;
         }
 
-        if (mounted) {
-          setSession(session);
-          if (session?.user) {
-            await loadUserProfile(session.user);
-          } else {
-            setUser(null);
-            setLoading(false);
-          }
-        }
+        await handleAuthEvent(session, 'initial_session');
       } catch (error) {
-        console.error('Error in getInitialSession:', error);
+        console.error('🔐 useAuth: Unexpected error in getInitialSession:', error);
         if (mounted) {
+          setUser(null);
           setLoading(false);
         }
       }
@@ -56,47 +114,22 @@ export const useAuth = () => {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
-      console.log('Auth state changed:', event, session?.user?.email);
-      
-      setSession(session);
-      if (session?.user) {
-        await loadUserProfile(session.user);
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
+      console.log('🔐 useAuth: Auth state changed:', event, session?.user?.email || 'No user');
+      await handleAuthEvent(session, `auth_${event}`);
     });
 
     return () => {
+      console.log('🔐 useAuth: Cleaning up...');
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  const loadUserProfile = async (authUser: User) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading profile:', error);
-        // Don't show error toast for missing profile, it's normal for new users
-      }
-
-      setUser({ ...authUser, profile: profile || undefined });
-    } catch (error) {
-      console.error('Error loading profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signUp = async (email: string, password: string, fullName: string, mobileNumber?: string) => {
     try {
       setLoading(true);
+      console.log('🔐 useAuth: Signing up user:', email);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -116,18 +149,22 @@ export const useAuth = () => {
         toast.success('Account created successfully');
       }
 
+      console.log('🔐 useAuth: Sign up successful');
       return { data, error: null };
     } catch (error: any) {
+      console.error('🔐 useAuth: Sign up error:', error);
       toast.error(error.message);
+      setLoading(false); // Set loading to false on error
       return { data: null, error };
-    } finally {
-      setLoading(false);
     }
+    // Note: Don't set loading to false on success as auth state change will handle it
   };
 
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log('🔐 useAuth: Signing in user:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -136,26 +173,33 @@ export const useAuth = () => {
       if (error) throw error;
 
       toast.success('Signed in successfully');
+      console.log('🔐 useAuth: Sign in successful');
       return { data, error: null };
     } catch (error: any) {
+      console.error('🔐 useAuth: Sign in error:', error);
       toast.error(error.message);
+      setLoading(false); // Set loading to false on error
       return { data: null, error };
-    } finally {
-      setLoading(false);
     }
+    // Note: Don't set loading to false on success as auth state change will handle it
   };
 
   const signOut = async () => {
     try {
       setLoading(true);
+      console.log('🔐 useAuth: Signing out user');
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
       toast.success('Signed out successfully');
+      console.log('🔐 useAuth: Sign out successful');
     } catch (error: any) {
+      console.error('🔐 useAuth: Sign out error:', error);
       toast.error(error.message);
-    } finally {
-      setLoading(false);
+      setLoading(false); // Set loading to false on error
     }
+    // Note: Don't set loading to false on success as auth state change will handle it
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
@@ -173,12 +217,23 @@ export const useAuth = () => {
 
       setUser({ ...user, profile: data });
       toast.success('Profile updated successfully');
+      console.log('🔐 useAuth: Profile update successful');
       return { data, error: null };
     } catch (error: any) {
+      console.error('🔐 useAuth: Profile update error:', error);
       toast.error(error.message);
       return { data: null, error };
     }
   };
+
+  // Debug logging
+  console.log('🔐 useAuth: Current state:', {
+    hasUser: !!user,
+    userEmail: user?.email || 'None',
+    hasProfile: !!user?.profile,
+    loading,
+    sessionExists: !!session
+  });
 
   return {
     user,
