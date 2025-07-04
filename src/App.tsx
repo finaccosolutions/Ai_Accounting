@@ -32,11 +32,13 @@ const AuthenticatedApp: React.FC = () => {
     currentCompany: currentCompany?.name || 'None',
     selectedFYs: selectedFinancialYears.length,
     companyLoading,
-    fyLoading
+    fyLoading,
+    showCompanySetup
   });
 
   // Show loading while companies are being loaded
-  if (companyLoading || fyLoading) {
+  if (companyLoading) {
+    console.log('🏢 App: Company loading, showing spinner');
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -49,6 +51,7 @@ const AuthenticatedApp: React.FC = () => {
 
   // If showing company setup
   if (showCompanySetup) {
+    console.log('🏢 App: Showing company setup');
     return (
       <CompanySetup 
         onBack={() => setShowCompanySetup(false)}
@@ -63,11 +66,26 @@ const AuthenticatedApp: React.FC = () => {
 
   // If user but no company selected, show company selector
   if (!currentCompany) {
+    console.log('🏢 App: No company selected, showing CompanySelector');
     return <CompanySelector onCreateCompany={() => setShowCompanySetup(true)} />;
+  }
+
+  // If company selected but financial years are still loading, show loading
+  if (fyLoading) {
+    console.log('🏢 App: Financial years loading for company:', currentCompany.name);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading financial years for {currentCompany.name}...</p>
+        </div>
+      </div>
+    );
   }
 
   // If company selected but no financial years selected, show financial year selector
   if (selectedFinancialYears.length === 0) {
+    console.log('🏢 App: Company selected but no FYs selected, showing FinancialYearSelector');
     return (
       <FinancialYearSelector 
         onContinue={() => {
@@ -82,6 +100,8 @@ const AuthenticatedApp: React.FC = () => {
       />
     );
   }
+
+  console.log('🏢 App: Company and FYs selected, showing main dashboard');
 
   // Main application with selected company and financial years
   const renderCurrentModule = () => {

@@ -116,7 +116,10 @@ export const useCompany = () => {
     console.log('🏢 switchCompany: Switching to company:', companyId);
     
     try {
-      if (!user) return;
+      if (!user) {
+        console.log('🏢 switchCompany: No user available');
+        return;
+      }
 
       setLoading(true);
       setError(null);
@@ -129,14 +132,27 @@ export const useCompany = () => {
         .eq('is_active', true)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('🏢 switchCompany: Error getting user role:', error);
+        throw error;
+      }
 
       const company = companies.find(c => c.id === companyId);
-      if (!company) throw new Error('Company not found');
+      if (!company) {
+        console.error('🏢 switchCompany: Company not found in companies list');
+        throw new Error('Company not found');
+      }
+
+      console.log('🏢 switchCompany: Setting current company and role:', {
+        companyName: company.name,
+        role: companyUser.role
+      });
 
       setCurrentCompany(company);
       setUserRole(companyUser.role);
       localStorage.setItem('currentCompanyId', companyId);
+      
+      console.log('🏢 switchCompany: Successfully switched to company:', company.name);
       toast.success(`Switched to ${company.name}`);
     } catch (error: any) {
       console.error('🏢 switchCompany: Error:', error);

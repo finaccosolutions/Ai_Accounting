@@ -12,6 +12,20 @@ export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompan
   const { companies, switchCompany, loading } = useCompany();
   const [hoveredCompany, setHoveredCompany] = useState<string | null>(null);
 
+  const handleCompanySelect = async (companyId: string) => {
+    console.log('🏢 CompanySelector: User clicked on company:', companyId);
+    
+    // Find the company name for logging
+    const company = companies.find(c => c.id === companyId);
+    console.log('🏢 CompanySelector: Switching to company:', company?.name);
+    
+    // Switch to the selected company
+    await switchCompany(companyId);
+    
+    // The App component will automatically detect the company change and show FinancialYearSelector
+    console.log('🏢 CompanySelector: Company switch completed, App should now show FinancialYearSelector');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       <Header />
@@ -61,7 +75,7 @@ export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompan
                       <CompanyCard 
                         key={company.id} 
                         company={company} 
-                        onSelect={() => switchCompany(company.id)}
+                        onSelect={() => handleCompanySelect(company.id)}
                         loading={loading}
                         isHovered={hoveredCompany === company.id}
                         onHover={() => setHoveredCompany(company.id)}
@@ -168,7 +182,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
-            Click to access
+            Click to select
           </span>
           <div className="flex items-center space-x-1">
             <TrendingUp className="w-4 h-4 text-green-500" />
