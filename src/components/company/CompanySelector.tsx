@@ -11,6 +11,7 @@ interface CompanySelectorProps {
 export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompany }) => {
   const { companies, switchCompany, loading } = useCompany();
   const [hoveredCompany, setHoveredCompany] = useState<string | null>(null);
+  const [switchingCompany, setSwitchingCompany] = useState<string | null>(null);
 
   const handleCompanySelect = async (companyId: string) => {
     console.log('🏢 CompanySelector: User clicked on company:', companyId);
@@ -19,11 +20,19 @@ export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompan
     const company = companies.find(c => c.id === companyId);
     console.log('🏢 CompanySelector: Switching to company:', company?.name);
     
-    // Switch to the selected company
-    await switchCompany(companyId);
+    setSwitchingCompany(companyId);
     
-    // The App component will automatically detect the company change and show FinancialYearSelector
-    console.log('🏢 CompanySelector: Company switch completed, App should now show FinancialYearSelector');
+    try {
+      // Switch to the selected company
+      await switchCompany(companyId);
+      
+      // The App component will automatically detect the company change and show FinancialYearSelector
+      console.log('🏢 CompanySelector: Company switch completed, App should now show FinancialYearSelector');
+    } catch (error) {
+      console.error('🏢 CompanySelector: Error switching company:', error);
+    } finally {
+      setSwitchingCompany(null);
+    }
   };
 
   return (
@@ -76,7 +85,7 @@ export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompan
                         key={company.id} 
                         company={company} 
                         onSelect={() => handleCompanySelect(company.id)}
-                        loading={loading}
+                        loading={switchingCompany === company.id}
                         isHovered={hoveredCompany === company.id}
                         onHover={() => setHoveredCompany(company.id)}
                         onLeave={() => setHoveredCompany(null)}
@@ -138,10 +147,10 @@ const CompanyCard: React.FC<CompanyCardProps> = ({
         isHovered 
           ? 'border-indigo-300 shadow-xl transform scale-[1.02]' 
           : 'border-gray-200 shadow-md hover:shadow-lg'
-      }`}
+      } ${loading ? 'opacity-75 cursor-wait' : ''}`}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
-      onClick={onSelect}
+      onClick={loading ? undefined : onSelect}
     >
       {/* Gradient overlay */}
       <div className={`absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 transition-opacity duration-300 ${
@@ -156,9 +165,13 @@ const CompanyCard: React.FC<CompanyCardProps> = ({
             <Building className="w-6 h-6 text-white" />
           </div>
           
-          <ChevronRight className={`w-5 h-5 text-gray-400 transition-all duration-300 ${
-            isHovered ? 'text-indigo-600 transform translate-x-1' : ''
-          }`} />
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <ChevronRight className={`w-5 h-5 text-gray-400 transition-all duration-300 ${
+              isHovered ? 'text-indigo-600 transform translate-x-1' : ''
+            }`} />
+          )}
         </div>
 
         <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
@@ -182,7 +195,7 @@ const CompanyCard: React.FC<CompanyCardProps> = ({
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
-            Click to select
+            {loading ? 'Switching...' : 'Click to select'}
           </span>
           <div className="flex items-center space-x-1">
             <TrendingUp className="w-4 h-4 text-green-500" />

@@ -153,7 +153,9 @@ export const useCompany = () => {
       localStorage.setItem('currentCompanyId', companyId);
       
       console.log('🏢 switchCompany: Successfully switched to company:', company.name);
-      toast.success(`Switched to ${company.name}`);
+      
+      // Show a more informative success message
+      toast.success(`Selected ${company.name}. Loading financial years...`);
     } catch (error: any) {
       console.error('🏢 switchCompany: Error:', error);
       setError('Failed to switch company.');

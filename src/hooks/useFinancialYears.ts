@@ -11,21 +11,22 @@ export const useFinancialYears = () => {
   const [financialYears, setFinancialYears] = useState<FinancialYear[]>([]);
   const [currentFinancialYear, setCurrentFinancialYear] = useState<FinancialYear | null>(null);
   const [selectedFinancialYears, setSelectedFinancialYears] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (currentCompany) {
-      console.log('🗓️ Loading financial years for company:', currentCompany.name);
+      console.log('🗓️ useFinancialYears: Company changed to:', currentCompany.name);
+      console.log('🗓️ useFinancialYears: Loading financial years for company ID:', currentCompany.id);
       loadFinancialYears();
     } else {
       // Reset state when no company is selected
-      console.log('🗓️ No company selected, resetting financial years state');
+      console.log('🗓️ useFinancialYears: No company selected, resetting state');
       setFinancialYears([]);
       setCurrentFinancialYear(null);
       setSelectedFinancialYears([]);
       setLoading(false);
     }
-  }, [currentCompany]);
+  }, [currentCompany?.id]); // Use currentCompany.id to ensure effect runs when company changes
 
   const loadFinancialYears = async () => {
     try {
@@ -34,7 +35,7 @@ export const useFinancialYears = () => {
         return;
       }
 
-      console.log('🗓️ loadFinancialYears: Starting to load for company ID:', currentCompany.id);
+      console.log('🗓️ loadFinancialYears: Starting to load for company:', currentCompany.name);
       setLoading(true);
 
       const { data, error } = await supabase
@@ -43,41 +44,42 @@ export const useFinancialYears = () => {
         .eq('company_id', currentCompany.id)
         .order('start_date', { ascending: false });
 
-      console.log('🗓️ loadFinancialYears: Query result:', {
-        data: data,
-        error: error,
-        count: data?.length || 0
-      });
+      console.log('🗓️ loadFinancialYears: Supabase query completed');
+      console.log('🗓️ loadFinancialYears: Data received:', data);
+      console.log('🗓️ loadFinancialYears: Error (if any):', error);
 
       if (error) {
         console.error('🗓️ loadFinancialYears: Error loading financial years:', error);
         throw error;
       }
 
-      console.log('🗓️ Financial years loaded:', data?.length || 0);
+      console.log('🗓️ loadFinancialYears: Successfully loaded', data?.length || 0, 'financial years');
       setFinancialYears(data || []);
       
       // Set current financial year
       const current = data?.find(fy => fy.is_current);
       if (current) {
-        console.log('🗓️ Found current financial year:', current.year_name);
+        console.log('🗓️ loadFinancialYears: Found current financial year:', current.year_name);
         setCurrentFinancialYear(current);
-        // Don't auto-select - let user choose
-        setSelectedFinancialYears([]);
       } else if (data && data.length > 0) {
-        // If no current FY is set, mark the latest one as current
-        console.log('🗓️ No current FY set, using latest:', data[0].year_name);
+        // If no current FY is set, use the latest one
+        console.log('🗓️ loadFinancialYears: No current FY set, using latest:', data[0].year_name);
         setCurrentFinancialYear(data[0]);
-        setSelectedFinancialYears([]);
       } else {
         // No financial years exist, create one
-        console.log('🗓️ No financial years found, creating default one...');
+        console.log('🗓️ loadFinancialYears: No financial years found, creating default one...');
         await createDefaultFinancialYear();
         return; // Exit early as createDefaultFinancialYear will reload
       }
+
+      // Clear selected financial years to force user selection
+      setSelectedFinancialYears([]);
     } catch (error: any) {
-      console.error('🗓️ Error loading financial years:', error);
-      toast.error('Error loading financial years');
+      console.error('🗓️ loadFinancialYears: Error:', error);
+      toast.error('Error loading financial years: ' + error.message);
+      setFinancialYears([]);
+      setCurrentFinancialYear(null);
+      setSelectedFinancialYears([]);
     } finally {
       setLoading(false);
     }
@@ -122,15 +124,15 @@ export const useFinancialYears = () => {
         throw error;
       }
 
-      console.log('🗓️ Default financial year created successfully:', data);
+      console.log('🗓️ createDefaultFinancialYear: Successfully created:', data);
       setFinancialYears([data]);
       setCurrentFinancialYear(data);
       setSelectedFinancialYears([]); // Don't auto-select
       
       toast.success('Default financial year created');
     } catch (error: any) {
-      console.error('🗓️ Error creating default financial year:', error);
-      toast.error('Error creating financial year');
+      console.error('🗓️ createDefaultFinancialYear: Error:', error);
+      toast.error('Error creating financial year: ' + error.message);
     } finally {
       setLoading(false);
     }

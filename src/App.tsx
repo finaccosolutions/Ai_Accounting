@@ -23,7 +23,7 @@ import { useState, useEffect } from 'react';
 
 const AuthenticatedApp: React.FC = () => {
   const { currentCompany, loading: companyLoading } = useCompany();
-  const { selectedFinancialYears, loading: fyLoading } = useFinancialYears();
+  const { selectedFinancialYears, loading: fyLoading, financialYears } = useFinancialYears();
   const [currentModule, setCurrentModule] = useState('dashboard');
   const [showCompanySetup, setShowCompanySetup] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
@@ -31,6 +31,7 @@ const AuthenticatedApp: React.FC = () => {
   console.log('🏢 App state:', {
     currentCompany: currentCompany?.name || 'None',
     selectedFYs: selectedFinancialYears.length,
+    availableFYs: financialYears.length,
     companyLoading,
     fyLoading,
     showCompanySetup
@@ -83,9 +84,27 @@ const AuthenticatedApp: React.FC = () => {
     );
   }
 
+  // If company selected but no financial years available, show error or create default
+  if (financialYears.length === 0) {
+    console.log('🏢 App: No financial years available for company:', currentCompany.name);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Financial Years Found</h3>
+          <p className="text-gray-600 mb-4">No financial years are configured for {currentCompany.name}.</p>
+          <p className="text-sm text-gray-500">Please contact your administrator or create a financial year.</p>
+        </div>
+      </div>
+    );
+  }
+
   // If company selected but no financial years selected, show financial year selector
   if (selectedFinancialYears.length === 0) {
     console.log('🏢 App: Company selected but no FYs selected, showing FinancialYearSelector');
+    console.log('🏢 App: Available financial years:', financialYears.length);
     return (
       <FinancialYearSelector 
         onContinue={() => {
