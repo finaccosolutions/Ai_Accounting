@@ -26,14 +26,17 @@ const menuItems = [
 interface SidebarProps {
   currentModule: string;
   setCurrentModule: (module: string) => void;
+  isOpen: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentModule, setCurrentModule }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentModule, setCurrentModule, isOpen }) => {
   const { user } = useAuth();
 
   const filteredMenuItems = menuItems.filter(item => 
     item.roles.includes(user?.profile?.role || 'viewer')
   );
+
+  if (!isOpen) return null;
 
   return (
     <aside className="fixed left-0 top-16 h-full w-64 bg-white border-r border-gray-200 z-40">

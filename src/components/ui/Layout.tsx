@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { AIChat } from './AIChat';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,17 +9,20 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentModule, setCurrentModule }) => {
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onOpenAIChat={() => setIsAIChatOpen(true)} />
+      <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="flex">
-        <Sidebar currentModule={currentModule} setCurrentModule={setCurrentModule} />
-        <main className="flex-1 p-6 ml-64 mt-16 transition-all duration-300">
+        <Sidebar 
+          currentModule={currentModule} 
+          setCurrentModule={setCurrentModule}
+          isOpen={sidebarOpen}
+        />
+        <main className={`flex-1 p-6 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'} mt-16`}>
           {children}
         </main>
-        <AIChat isOpen={isAIChatOpen} onClose={() => setIsAIChatOpen(false)} />
       </div>
     </div>
   );

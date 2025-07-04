@@ -1,89 +1,138 @@
-import React from 'react';
-import { Bell, Settings, User, MessageSquare, Search, Building } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, X, User, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCompany } from '../../hooks/useCompany';
 
 interface HeaderProps {
-  onOpenAIChat: () => void;
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAIChat }) => {
+export const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const { user, signOut } = useAuth();
   const { currentCompany } = useCompany();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    setUserMenuOpen(false);
+    await signOut();
+  };
+
+  const getUserDisplayName = () => {
+    if (user?.profile?.full_name) {
+      return user.profile.full_name;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return 'User';
+  };
+
+  const getUserInitials = () => {
+    const name = getUserDisplayName();
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
-      <div className="flex items-center justify-between px-6 py-4">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">AI</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">AI Accounting</h1>
-              {currentCompany && (
-                <p className="text-sm text-gray-500">{currentCompany.name}</p>
-              )}
-            </div>
+    <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between relative z-50">
+      {/* Left side - Menu toggle and company info */}
+      <div className="flex items-center space-x-4">
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+        >
+          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+        
+        {currentCompany && (
+          <div className="hidden sm:block">
+            <h1 className="text-lg font-semibold text-gray-900">{currentCompany.name}</h1>
+            <p className="text-xs text-gray-500">Financial Year: {new Date(currentCompany.financial_year_start).getFullYear()}-{new Date(currentCompany.financial_year_start).getFullYear() + 1}</p>
           </div>
-        </div>
-
-        <div className="flex-1 max-w-xl mx-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search vouchers, ledgers, or ask AI..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onOpenAIChat}
-            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="AI Assistant"
-          >
-            <MessageSquare className="w-5 h-5" />
-          </button>
-          
-          <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors">
-            <Bell className="w-5 h-5" />
-          </button>
-          
-          <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors">
-            <Settings className="w-5 h-5" />
-          </button>
-          
-          <div className="relative group">
-            <button className="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors">
-              {user?.profile?.avatar_url ? (
-                <img src={user.profile.avatar_url} alt={user.profile?.full_name} className="w-6 h-6 rounded-full" />
-              ) : (
-                <User className="w-5 h-5" />
-              )}
-              <span className="text-sm font-medium">{user?.profile?.full_name || user?.email}</span>
-            </button>
-            
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div className="p-4 border-b border-gray-200">
-                <p className="font-medium text-gray-900">{user?.profile?.full_name || 'User'}</p>
-                <p className="text-sm text-gray-500">{user?.email}</p>
-                <p className="text-xs text-blue-600 capitalize">{user?.profile?.role || 'user'}</p>
-              </div>
-              <div className="p-2">
-                <button
-                  onClick={signOut}
-                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
+
+      {/* Right side - User menu */}
+      {user && (
+        <div className="relative">
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                {getUserInitials()}
+              </div>
+              <div className="hidden sm:block text-left">
+                <p className="text-sm font-medium text-gray-900">{getUserDisplayName()}</p>
+                <p className="text-xs text-gray-500">{user.profile?.role || 'User'}</p>
+              </div>
+            </div>
+            <ChevronDown size={16} className={`text-gray-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Dropdown menu */}
+          {userMenuOpen && (
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setUserMenuOpen(false)}
+              />
+              
+              {/* Menu */}
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                {/* User info section */}
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
+                      {getUserInitials()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{getUserDisplayName()}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      <p className="text-xs text-blue-600 font-medium">{user.profile?.role || 'User'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Company info if available */}
+                {currentCompany && (
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-xs text-gray-500">Current Company</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">{currentCompany.name}</p>
+                    {currentCompany.gstin && (
+                      <p className="text-xs text-gray-500">GSTIN: {currentCompany.gstin}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Menu items */}
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      // Add profile/settings navigation here
+                    }}
+                    className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <User size={16} />
+                    <span>Profile & Settings</span>
+                  </button>
+                  
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut size={16} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </header>
   );
 };

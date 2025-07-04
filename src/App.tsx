@@ -55,26 +55,23 @@ const AuthenticatedApp: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading } = useAuth();
 
-  // Show loading while authentication is being checked
-  if (authLoading) {
+  // Show minimal loading only for very brief moments
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Authenticating...</p>
-        </div>
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  // If no user, show auth form
+  // Simple logic: No user = show login, User = show authenticated app
   if (!user) {
     return <AuthForm />;
   }
 
-  // User is authenticated, render the authenticated app
+  // User is authenticated, show the main app
   return <AuthenticatedApp />;
 };
 
