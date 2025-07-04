@@ -93,39 +93,11 @@ export const useCompany = () => {
         setCompanies(userCompanies || []);
         setError(null);
 
-        // Try to restore previously selected company from localStorage
-        const storedCompanyId = localStorage.getItem('currentCompanyId');
-        console.log('🏢 loadUserCompanies: Stored company ID from localStorage:', storedCompanyId);
-
-        if (storedCompanyId && userCompanies) {
-          // Find the stored company in the loaded companies
-          const storedCompany = userCompanies.find(c => c.id === storedCompanyId);
-          
-          if (storedCompany) {
-            // Find the user's role for this company
-            const companyUser = companyUsers.find(cu => cu.company_id === storedCompanyId);
-            
-            if (companyUser) {
-              console.log('🏢 loadUserCompanies: Restoring previously selected company:', storedCompany.name);
-              setCurrentCompany(storedCompany);
-              setUserRole(companyUser.role);
-            } else {
-              console.log('🏢 loadUserCompanies: User role not found for stored company, clearing selection');
-              localStorage.removeItem('currentCompanyId');
-              setCurrentCompany(null);
-              setUserRole(null);
-            }
-          } else {
-            console.log('🏢 loadUserCompanies: Stored company not found in user companies, clearing selection');
-            localStorage.removeItem('currentCompanyId');
-            setCurrentCompany(null);
-            setUserRole(null);
-          }
-        } else {
-          console.log('🏢 loadUserCompanies: No stored company ID or no companies loaded');
-          setCurrentCompany(null);
-          setUserRole(null);
-        }
+        // IMPORTANT: Never auto-restore company from localStorage
+        // Always force user to select company from CompanySelector
+        console.log('🏢 loadUserCompanies: Not auto-restoring company - user must select from CompanySelector');
+        setCurrentCompany(null);
+        setUserRole(null);
       }
     } catch (error: any) {
       console.error('🏢 loadUserCompanies: Error:', error);
@@ -145,7 +117,7 @@ export const useCompany = () => {
     try {
       if (!user) {
         console.log('🏢 switchCompany: No user available');
-        return;
+        throw new Error('No user logged in');
       }
 
       setLoading(true);
@@ -157,6 +129,8 @@ export const useCompany = () => {
         console.error('🏢 switchCompany: Company not found in companies list');
         throw new Error('Company not found');
       }
+
+      console.log('🏢 switchCompany: Found company:', company.name);
 
       const { data: companyUser, error } = await supabase
         .from('company_users')
@@ -171,25 +145,30 @@ export const useCompany = () => {
         throw error;
       }
 
-      console.log('🏢 switchCompany: Setting current company and role:', {
-        companyName: company.name,
-        role: companyUser.role
-      });
+      console.log('🏢 switchCompany: Found user role:', companyUser.role);
 
       // Set the current company and role
+      console.log('🏢 switchCompany: Setting current company and role...');
       setCurrentCompany(company);
       setUserRole(companyUser.role);
       localStorage.setItem('currentCompanyId', companyId);
       
       console.log('🏢 switchCompany: Successfully switched to company:', company.name);
-      console.log('🏢 switchCompany: Current company state after switch:', company);
+      console.log('🏢 switchCompany: Current company state after switch:', {
+        id: company.id,
+        name: company.name,
+        role: companyUser.role
+      });
       
       // Show a more informative success message
       toast.success(`Selected ${company.name}. Loading financial years...`);
+      
+      return { success: true };
     } catch (error: any) {
       console.error('🏢 switchCompany: Error:', error);
       setError('Failed to switch company.');
-      toast.error('Error switching company');
+      toast.error('Error switching company: ' + error.message);
+      return { success: false, error };
     } finally {
       setLoading(false);
     }
@@ -297,9 +276,7 @@ export const useCompany = () => {
       await loadUserCompanies();
       
       // Automatically switch to the new company
-      setCurrentCompany(company);
-      setUserRole('admin');
-      localStorage.setItem('currentCompanyId', company.id);
+      await switchCompany(company.id);
       
       toast.success('Company created successfully');
       return { data: company, error: null };

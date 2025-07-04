@@ -50,6 +50,13 @@ export const FinancialYearSelector: React.FC<FinancialYearSelectorProps> = ({
 
   const handleContinue = () => {
     console.log('✅ Financial years selected, proceeding to dashboard');
+    console.log('✅ Selected FYs:', selectedFinancialYears);
+    
+    if (selectedFinancialYears.length === 0) {
+      alert('Please select at least one financial year to continue.');
+      return;
+    }
+    
     onContinue();
   };
 
@@ -344,4 +351,4 @@ export const FinancialYearSelector: React.FC<FinancialYearSelectorProps> = ({
       )}
     </div>
   );
-};
+}; 

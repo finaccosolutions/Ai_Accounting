@@ -22,7 +22,7 @@ export const useFinancialYears = () => {
       console.log('🗓️ useFinancialYears: Company found, loading financial years for:', currentCompany.name);
       loadFinancialYears();
     } else {
-      // Reset state when no company is selected
+      // Only reset state when explicitly no company (not during loading)
       console.log('🗓️ useFinancialYears: No company selected, resetting state');
       setFinancialYears([]);
       setCurrentFinancialYear(null);
@@ -76,7 +76,7 @@ export const useFinancialYears = () => {
         return; // Exit early as createDefaultFinancialYear will reload
       }
 
-      // Clear selected financial years to force user selection
+      // Don't auto-select financial years - let user choose
       setSelectedFinancialYears([]);
     } catch (error: any) {
       console.error('🗓️ loadFinancialYears: Error:', error);

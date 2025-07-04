@@ -8,32 +8,35 @@ interface CompanySelectorProps {
   onCreateCompany: () => void;
 }
 
-export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompany }) => {
+export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompany }) => {  
   const { companies, switchCompany, loading } = useCompany();
   const [hoveredCompany, setHoveredCompany] = useState<string | null>(null);
   const [switchingCompany, setSwitchingCompany] = useState<string | null>(null);
 
-  const handleCompanySelect = async (companyId: string) => {
-    console.log('🏢 CompanySelector: User clicked on company:', companyId);
-    
-    // Find the company name for logging
-    const company = companies.find(c => c.id === companyId);
-    console.log('🏢 CompanySelector: Switching to company:', company?.name);
-    
-    setSwitchingCompany(companyId);
-    
-    try {
-      // Switch to the selected company
-      await switchCompany(companyId);
-      
-      console.log('🏢 CompanySelector: Company switch completed successfully');
-      // The App component will automatically detect the company change and show FinancialYearSelector
-    } catch (error) {
-      console.error('🏢 CompanySelector: Error switching company:', error);
-    } finally {
-      setSwitchingCompany(null);
+  // In CompanySelector.tsx
+const handleCompanySelect = async (companyId: string) => {
+  console.log('🏢 CompanySelector: User clicked on company:', companyId);
+  
+  const company = companies.find(c => c.id === companyId);
+  if (!company) {
+    console.error('Company not found');
+    return;
+  }
+
+  setSwitchingCompany(companyId);
+  
+  try {
+    const { success } = await switchCompany(companyId);
+    if (success) {
+      console.log('Company switch successful - should now show FinancialYearSelector');
+      // The parent component should detect this change and show the next step
     }
-  };
+  } catch (error) {
+    console.error('Error switching company:', error);
+  } finally {
+    setSwitchingCompany(null);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">

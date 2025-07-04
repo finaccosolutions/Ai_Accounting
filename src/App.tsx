@@ -19,21 +19,17 @@ import { Settings } from './components/modules/Settings';
 import { UserManagement } from './components/modules/UserManagement';
 import { AuditPanel } from './components/modules/AuditPanel';
 import { AIChat } from './components/ui/AIChat';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 const AuthenticatedApp: React.FC = () => {
   const { currentCompany, loading: companyLoading } = useCompany();
-  const { selectedFinancialYears, loading: fyLoading, financialYears } = useFinancialYears();
   const [currentModule, setCurrentModule] = useState('dashboard');
   const [showCompanySetup, setShowCompanySetup] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
   console.log('🏢 App state:', {
     currentCompany: currentCompany?.name || 'None',
-    selectedFYs: selectedFinancialYears.length,
-    availableFYs: financialYears.length,
     companyLoading,
-    fyLoading,
     showCompanySetup
   });
 
@@ -71,14 +67,55 @@ const AuthenticatedApp: React.FC = () => {
     return <CompanySelector onCreateCompany={() => setShowCompanySetup(true)} />;
   }
 
-  // If company selected but financial years are still loading, show loading
+  // If company is selected, show the financial year selector and main app
+  console.log('🏢 App: Company selected, showing FinancialYearSelector and main app');
+  return <MainAppWithFinancialYears 
+    currentModule={currentModule}
+    setCurrentModule={setCurrentModule}
+    isAIChatOpen={isAIChatOpen}
+    setIsAIChatOpen={setIsAIChatOpen}
+    onShowCompanySelector={() => {
+      // Reset to company selector
+      window.location.reload();
+    }}
+  />;
+};
+
+interface MainAppWithFinancialYearsProps {
+  currentModule: string;
+  setCurrentModule: (module: string) => void;
+  isAIChatOpen: boolean;
+  setIsAIChatOpen: (open: boolean) => void;
+  onShowCompanySelector: () => void;
+}
+
+const MainAppWithFinancialYears: React.FC<MainAppWithFinancialYearsProps> = ({
+  currentModule,
+  setCurrentModule,
+  isAIChatOpen,
+  setIsAIChatOpen,
+  onShowCompanySelector
+}) => {
+  const { currentCompany } = useCompany();
+  const { selectedFinancialYears, loading: fyLoading, financialYears } = useFinancialYears();
+  const [showDashboard, setShowDashboard] = useState(false);
+
+  console.log('🗓️ MainAppWithFinancialYears state:', {
+    currentCompany: currentCompany?.name || 'None',
+    selectedFYs: selectedFinancialYears.length,
+    availableFYs: financialYears.length,
+    fyLoading,
+    showDashboard
+  });
+
+  // Show loading while financial years are being loaded
   if (fyLoading) {
-    console.log('🏢 App: Financial years loading for company:', currentCompany.name);
+    console.log('🗓️ MainApp: Financial years loading for company:', currentCompany?.name);
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading financial years for {currentCompany.name}...</p>
+          <p className="text-gray-600">Loading financial years for {currentCompany?.name}...</p>
         </div>
       </div>
     );
@@ -86,7 +123,7 @@ const AuthenticatedApp: React.FC = () => {
 
   // If company selected but no financial years available, show error or create default
   if (financialYears.length === 0) {
-    console.log('🏢 App: No financial years available for company:', currentCompany.name);
+    console.log('🗓️ MainApp: No financial years available for company:', currentCompany?.name);
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -94,33 +131,51 @@ const AuthenticatedApp: React.FC = () => {
             <span className="text-2xl">⚠️</span>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No Financial Years Found</h3>
-          <p className="text-gray-600 mb-4">No financial years are configured for {currentCompany.name}.</p>
+          <p className="text-gray-600 mb-4">No financial years are configured for {currentCompany?.name}.</p>
           <p className="text-sm text-gray-500">Please contact your administrator or create a financial year.</p>
         </div>
       </div>
     );
   }
 
-  // If company selected but no financial years selected, show financial year selector
-  if (selectedFinancialYears.length === 0) {
-    console.log('🏢 App: Company selected but no FYs selected, showing FinancialYearSelector');
-    console.log('🏢 App: Available financial years:', financialYears.length);
+  // If company selected but no financial years selected and not showing dashboard, show financial year selector
+  if (selectedFinancialYears.length === 0 && !showDashboard) {
+    console.log('🗓️ MainApp: Company selected but no FYs selected, showing FinancialYearSelector');
+    console.log('🗓️ MainApp: Available financial years:', financialYears.length);
     return (
       <FinancialYearSelector 
         onContinue={() => {
           console.log('✅ Financial years selected, proceeding to dashboard');
-          // The component will automatically proceed to dashboard
-          // No need to do anything here as the selectedFinancialYears will update
+          setShowDashboard(true);
         }}
-        onChangeCompany={() => {
-          // Reset company selection to show company selector
-          window.location.reload(); // Simple way to reset state
-        }}
+        onChangeCompany={onShowCompanySelector}
       />
     );
   }
 
-  console.log('🏢 App: Company and FYs selected, showing main dashboard');
+  // If no financial years selected but user wants to see dashboard, show error
+  if (selectedFinancialYears.length === 0 && showDashboard) {
+    console.log('🗓️ MainApp: No FYs selected but trying to show dashboard');
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">❌</span>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Financial Years Selected</h3>
+          <p className="text-gray-600 mb-4">Please select at least one financial year to continue.</p>
+          <button 
+            onClick={() => setShowDashboard(false)}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Select Financial Years
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('🗓️ MainApp: Company and FYs selected, showing main dashboard');
 
   // Main application with selected company and financial years
   const renderCurrentModule = () => {
@@ -142,10 +197,7 @@ const AuthenticatedApp: React.FC = () => {
       <Layout 
         currentModule={currentModule} 
         setCurrentModule={setCurrentModule}
-        onShowCompanySelector={() => {
-          // Reset to company selector
-          window.location.reload();
-        }}
+        onShowCompanySelector={onShowCompanySelector}
         onToggleAIChat={() => setIsAIChatOpen(!isAIChatOpen)}
       >
         {renderCurrentModule()}
