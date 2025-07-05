@@ -1,229 +1,109 @@
-import React, { useState } from 'react';
-import { Building, Plus, ChevronRight, Calendar, MapPin, Globe, Sparkles, TrendingUp } from 'lucide-react';
-import { Button } from '../ui/Button';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { Header } from '../ui/Header';
-import toast from 'react-hot-toast';
+import { supabase } from '../../lib/supabase';
+import { Company } from '../../types';
+import { ChevronDown, Building2, Plus } from 'lucide-react';
 
-interface CompanySelectorProps {
-  onCreateCompany: () => void;
-}
+export const CompanySelector: React.FC = () => {
+  const { selectedCompany, setSelectedCompany } = useApp();
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompany }) => {  
-  const { companies, switchCompany, companyLoading } = useApp();
-  const [hoveredCompany, setHoveredCompany] = useState<string | null>(null);
-  const [switchingCompany, setSwitchingCompany] = useState<string | null>(null);
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
 
-  const handleCompanySelect = async (companyId: string) => {
-    console.log('🏢 CompanySelector: handleCompanySelect function triggered!');
-    console.log('🏢 CompanySelector: User clicked on company:', companyId);
-    
-    const company = companies.find(c => c.id === companyId);
-    if (!company) {
-      console.error('🏢 CompanySelector: Company not found');
-      toast.error('Company not found');
-      return;
-    }
-
-    console.log('🏢 CompanySelector: Found company:', company.name);
-    
-    // Show loading toast
-    const loadingToastId = toast.loading(`Switching to ${company.name}...`);
-    setSwitchingCompany(companyId);
-    
+  const fetchCompanies = async () => {
     try {
-      console.log('🏢 CompanySelector: About to call switchCompany...');
-      const result = await switchCompany(companyId);
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setCompanies(data || []);
       
-      console.log('🏢 CompanySelector: switchCompany returned:', result);
-      
-      if (result.success) {
-        console.log('🏢 CompanySelector: Company switch successful - should now show FinancialYearSelector');
-        toast.dismiss(loadingToastId);
-        toast.success(`Successfully switched to ${company.name}`);
-        // The parent component should detect this change and show the next step
-      } else {
-        toast.dismiss(loadingToastId);
-        toast.error('Failed to switch company');
-        console.error('🏢 CompanySelector: Company switch failed:', result.error);
+      // Auto-select first company if none selected
+      if (data && data.length > 0 && !selectedCompany) {
+        setSelectedCompany(data[0]);
       }
     } catch (error) {
-      console.error('🏢 CompanySelector: Error switching company:', error);
-      toast.dismiss(loadingToastId);
-      toast.error('Error switching company: ' + (error as Error).message);
+      console.error('Error fetching companies:', error);
     } finally {
-      setSwitchingCompany(null);
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      <Header />
-      
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
-        <div className="w-full max-w-6xl">
-          {/* Hero Section */}
-          <div className="text-center mb-12">
-            <div className="relative mb-8">
-              <div className="w-24 h-24 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl transform hover:scale-105 transition-all duration-300">
-                <Building className="w-12 h-12 text-white" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-pink-600/20 rounded-3xl blur-xl transform scale-110"></div>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 via-indigo-800 to-purple-800 bg-clip-text text-transparent mb-4">
-              Select Your Company
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              Choose a company to access your intelligent accounting dashboard and unlock powerful AI-driven insights
-            </p>
-          </div>
+  const handleCompanySelect = (company: Company) => {
+    setSelectedCompany(company);
+    setIsOpen(false);
+  };
 
-          {/* Companies Grid */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-            {companies.length > 0 ? (
-              <>
-                <div className="p-8 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
+  if (loading) {
+    return (
+      <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg animate-pulse">
+        <Building2 className="h-4 w-4 text-gray-400" />
+        <span className="text-sm text-gray-400">Loading...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors min-w-[200px]"
+      >
+        <Building2 className="h-4 w-4 text-gray-600" />
+        <span className="text-sm font-medium text-gray-900 truncate">
+          {selectedCompany ? selectedCompany.name : 'Select Company'}
+        </span>
+        <ChevronDown className="h-4 w-4 text-gray-400 ml-auto" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+          {companies.length > 0 ? (
+            <>
+              {companies.map((company) => (
+                <button
+                  key={company.id}
+                  onClick={() => handleCompanySelect(company)}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-100 last:border-0"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Building2 className="h-4 w-4 text-gray-600" />
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900">Your Companies</h3>
-                      <p className="text-gray-600 mt-1">Select a company to continue</p>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <Building className="w-4 h-4" />
-                      <span>{companies.length} {companies.length === 1 ? 'company' : 'companies'} available</span>
+                      <p className="text-sm font-medium text-gray-900">{company.name}</p>
+                      {company.gstin && (
+                        <p className="text-xs text-gray-500">GSTIN: {company.gstin}</p>
+                      )}
                     </div>
                   </div>
-                </div>
-
-                <div className="p-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {companies.map((company) => (
-                      <CompanyCard 
-                        key={company.id} 
-                        company={company} 
-                        onSelect={() => handleCompanySelect(company.id)}
-                        loading={switchingCompany === company.id}
-                        isHovered={hoveredCompany === company.id}
-                        onHover={() => setHoveredCompany(company.id)}
-                        onLeave={() => setHoveredCompany(null)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="p-12 text-center">
-                <div className="w-20 h-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Building className="w-10 h-10 text-gray-400" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">No Companies Found</h3>
-                <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                  You don't have access to any companies yet. Create your first company to get started with intelligent accounting.
-                </p>
-              </div>
-            )}
-
-            <div className="p-8 bg-gradient-to-r from-indigo-50 to-purple-50 border-t border-gray-100">
-              <Button
-                onClick={onCreateCompany}
-                icon={Plus}
-                size="lg"
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
-                disabled={companyLoading}
+                </button>
+              ))}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="w-full text-left px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-t border-gray-200 text-blue-600"
               >
-                Create New Company
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-interface CompanyCardProps {
-  company: any;
-  onSelect: () => void;
-  loading: boolean;
-  isHovered: boolean;
-  onHover: () => void;
-  onLeave: () => void;
-}
-
-const CompanyCard: React.FC<CompanyCardProps> = ({ 
-  company, 
-  onSelect, 
-  loading, 
-  isHovered, 
-  onHover, 
-  onLeave 
-}) => {
-  return (
-    <div 
-      className={`group relative bg-white rounded-xl border-2 transition-all duration-300 overflow-hidden cursor-pointer ${
-        isHovered 
-          ? 'border-indigo-300 shadow-xl transform scale-[1.02]' 
-          : 'border-gray-200 shadow-md hover:shadow-lg'
-      } ${loading ? 'opacity-75 cursor-wait' : ''}`}
-      onMouseEnter={onHover}
-      onMouseLeave={onLeave}
-      onClick={loading ? undefined : onSelect}
-    >
-      {/* Gradient overlay */}
-      <div className={`absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 transition-opacity duration-300 ${
-        isHovered ? 'opacity-100' : 'opacity-0'
-      }`} />
-      
-      <div className="relative p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className={`w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center transition-transform duration-300 ${
-            isHovered ? 'scale-110' : ''
-          }`}>
-            <Building className="w-6 h-6 text-white" />
-          </div>
-          
-          {loading ? (
-            <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                <div className="flex items-center space-x-3">
+                  <Plus className="h-4 w-4" />
+                  <span className="text-sm font-medium">Add New Company</span>
+                </div>
+              </button>
+            </>
           ) : (
-            <ChevronRight className={`w-5 h-5 text-gray-400 transition-all duration-300 ${
-              isHovered ? 'text-indigo-600 transform translate-x-1' : ''
-            }`} />
-          )}
-        </div>
-
-        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
-          {company.name}
-        </h3>
-        
-        <div className="space-y-2 mb-4">
-          {company.city && company.state && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <span>{company.city}, {company.state}</span>
-            </div>
-          )}
-          {company.gstin && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Globe className="w-4 h-4" />
-              <span>GSTIN: {company.gstin}</span>
+            <div className="px-4 py-6 text-center">
+              <Building2 className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-500 mb-3">No companies found</p>
+              <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                Create your first company
+              </button>
             </div>
           )}
         </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {loading ? 'Switching...' : 'Click to select'}
-          </span>
-          <div className="flex items-center space-x-1">
-            <TrendingUp className="w-4 h-4 text-green-500" />
-            <span className="text-xs text-green-600 font-medium">Active</span>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

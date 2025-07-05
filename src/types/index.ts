@@ -1,110 +1,92 @@
 export interface User {
   id: string;
-  name: string;
   email: string;
+  phone?: string;
   role: 'admin' | 'accountant' | 'auditor' | 'owner' | 'viewer';
-  avatar?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Company {
   id: string;
   name: string;
-  gstin: string;
-  pan: string;
-  address: string;
-  phone: string;
-  email: string;
-}
-
-export interface Voucher {
-  id: string;
-  type: 'sales' | 'purchase' | 'receipt' | 'payment' | 'journal' | 'contra' | 'debit_note' | 'credit_note' | 'manufacturing' | 'stock_transfer';
-  number: string;
-  date: string;
-  reference?: string;
-  narration: string;
-  amount: number;
-  status: 'draft' | 'posted' | 'cancelled';
-  entries: VoucherEntry[];
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface VoucherEntry {
-  id: string;
-  ledger: string;
-  amount: number;
-  type: 'debit' | 'credit';
-  stockItem?: string;
-  quantity?: number;
-  rate?: number;
-  discount?: number;
-  tax?: number;
-}
-
-export interface Ledger {
-  id: string;
-  name: string;
-  group: string;
-  type: 'asset' | 'liability' | 'income' | 'expense';
-  openingBalance: number;
-  currentBalance: number;
   gstin?: string;
   pan?: string;
   address?: string;
   phone?: string;
   email?: string;
+  admin_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FinancialYear {
+  id: string;
+  company_id: string;
+  year_start: string;
+  year_end: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Ledger {
+  id: string;
+  company_id: string;
+  financial_year_id: string;
+  name: string;
+  group: string;
+  opening_balance: number;
+  current_balance: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Voucher {
+  id: string;
+  company_id: string;
+  financial_year_id: string;
+  voucher_type: 'sales' | 'purchase' | 'receipt' | 'payment' | 'journal' | 'contra' | 'debit_note' | 'credit_note';
+  voucher_number: string;
+  date: string;
+  reference?: string;
+  narration?: string;
+  total_amount: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VoucherEntry {
+  id: string;
+  voucher_id: string;
+  ledger_id: string;
+  debit_amount: number;
+  credit_amount: number;
+  narration?: string;
 }
 
 export interface StockItem {
   id: string;
+  company_id: string;
   name: string;
-  group: string;
   unit: string;
-  hsnCode?: string;
-  taxRate?: number;
-  openingStock: number;
-  currentStock: number;
   rate: number;
-  minimumLevel?: number;
-  maximumLevel?: number;
+  opening_stock: number;
+  current_stock: number;
+  hsn_code?: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface Report {
-  id: string;
-  name: string;
-  type: 'accounting' | 'inventory' | 'tax' | 'compliance';
-  category: string;
-  description: string;
-  parameters?: ReportParameter[];
-}
-
-export interface ReportParameter {
-  name: string;
-  type: 'date' | 'dateRange' | 'select' | 'multiSelect' | 'text';
-  required: boolean;
-  options?: string[];
-  defaultValue?: any;
-}
-
-export interface AIInsight {
-  id: string;
-  type: 'warning' | 'suggestion' | 'info' | 'error';
-  title: string;
-  description: string;
-  action?: string;
-  priority: 'low' | 'medium' | 'high';
-  createdAt: string;
-}
-
-export interface DashboardStats {
+export interface Dashboard {
   totalIncome: number;
   totalExpense: number;
-  profit: number;
+  totalReceivables: number;
+  totalPayables: number;
   gstPayable: number;
-  outstandingReceivables: number;
-  outstandingPayables: number;
-  cashBalance: number;
-  bankBalance: number;
+  profitLoss: number;
+  topCustomers: Array<{name: string; amount: number}>;
+  topVendors: Array<{name: string; amount: number}>;
+  recentVouchers: Voucher[];
+  monthlyTrend: Array<{month: string; income: number; expense: number}>;
 }
