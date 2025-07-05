@@ -10,7 +10,8 @@ import {
   Settings, 
   Users,
   Bot,
-  ChevronRight
+  ChevronRight,
+  Building2
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -50,15 +51,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -300, opacity: 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-80 bg-white/90 backdrop-blur-md border-r border-gray-200/50 z-40 shadow-xl"
+      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white/95 backdrop-blur-md border-r border-gray-200/50 z-40 shadow-xl transition-all duration-300 ${
+        isOpen ? 'w-80' : 'w-16'
+      }`}
     >
       <div className="flex flex-col h-full">
         {/* Navigation */}
-        <div className="flex-1 p-6">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">Navigation</h2>
-            <p className="text-sm text-gray-500">Manage your accounting operations</p>
-          </div>
+        <div className="flex-1 p-4">
+          {isOpen && (
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">Navigation</h2>
+              <p className="text-sm text-gray-500">Manage your accounting operations</p>
+            </div>
+          )}
           
           <nav className="space-y-2">
             {filteredMenuItems.map((item, index) => {
@@ -79,8 +84,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       ? 'bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-100/50'
                       : 'hover:bg-gray-50/80'
                   }`}
+                  title={!isOpen ? item.label : undefined}
                 >
-                  <div className="flex items-center space-x-4 p-4">
+                  <div className={`flex items-center p-4 ${!isOpen ? 'justify-center' : 'space-x-4'}`}>
                     <div className={`relative p-2 rounded-xl transition-all duration-300 ${
                       isActive 
                         ? `bg-gradient-to-r ${item.color} shadow-lg` 
@@ -91,19 +97,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }`} />
                     </div>
                     
-                    <div className="flex-1 text-left">
-                      <span className={`font-medium transition-colors duration-300 ${
-                        isActive ? 'text-blue-700' : 'text-gray-700 group-hover:text-gray-900'
-                      }`}>
-                        {item.label}
-                      </span>
-                    </div>
-                    
-                    <ChevronRight className={`w-4 h-4 transition-all duration-300 ${
-                      isActive 
-                        ? 'text-blue-600 transform translate-x-1' 
-                        : 'text-gray-400 group-hover:text-gray-600 group-hover:transform group-hover:translate-x-1'
-                    }`} />
+                    {isOpen && (
+                      <>
+                        <div className="flex-1 text-left">
+                          <span className={`font-medium transition-colors duration-300 ${
+                            isActive ? 'text-blue-700' : 'text-gray-700 group-hover:text-gray-900'
+                          }`}>
+                            {item.label}
+                          </span>
+                        </div>
+                        
+                        <ChevronRight className={`w-4 h-4 transition-all duration-300 ${
+                          isActive 
+                            ? 'text-blue-600 transform translate-x-1' 
+                            : 'text-gray-400 group-hover:text-gray-600 group-hover:transform group-hover:translate-x-1'
+                        }`} />
+                      </>
+                    )}
                   </div>
                   
                   {/* Active indicator */}
@@ -121,24 +131,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         
         {/* AI Assistant */}
-        <div className="p-6 border-t border-gray-200/50">
+        <div className={`p-4 border-t border-gray-200/50 ${!isOpen ? 'px-2' : 'px-6'}`}>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onToggleAIChat}
-            className="w-full relative overflow-hidden bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300"
+            className={`w-full relative overflow-hidden bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 ${
+              !isOpen ? 'p-3' : 'p-4'
+            }`}
+            title={!isOpen ? 'AI Assistant' : undefined}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-700 opacity-0 hover:opacity-100 transition-opacity duration-300" />
             
-            <div className="relative flex items-center space-x-4">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <Bot className="w-6 h-6 text-white" />
+            <div className={`relative flex items-center ${!isOpen ? 'justify-center' : 'space-x-4'}`}>
+              <div className={`bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center ${
+                !isOpen ? 'w-8 h-8' : 'w-12 h-12'
+              }`}>
+                <Bot className={`text-white ${!isOpen ? 'w-4 h-4' : 'w-6 h-6'}`} />
               </div>
-              <div className="flex-1 text-left">
-                <p className="text-white font-semibold">AI Assistant</p>
-                <p className="text-white/80 text-sm">Always here to help</p>
-              </div>
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              {isOpen && (
+                <>
+                  <div className="flex-1 text-left">
+                    <p className="text-white font-semibold">AI Assistant</p>
+                    <p className="text-white/80 text-sm">Always here to help</p>
+                  </div>
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                </>
+              )}
             </div>
             
             {/* Animated background */}
