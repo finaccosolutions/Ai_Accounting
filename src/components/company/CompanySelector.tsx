@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Building, Plus, ChevronRight, Calendar, MapPin, Globe, Sparkles, TrendingUp } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { useCompany } from '../../hooks/useCompany';
+import { useApp } from '../../contexts/AppContext';
 import { Header } from '../ui/Header';
 import toast from 'react-hot-toast';
 
@@ -10,7 +10,7 @@ interface CompanySelectorProps {
 }
 
 export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompany }) => {  
-  const { companies, switchCompany, loading } = useCompany();
+  const { companies, switchCompany, companyLoading } = useApp();
   const [hoveredCompany, setHoveredCompany] = useState<string | null>(null);
   const [switchingCompany, setSwitchingCompany] = useState<string | null>(null);
 
@@ -133,7 +133,7 @@ export const CompanySelector: React.FC<CompanySelectorProps> = ({ onCreateCompan
                 icon={Plus}
                 size="lg"
                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
-                disabled={loading}
+                disabled={companyLoading}
               >
                 Create New Company
               </Button>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useCompany } from './useCompany';
-import { useFinancialYears } from './useFinancialYears';
+import { useApp } from '../contexts/AppContext';
 import { generateAIInsights, analyzeFinancialPerformance, performAuditAnalysis, generateTaxOptimizationSuggestions } from '../lib/gemini';
 import toast from 'react-hot-toast';
 
@@ -38,8 +37,7 @@ export interface FinancialTrend {
 }
 
 export const useDashboard = () => {
-  const { currentCompany } = useCompany();
-  const { selectedFinancialYears, currentFinancialYear } = useFinancialYears();
+  const { currentCompany, selectedFinancialYears, currentFinancialYear } = useApp();
   const [stats, setStats] = useState<DashboardStats>({
     totalIncome: 0,
     totalExpense: 0,

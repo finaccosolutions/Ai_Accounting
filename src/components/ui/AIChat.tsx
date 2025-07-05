@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Send, Bot, User, Lightbulb } from 'lucide-react';
 import { chatWithAI, parseVoucherCommand } from '../../lib/gemini';
-import { useCompany } from '../../hooks/useCompany';
+import { useApp } from '../../contexts/AppContext';
 import { useLedgers } from '../../hooks/useLedgers';
 import { useVouchers } from '../../hooks/useVouchers';
 import toast from 'react-hot-toast';
@@ -20,7 +20,7 @@ interface AIChatProps {
 }
 
 export const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
-  const { currentCompany } = useCompany();
+  const { currentCompany } = useApp();
   const { ledgers } = useLedgers();
   const { createVoucher, generateVoucherNumber, voucherTypes } = useVouchers();
   const [messages, setMessages] = useState<Message[]>([

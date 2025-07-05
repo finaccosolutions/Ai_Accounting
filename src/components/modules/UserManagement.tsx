@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Filter, Users, Mail, Phone, Shield } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../hooks/useAuth';
-import { useCompany } from '../../hooks/useCompany';
+import { useApp } from '../../contexts/AppContext';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -29,7 +29,7 @@ const roles = [
 
 export const UserManagement: React.FC = () => {
   const { user } = useAuth();
-  const { currentCompany, userRole } = useCompany();
+  const { currentCompany, userRole } = useApp();
   const [companyUsers, setCompanyUsers] = useState<CompanyUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

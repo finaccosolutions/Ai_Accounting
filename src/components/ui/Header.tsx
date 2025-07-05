@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X, User, LogOut, Settings, ChevronDown, Calculator, Building, Bot } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useCompany } from '../../hooks/useCompany';
-import { useFinancialYears } from '../../hooks/useFinancialYears';
+import { useApp } from '../../contexts/AppContext';
 import { Button } from './Button';
 
 interface HeaderProps {
@@ -19,8 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleAIChat
 }) => {
   const { user, signOut } = useAuth();
-  const { currentCompany } = useCompany();
-  const { selectedFinancialYears, financialYears } = useFinancialYears();
+  const { currentCompany, selectedFinancialYears, financialYears } = useApp();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleSignOut = async () => {

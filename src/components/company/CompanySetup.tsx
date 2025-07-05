@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Building, Save, ArrowLeft, Sparkles, Globe, MapPin } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { useCompany } from '../../hooks/useCompany';
+import { useApp } from '../../contexts/AppContext';
 import { Header } from '../ui/Header';
 
 interface CompanySetupProps {
@@ -50,7 +50,7 @@ const getStatesForCountry = (countryCode: string) => {
 const FORM_DATA_KEY = 'companySetupFormData';
 
 export const CompanySetup: React.FC<CompanySetupProps> = ({ onBack, onSuccess }) => {
-  const { createCompany, loading } = useCompany();
+  const { createCompany, companyLoading } = useApp();
   
   // Initialize form data from localStorage or defaults
   const [formData, setFormData] = useState(() => {
@@ -511,7 +511,7 @@ export const CompanySetup: React.FC<CompanySetupProps> = ({ onBack, onSuccess })
               )}
               <Button
                 type="submit"
-                loading={loading}
+                loading={companyLoading}
                 icon={Save}
                 size="lg"
                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"

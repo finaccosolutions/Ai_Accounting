@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { StatCard } from '../ui/StatCard';
 import { useDashboard } from '../../hooks/useDashboard';
-import { useFinancialYears } from '../../hooks/useFinancialYears';
+import { useApp } from '../../contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Cell } from 'recharts';
 import { Button } from '../ui/Button';
 
@@ -45,7 +45,7 @@ export const Dashboard: React.FC = () => {
     toggleFinancialYearSelection,
     selectAllFinancialYears,
     clearFinancialYearSelection 
-  } = useFinancialYears();
+  } = useApp();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {

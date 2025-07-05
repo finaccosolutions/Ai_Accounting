@@ -1,9 +1,57 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Company, DashboardStats, AIInsight } from '../types';
+import { useCompany } from '../hooks/useCompany';
+import { useFinancialYears } from '../hooks/useFinancialYears';
+import { Database } from '../types/database';
+
+type Company = Database['public']['Tables']['companies']['Row'];
+type FinancialYear = Database['public']['Tables']['financial_years']['Row'];
+
+export interface DashboardStats {
+  totalIncome: number;
+  totalExpense: number;
+  profit: number;
+  gstPayable: number;
+  outstandingReceivables: number;
+  outstandingPayables: number;
+  cashBalance: number;
+  bankBalance: number;
+}
+
+export interface AIInsight {
+  id: string;
+  type: 'warning' | 'suggestion' | 'info' | 'error';
+  title: string;
+  description: string;
+  action?: string;
+  priority: 'low' | 'medium' | 'high';
+  createdAt: string;
+}
 
 interface AppContextType {
-  company: Company | null;
-  setCompany: (company: Company) => void;
+  // Company state from useCompany hook
+  companies: Company[];
+  currentCompany: Company | null;
+  userRole: string | null;
+  companyLoading: boolean;
+  companyError: string | null;
+  switchCompany: (companyId: string) => Promise<{ success: boolean; error?: any }>;
+  createCompany: (companyData: Database['public']['Tables']['companies']['Insert']) => Promise<{ data: Company | null; error: any }>;
+  updateCompany: (companyId: string, updates: Database['public']['Tables']['companies']['Update']) => Promise<{ data: Company | null; error: any }>;
+  refreshCompanies: () => Promise<void>;
+  
+  // Financial Years state from useFinancialYears hook
+  financialYears: FinancialYear[];
+  currentFinancialYear: FinancialYear | null;
+  selectedFinancialYears: string[];
+  fyLoading: boolean;
+  toggleFinancialYearSelection: (fyId: string) => void;
+  selectAllFinancialYears: () => void;
+  clearFinancialYearSelection: () => void;
+  createFinancialYear: (fyData: Database['public']['Tables']['financial_years']['Insert']) => Promise<{ data: FinancialYear | null; error: any }>;
+  setCurrentFY: (fyId: string) => Promise<{ data: FinancialYear | null; error: any }>;
+  refreshFinancialYears: () => Promise<void>;
+  
+  // App state
   dashboardStats: DashboardStats;
   aiInsights: AIInsight[];
   isAIChatOpen: boolean;
@@ -23,7 +71,34 @@ export const useApp = () => {
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [company, setCompany] = useState<Company | null>(null);
+  // Get company state from useCompany hook
+  const {
+    companies,
+    currentCompany,
+    userRole,
+    loading: companyLoading,
+    error: companyError,
+    switchCompany,
+    createCompany,
+    updateCompany,
+    refreshCompanies: refreshCompaniesHook,
+  } = useCompany();
+
+  // Get financial years state from useFinancialYears hook
+  const {
+    financialYears,
+    currentFinancialYear,
+    selectedFinancialYears,
+    loading: fyLoading,
+    toggleFinancialYearSelection,
+    selectAllFinancialYears,
+    clearFinancialYearSelection,
+    createFinancialYear,
+    setCurrentFY,
+    refreshFinancialYears: refreshFinancialYearsHook,
+  } = useFinancialYears();
+
+  // App-specific state
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentModule, setCurrentModule] = useState('dashboard');
 
@@ -67,24 +142,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   ]);
 
-  useEffect(() => {
-    // Load company data
-    const mockCompany: Company = {
-      id: '1',
-      name: 'Demo Company Ltd.',
-      gstin: '29ABCDE1234F1Z5',
-      pan: 'ABCDE1234F',
-      address: '123 Business Street, City, State - 560001',
-      phone: '+91-9876543210',
-      email: 'info@democompany.com'
-    };
-    setCompany(mockCompany);
-  }, []);
+  // Debug logging
+  console.log('🏢 AppProvider: Company state:', {
+    companiesCount: companies.length,
+    currentCompany: currentCompany?.name || 'None',
+    currentCompanyId: currentCompany?.id || 'None',
+    userRole,
+    companyLoading
+  });
 
   return (
     <AppContext.Provider value={{
-      company,
-      setCompany,
+      // Company state
+      companies,
+      currentCompany,
+      userRole,
+      companyLoading,
+      companyError,
+      switchCompany,
+      createCompany,
+      updateCompany,
+      refreshCompanies: refreshCompaniesHook,
+      
+      // Financial Years state
+      financialYears,
+      currentFinancialYear,
+      selectedFinancialYears,
+      fyLoading,
+      toggleFinancialYearSelection,
+      selectAllFinancialYears,
+      clearFinancialYearSelection,
+      createFinancialYear,
+      setCurrentFY,
+      refreshFinancialYears: refreshFinancialYearsHook,
+      
+      // App state
       dashboardStats,
       aiInsights,
       isAIChatOpen,

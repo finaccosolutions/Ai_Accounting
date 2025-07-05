@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Database } from '../types/database';
 import { useAuth } from './useAuth';
-import { useCompany } from './useCompany';
+import { useApp } from '../contexts/AppContext';
 import toast from 'react-hot-toast';
 
 type Voucher = Database['public']['Tables']['vouchers']['Row'];
@@ -19,7 +19,7 @@ export interface VoucherWithDetails extends Voucher {
 
 export const useVouchers = () => {
   const { user } = useAuth();
-  const { currentCompany } = useCompany();
+  const { currentCompany } = useApp();
   const [vouchers, setVouchers] = useState<VoucherWithDetails[]>([]);
   const [voucherTypes, setVoucherTypes] = useState<VoucherType[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Building, ChevronRight, Plus, ArrowLeft, Sparkles, TrendingUp, CheckCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { useFinancialYears } from '../../hooks/useFinancialYears';
-import { useCompany } from '../../hooks/useCompany';
+import { useApp } from '../../contexts/AppContext';
 import { Header } from '../ui/Header';
 
 interface FinancialYearSelectorProps {
@@ -14,16 +13,16 @@ export const FinancialYearSelector: React.FC<FinancialYearSelectorProps> = ({
   onContinue, 
   onChangeCompany 
 }) => {
-  const { currentCompany } = useCompany();
   const { 
+    currentCompany,
     financialYears, 
     selectedFinancialYears, 
     toggleFinancialYearSelection,
     selectAllFinancialYears,
     clearFinancialYearSelection,
     createFinancialYear,
-    loading 
-  } = useFinancialYears();
+    fyLoading 
+  } = useApp();
   
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [hoveredFY, setHoveredFY] = useState<string | null>(null);
@@ -63,7 +62,7 @@ export const FinancialYearSelector: React.FC<FinancialYearSelectorProps> = ({
   const canContinue = selectedFinancialYears.length > 0;
 
   // If loading, show loading state
-  if (loading) {
+  if (fyLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
         <Header />
@@ -118,110 +117,112 @@ export const FinancialYearSelector: React.FC<FinancialYearSelectorProps> = ({
 
           {/* Financial Years Section */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-            <div className="p-8 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900">Available Financial Years</h3>
-                  <p className="text-gray-600 mt-1">
-                    Selected: <span className="font-semibold text-indigo-600">{selectedFinancialYears.length}</span> of {financialYears.length} financial years
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={selectAllFinancialYears}
-                    className="hover:bg-indigo-50 hover:border-indigo-300"
-                  >
-                    Select All
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={clearFinancialYearSelection}
-                    className="hover:bg-red-50 hover:border-red-300"
-                  >
-                    Clear All
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    icon={Plus} 
-                    onClick={() => setShowCreateForm(true)}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg"
-                  >
-                    Create New
-                  </Button>
-                </div>
-              </div>
-            </div>
-
             {financialYears.length > 0 ? (
-              <div className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {financialYears.map((fy) => (
-                    <div
-                      key={fy.id}
-                      className={`group relative bg-white rounded-xl border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
-                        selectedFinancialYears.includes(fy.id)
-                          ? 'border-indigo-500 shadow-lg transform scale-[1.02] bg-gradient-to-br from-indigo-50 to-purple-50'
-                          : hoveredFY === fy.id
-                          ? 'border-indigo-300 shadow-lg transform scale-[1.01]'
-                          : 'border-gray-200 shadow-md hover:shadow-lg'
-                      }`}
-                      onClick={() => toggleFinancialYearSelection(fy.id)}
-                      onMouseEnter={() => setHoveredFY(fy.id)}
-                      onMouseLeave={() => setHoveredFY(null)}
-                    >
-                      {/* Selection indicator */}
-                      {selectedFinancialYears.includes(fy.id) && (
-                        <div className="absolute top-4 right-4 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                          <CheckCircle className="w-4 h-4 text-white" />
-                        </div>
-                      )}
+              <>
+                <div className="p-8 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">Available Financial Years</h3>
+                      <p className="text-gray-600 mt-1">
+                        Selected: <span className="font-semibold text-indigo-600">{selectedFinancialYears.length}</span> of {financialYears.length} financial years
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={selectAllFinancialYears}
+                        className="hover:bg-indigo-50 hover:border-indigo-300"
+                      >
+                        Select All
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={clearFinancialYearSelection}
+                        className="hover:bg-red-50 hover:border-red-300"
+                      >
+                        Clear All
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        icon={Plus} 
+                        onClick={() => setShowCreateForm(true)}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg"
+                      >
+                        Create New
+                      </Button>
+                    </div>
+                  </div>
+                </div>
 
-                      <div className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className={`w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center transition-transform duration-300 ${
-                            hoveredFY === fy.id || selectedFinancialYears.includes(fy.id) ? 'scale-110' : ''
-                          }`}>
-                            <Calendar className="w-6 h-6 text-white" />
+                <div className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {financialYears.map((fy) => (
+                      <div
+                        key={fy.id}
+                        className={`group relative bg-white rounded-xl border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
+                          selectedFinancialYears.includes(fy.id)
+                            ? 'border-indigo-500 shadow-lg transform scale-[1.02] bg-gradient-to-br from-indigo-50 to-purple-50'
+                            : hoveredFY === fy.id
+                            ? 'border-indigo-300 shadow-lg transform scale-[1.01]'
+                            : 'border-gray-200 shadow-md hover:shadow-lg'
+                        }`}
+                        onClick={() => toggleFinancialYearSelection(fy.id)}
+                        onMouseEnter={() => setHoveredFY(fy.id)}
+                        onMouseLeave={() => setHoveredFY(null)}
+                      >
+                        {/* Selection indicator */}
+                        {selectedFinancialYears.includes(fy.id) && (
+                          <div className="absolute top-4 right-4 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                            <CheckCircle className="w-4 h-4 text-white" />
                           </div>
+                        )}
+
+                        <div className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className={`w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center transition-transform duration-300 ${
+                              hoveredFY === fy.id || selectedFinancialYears.includes(fy.id) ? 'scale-110' : ''
+                            }`}>
+                              <Calendar className="w-6 h-6 text-white" />
+                            </div>
+                            
+                            <div className="flex flex-col items-end space-y-1">
+                              {fy.is_current && (
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
+                                  Current
+                                </span>
+                              )}
+                              {fy.is_closed && (
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+                                  Closed
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                            {fy.year_name}
+                          </h3>
                           
-                          <div className="flex flex-col items-end space-y-1">
-                            {fy.is_current && (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
-                                Current
-                              </span>
-                            )}
-                            {fy.is_closed && (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
-                                Closed
-                              </span>
-                            )}
+                          <p className="text-gray-600 mb-4">
+                            {new Date(fy.start_date).toLocaleDateString()} - {new Date(fy.end_date).toLocaleDateString()}
+                          </p>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-500">
+                              {Math.ceil((new Date(fy.end_date).getTime() - new Date(fy.start_date).getTime()) / (1000 * 60 * 60 * 24))} days
+                            </span>
+                            <ChevronRight className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${
+                              selectedFinancialYears.includes(fy.id) ? 'rotate-90 text-indigo-600' : ''
+                            }`} />
                           </div>
-                        </div>
-
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
-                          {fy.year_name}
-                        </h3>
-                        
-                        <p className="text-gray-600 mb-4">
-                          {new Date(fy.start_date).toLocaleDateString()} - {new Date(fy.end_date).toLocaleDateString()}
-                        </p>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500">
-                            {Math.ceil((new Date(fy.end_date).getTime() - new Date(fy.start_date).getTime()) / (1000 * 60 * 60 * 24))} days
-                          </span>
-                          <ChevronRight className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${
-                            selectedFinancialYears.includes(fy.id) ? 'rotate-90 text-indigo-600' : ''
-                          }`} />
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </>
             ) : (
               <div className="p-12 text-center">
                 <div className="w-20 h-20 bg-gradient-to-r from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -339,7 +340,7 @@ export const FinancialYearSelector: React.FC<FinancialYearSelectorProps> = ({
                 </Button>
                 <Button 
                   type="submit" 
-                  loading={loading}
+                  loading={fyLoading}
                   className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg"
                 >
                   Create Financial Year
@@ -351,4 +352,4 @@ export const FinancialYearSelector: React.FC<FinancialYearSelectorProps> = ({
       )}
     </div>
   );
-}; 
+};

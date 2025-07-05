@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Search, Filter, Eye, Download, Calendar, User, FileText } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../hooks/useAuth';
-import { useCompany } from '../../hooks/useCompany';
-import { useFinancialYears } from '../../hooks/useFinancialYears';
+import { useApp } from '../../contexts/AppContext';
 import { supabase } from '../../lib/supabase';
 import { generateAIInsights } from '../../lib/gemini';
 import toast from 'react-hot-toast';
@@ -35,8 +34,7 @@ interface AuditInsight {
 
 export const AuditPanel: React.FC = () => {
   const { user } = useAuth();
-  const { currentCompany, userRole } = useCompany();
-  const { selectedFinancialYears } = useFinancialYears();
+  const { currentCompany, userRole, selectedFinancialYears } = useApp();
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [insights, setInsights] = useState<AuditInsight[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Database } from '../types/database';
-import { useCompany } from './useCompany';
+import { useApp } from '../contexts/AppContext';
 import toast from 'react-hot-toast';
 
 type Ledger = Database['public']['Tables']['ledgers']['Row'];
@@ -12,7 +12,7 @@ export interface LedgerWithGroup extends Ledger {
 }
 
 export const useLedgers = () => {
-  const { currentCompany } = useCompany();
+  const { currentCompany } = useApp();
   const [ledgers, setLedgers] = useState<LedgerWithGroup[]>([]);
   const [ledgerGroups, setLedgerGroups] = useState<LedgerGroup[]>([]);
   const [loading, setLoading] = useState(true);

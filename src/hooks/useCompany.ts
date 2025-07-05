@@ -147,10 +147,14 @@ export const useCompany = () => {
       setUserRole(companyUser.role);
       console.log('🏢 switchCompany: setUserRole called with:', companyUser.role);
       
-      localStorage.setItem('currentCompanyId', companyId);
+      // Debug: Log the state immediately after setting
+      console.log('🏢 switchCompany: State set to:', { 
+        companyName: company.name, 
+        companyId: company.id,
+        role: companyUser.role 
+      });
       
-      // Force a small delay to ensure state updates
-      await new Promise(resolve => setTimeout(resolve, 100));
+      localStorage.setItem('currentCompanyId', companyId);
       
       console.log('🏢 switchCompany: Successfully switched to company:', company.name);
       console.log('🏢 switchCompany: Current company state after switch:', {

@@ -1,10 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AppProvider } from './contexts/AppContext';
+import { AppProvider, useApp } from './contexts/AppContext';
 import { useAuth } from './hooks/useAuth';
-import { useCompany } from './hooks/useCompany';
-import { useFinancialYears } from './hooks/useFinancialYears';
 import { AuthForm } from './components/auth/AuthForm';
 import { CompanySelector } from './components/company/CompanySelector';
 import { CompanySetup } from './components/company/CompanySetup';
@@ -22,16 +20,28 @@ import { AIChat } from './components/ui/AIChat';
 import { useState } from 'react';
 
 const AuthenticatedApp: React.FC = () => {
-  const { currentCompany, loading: companyLoading } = useCompany();
-  const [currentModule, setCurrentModule] = useState('dashboard');
+  const { 
+    currentCompany, 
+    companyLoading,
+    financialYears,
+    selectedFinancialYears,
+    fyLoading,
+    currentModule,
+    setCurrentModule,
+    isAIChatOpen,
+    setIsAIChatOpen
+  } = useApp();
+  
   const [showCompanySetup, setShowCompanySetup] = useState(false);
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
-  console.log('🏢 AuthenticatedApp: Received currentCompany from useCompany hook:', {
+  console.log('🏢 AuthenticatedApp: Received state from useApp:', {
     currentCompany: currentCompany?.name || 'None',
     currentCompanyId: currentCompany?.id || 'None',
     companyLoading,
-    showCompanySetup
+    showCompanySetup,
+    financialYearsCount: financialYears.length,
+    selectedFYsCount: selectedFinancialYears.length,
+    fyLoading
   });
 
   // Show loading while companies are being loaded
@@ -71,10 +81,6 @@ const AuthenticatedApp: React.FC = () => {
   // If company is selected, show the financial year selector and main app
   console.log('🏢 App: Company selected, showing FinancialYearSelector and main app');
   return <MainAppWithFinancialYears 
-    currentModule={currentModule}
-    setCurrentModule={setCurrentModule}
-    isAIChatOpen={isAIChatOpen}
-    setIsAIChatOpen={setIsAIChatOpen}
     onShowCompanySelector={() => {
       // Reset to company selector
       window.location.reload();
@@ -83,23 +89,30 @@ const AuthenticatedApp: React.FC = () => {
 };
 
 interface MainAppWithFinancialYearsProps {
-  currentModule: string;
-  setCurrentModule: (module: string) => void;
-  isAIChatOpen: boolean;
-  setIsAIChatOpen: (open: boolean) => void;
   onShowCompanySelector: () => void;
 }
 
 const MainAppWithFinancialYears: React.FC<MainAppWithFinancialYearsProps> = ({
-  currentModule,
-  setCurrentModule,
-  isAIChatOpen,
-  setIsAIChatOpen,
   onShowCompanySelector
 }) => {
-  const { currentCompany } = useCompany();
-  const { selectedFinancialYears, loading: fyLoading, financialYears } = useFinancialYears();
+  const { 
+    currentCompany,
+    financialYears,
+    selectedFinancialYears,
+    fyLoading,
+    currentModule,
+    setCurrentModule,
+    isAIChatOpen,
+    setIsAIChatOpen
+  } = useApp();
+  
   const [showDashboard, setShowDashboard] = useState(false);
+
+  // Debug: Log the currentCompany received in this component
+  console.log('🗓️ MainAppWithFinancialYears: currentCompany received:', {
+    companyName: currentCompany?.name || 'None',
+    companyId: currentCompany?.id || 'None'
+  });
 
   console.log('🗓️ MainAppWithFinancialYears state:', {
     currentCompany: currentCompany?.name || 'None',
