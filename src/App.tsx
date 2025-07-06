@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
 import { AuthPage } from './components/auth/AuthPage';
@@ -30,9 +31,11 @@ const AppContent: React.FC = () => {
 function App() {
   return (
     <div className="w-full min-h-screen">
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </BrowserRouter>
     </div>
   );
 }

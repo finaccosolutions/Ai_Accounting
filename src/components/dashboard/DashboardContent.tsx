@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { VoucherEntryNew } from '../vouchers/VoucherEntryNew';
+import { VoucherSettings } from '../vouchers/VoucherSettings';
 import { MasterManagement } from '../masters/MasterManagement';
 import { Reports } from '../reports/Reports';
 import { CompanySettings } from '../company/CompanySettings';
@@ -189,6 +190,10 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
   // Handle different modules
   if (currentModule === 'vouchers') {
     return <VoucherEntryNew />;
+  }
+
+  if (currentModule === 'voucher-settings') {
+    return <VoucherSettings />;
   }
 
   if (currentModule === 'masters') {

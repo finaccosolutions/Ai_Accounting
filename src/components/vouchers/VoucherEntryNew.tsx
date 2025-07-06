@@ -9,14 +9,13 @@ import { PartyDetails } from './components/PartyDetails';
 import { StockItemsEntry } from './components/StockItemsEntry';
 import { AccountingEntries } from './components/AccountingEntries';
 import { VoucherNarration } from './components/VoucherNarration';
-import { EntryModeSelector } from './components/EntryModeSelector';
+import { EntryMethodSelector } from './components/EntryMethodSelector';
 import { EnhancedRightSidebar } from './components/EnhancedRightSidebar';
 import { 
   Save, 
   Search,
   Copy,
-  Sparkles,
-  Settings
+  Sparkles
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -59,8 +58,17 @@ interface Voucher {
   };
   cost_center_id?: string;
   mode?: 'item_invoice' | 'voucher_mode' | 'accounting_mode';
-  entry_method?: 'manual' | 'ai_assisted' | 'pdf_upload' | 'bank_statement';
+  entry_method?: 'manual' | 'ai_assisted' | 'pdf_upload';
 }
+
+const voucherTypeLabels = {
+  sales: 'Sales Invoice',
+  purchase: 'Purchase Bill',
+  receipt: 'Receipt Voucher',
+  payment: 'Payment Voucher',
+  journal: 'Journal Entry',
+  contra: 'Contra Entry'
+};
 
 export const VoucherEntryNew: React.FC = () => {
   const { selectedCompany } = useApp();
@@ -303,57 +311,51 @@ export const VoucherEntryNew: React.FC = () => {
     <div className="flex h-[calc(100vh-8rem)] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative">
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-6">
-        {/* Header */}
+        {/* Header with Voucher Type */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="mb-8"
         >
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-              Smart Voucher Entry
-            </h1>
-            <p className="text-slate-600 text-lg">Create and manage accounting vouchers with AI assistance</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm shadow-lg">
-              <Search className="w-4 h-4 mr-2" />
-              Search
-            </Button>
-            <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm shadow-lg">
-              <Copy className="w-4 h-4 mr-2" />
-              Duplicate
-            </Button>
-            <Button 
-              size="sm" 
-              className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 shadow-lg"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI Assist
-            </Button>
-            <Button 
-              variant="outline"
-              size="sm" 
-              onClick={() => setSidebarVisible(true)}
-              className="bg-white/80 backdrop-blur-sm shadow-lg"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </Button>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                {voucherTypeLabels[voucher.voucher_type as keyof typeof voucherTypeLabels] || 'Voucher Entry'}
+              </h1>
+              <p className="text-slate-600 text-lg">Create and manage accounting vouchers with AI assistance</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm shadow-lg">
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </Button>
+              <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm shadow-lg">
+                <Copy className="w-4 h-4 mr-2" />
+                Duplicate
+              </Button>
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 shadow-lg"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                AI Assist
+              </Button>
+            </div>
           </div>
         </motion.div>
 
-        {/* Entry Mode Selector - Now at the top */}
+        {/* Entry Method Selector - Now at the top */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <EntryModeSelector
-            currentMode={voucher.mode || 'item_invoice'}
-            voucherType={voucher.voucher_type}
-            onModeChange={(mode) => setVoucher(prev => ({ ...prev, mode: mode as any }))}
+          <EntryMethodSelector
+            currentMethod={voucher.entry_method || 'manual'}
+            onMethodChange={(method) => setVoucher(prev => ({ ...prev, entry_method: method as any }))}
+            voucher={voucher}
+            onVoucherChange={setVoucher}
           />
         </motion.div>
 
