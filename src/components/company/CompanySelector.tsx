@@ -44,9 +44,9 @@ export const CompanySelectorPage: React.FC<CompanySelectorPageProps> = ({ onComp
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('companies')
-        .select('*')
-        .order('name');
+      .from('companies')
+      .select('id, name, admin_id') // NOT '*'
+      .order('name');
 
       if (error) throw error;
       setCompanies(data || []);
@@ -56,15 +56,16 @@ export const CompanySelectorPage: React.FC<CompanySelectorPageProps> = ({ onComp
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
   const fetchFinancialYears = async (companyId: string) => {
     try {
       const { data, error } = await supabase
         .from('financial_years')
-        .select('*')
+        .select('id, year_start, year_end, is_active, created_at, company_id')
         .eq('company_id', companyId)
         .order('year_start', { ascending: false });
+
 
       if (error) throw error;
       setFinancialYears(data || []);
