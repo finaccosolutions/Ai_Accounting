@@ -9,12 +9,14 @@ import { PartyDetails } from './components/PartyDetails';
 import { StockItemsEntry } from './components/StockItemsEntry';
 import { AccountingEntries } from './components/AccountingEntries';
 import { VoucherNarration } from './components/VoucherNarration';
+import { EntryModeSelector } from './components/EntryModeSelector';
 import { EnhancedRightSidebar } from './components/EnhancedRightSidebar';
 import { 
   Save, 
   Search,
   Copy,
-  Sparkles
+  Sparkles,
+  Settings
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -311,7 +313,7 @@ export const VoucherEntryNew: React.FC = () => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
               Smart Voucher Entry
             </h1>
-            <p className="text-gray-600 text-lg">Create and manage accounting vouchers with AI assistance</p>
+            <p className="text-slate-600 text-lg">Create and manage accounting vouchers with AI assistance</p>
           </div>
           <div className="flex items-center space-x-3">
             <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm shadow-lg">
@@ -329,44 +331,30 @@ export const VoucherEntryNew: React.FC = () => {
               <Sparkles className="w-4 h-4 mr-2" />
               AI Assist
             </Button>
+            <Button 
+              variant="outline"
+              size="sm" 
+              onClick={() => setSidebarVisible(true)}
+              className="bg-white/80 backdrop-blur-sm shadow-lg"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Button>
           </div>
         </motion.div>
 
-        {/* Current Entry Method Display */}
+        {/* Entry Mode Selector - Now at the top */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <Card className="p-4 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-0 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {voucher.entry_method === 'manual' && 'Manual Entry'}
-                    {voucher.entry_method === 'ai_assisted' && 'AI Assisted Entry'}
-                    {voucher.entry_method === 'pdf_upload' && 'PDF Upload Entry'}
-                    {voucher.entry_method === 'bank_statement' && 'Bank Statement Entry'}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {voucher.voucher_type.charAt(0).toUpperCase() + voucher.voucher_type.slice(1)} • {voucher.mode?.replace('_', ' ')}
-                  </p>
-                </div>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setSidebarVisible(true)}
-                className="bg-white/80 backdrop-blur-sm"
-              >
-                Change Settings
-              </Button>
-            </div>
-          </Card>
+          <EntryModeSelector
+            currentMode={voucher.mode || 'item_invoice'}
+            voucherType={voucher.voucher_type}
+            onModeChange={(mode) => setVoucher(prev => ({ ...prev, mode: mode as any }))}
+          />
         </motion.div>
 
         {/* Voucher Header */}
@@ -457,7 +445,7 @@ export const VoucherEntryNew: React.FC = () => {
           <Button 
             onClick={saveVoucher}
             disabled={!isBalanced || loading}
-            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg"
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
