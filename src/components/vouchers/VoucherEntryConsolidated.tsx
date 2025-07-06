@@ -1,43 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { supabase } from '../../lib/supabase';
-import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
 import { 
   Save, 
   Search,
   Copy,
-  Sparkles,
-  FileText,
-  Package,
-  Calculator,
-  User,
-  MapPin,
-  MessageSquare,
-  Plus,
-  Trash2,
-  AlertCircle,
-  CheckCircle,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  X,
-  Settings,
   Menu,
-  Receipt,
-  CreditCard,
-  Banknote,
-  ArrowUpDown,
-  Building2,
-  DollarSign,
-  Hash,
-  Calendar,
-  Percent
+  Edit3,
+  Bot,
+  Upload,
+  FileText,
+  Sparkles,
+  Camera
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// Import the new components
+import { VoucherHeader } from './VoucherHeader';
+import { PartyDetailsSection } from './PartyDetailsSection';
+import { StockItemsSection } from './StockItemsSection';
+import { AccountingEntriesSection } from './AccountingEntriesSection';
+import { VoucherNarrationSection } from './VoucherNarrationSection';
+import { EnhancedRightSidebar } from './EnhancedRightSidebar';
 
 interface VoucherEntry {
   id?: string;
@@ -86,118 +73,37 @@ const voucherTypes = [
   { value: 'credit_note', label: 'Credit Note', icon: '📄', hasParty: true, hasStock: true, hasTax: true }
 ];
 
-const voucherModes = [
-  { value: 'item_invoice', label: 'Item Invoice', description: 'Item-wise billing with stock' },
-  { value: 'voucher_mode', label: 'Voucher Mode', description: 'Simple voucher entry' }
+const entryModes = [
+  {
+    id: 'manual',
+    label: 'Manual Entry',
+    description: 'Enter voucher details manually',
+    icon: Edit3,
+    color: 'from-blue-500 to-blue-600',
+    bgColor: 'from-blue-50 to-blue-100'
+  },
+  {
+    id: 'ai_assisted',
+    label: 'AI Assisted',
+    description: 'Let AI help create vouchers',
+    icon: Bot,
+    color: 'from-purple-500 to-purple-600',
+    bgColor: 'from-purple-50 to-purple-100'
+  },
+  {
+    id: 'pdf_import',
+    label: 'PDF Import',
+    description: 'Upload invoices, bills & statements',
+    icon: Upload,
+    color: 'from-green-500 to-green-600',
+    bgColor: 'from-green-50 to-green-100'
+  }
 ];
-
-// Searchable Dropdown Component
-const SearchableDropdown: React.FC<{
-  items: any[];
-  value: string;
-  onSelect: (item: any) => void;
-  placeholder: string;
-  displayField: string;
-  searchFields: string[];
-  renderItem?: (item: any) => React.ReactNode;
-  className?: string;
-}> = ({ items, value, onSelect, placeholder, displayField, searchFields, renderItem, className = '' }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  const [filteredItems, setFilteredItems] = useState(items);
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = items.filter(item =>
-        searchFields.some(field =>
-          item[field]?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-      setFilteredItems(filtered);
-    } else {
-      setFilteredItems(items);
-    }
-  }, [searchTerm, items, searchFields]);
-
-  useEffect(() => {
-    const selectedItem = items.find(item => item.id === value);
-    if (selectedItem) {
-      setSearchTerm(selectedItem[displayField] || '');
-    } else {
-      setSearchTerm('');
-    }
-  }, [value, items, displayField]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSelect = (item: any) => {
-    onSelect(item);
-    setSearchTerm(item[displayField] || '');
-    setIsOpen(false);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setIsOpen(true);
-  };
-
-  return (
-    <div ref={dropdownRef} className={`relative ${className}`}>
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={handleInputChange}
-          onFocus={() => setIsOpen(true)}
-          placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-        />
-        <ChevronDown 
-          className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${
-            isOpen ? 'rotate-180' : ''
-          }`} 
-        />
-      </div>
-      
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
-          {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleSelect(item)}
-                className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
-              >
-                {renderItem ? renderItem(item) : (
-                  <div className="font-medium text-gray-900">{item[displayField]}</div>
-                )}
-              </button>
-            ))
-          ) : (
-            <div className="px-4 py-3 text-gray-500 text-center">
-              No items found
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
 
 export const VoucherEntryConsolidated: React.FC = () => {
   const navigate = useNavigate();
   const { selectedCompany } = useApp();
+  const [entryMode, setEntryMode] = useState<'manual' | 'ai_assisted' | 'pdf_import'>('manual');
   const [voucher, setVoucher] = useState<Voucher>({
     voucher_type: 'sales',
     voucher_number: '',
@@ -487,25 +393,15 @@ export const VoucherEntryConsolidated: React.FC = () => {
     }
   };
 
-  const handleVoucherTypeChange = (type: string) => {
+  const handleVoucherChange = (updatedVoucher: any) => {
     setVoucher(prev => ({ 
       ...prev, 
-      voucher_type: type,
+      ...updatedVoucher,
       entries: [],
       stock_entries: [],
-      mode: ['sales', 'purchase', 'debit_note', 'credit_note'].includes(type) ? 'item_invoice' : 'voucher_mode'
+      mode: ['sales', 'purchase', 'debit_note', 'credit_note'].includes(updatedVoucher.voucher_type) ? 'item_invoice' : 'voucher_mode'
     }));
     setRightPanelVisible(false);
-  };
-
-  const handleModeChange = (mode: 'item_invoice' | 'voucher_mode') => {
-    setVoucher(prev => ({ ...prev, mode }));
-    setRightPanelVisible(false);
-  };
-
-  const handleSettingsClick = () => {
-    setRightPanelVisible(false);
-    navigate('/voucher-settings');
   };
 
   const { totalDebit, totalCredit, stockTotal, isBalanced } = calculateTotals();
@@ -588,9 +484,99 @@ export const VoucherEntryConsolidated: React.FC = () => {
     return ['sales', 'purchase', 'debit_note', 'credit_note'].includes(voucher.voucher_type) && voucher.mode === 'item_invoice';
   };
 
-  const shouldShowVoucherMode = () => {
-    return ['sales', 'purchase', 'debit_note', 'credit_note'].includes(voucher.voucher_type);
-  };
+  const renderAIAssistedMode = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="text-center py-16"
+    >
+      <div className="max-w-md mx-auto">
+        <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+          <Bot className="w-12 h-12 text-white" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-4">AI-Assisted Voucher Creation</h3>
+        <p className="text-gray-600 mb-8">
+          Let our AI help you create vouchers by understanding your natural language commands.
+        </p>
+        
+        <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-6 mb-8">
+          <h4 className="font-semibold text-gray-900 mb-3 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
+            Try these commands:
+          </h4>
+          <div className="space-y-2 text-sm text-gray-700">
+            <div className="bg-white rounded-lg p-3">"Create a sales invoice for ABC Ltd for ₹50,000"</div>
+            <div className="bg-white rounded-lg p-3">"Record payment of ₹25,000 to XYZ Vendor"</div>
+            <div className="bg-white rounded-lg p-3">"Journal entry: Office rent ₹15,000 paid by cash"</div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <textarea
+            placeholder="Describe the transaction you want to create..."
+            rows={4}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+          />
+          <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Create with AI
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderPDFImportMode = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="text-center py-16"
+    >
+      <div className="max-w-md mx-auto">
+        <div className="w-24 h-24 bg-gradient-to-r from-green-500 to-green-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
+          <Upload className="w-12 h-12 text-white" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-4">PDF Import & Processing</h3>
+        <p className="text-gray-600 mb-8">
+          Upload invoices, bills, bank statements, and other documents to automatically create vouchers.
+        </p>
+        
+        <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-2xl p-6 mb-8">
+          <h4 className="font-semibold text-gray-900 mb-3">Supported Documents:</h4>
+          <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
+            <div className="flex items-center">
+              <FileText className="w-4 h-4 mr-2 text-green-600" />
+              Sales Invoices
+            </div>
+            <div className="flex items-center">
+              <FileText className="w-4 h-4 mr-2 text-green-600" />
+              Purchase Bills
+            </div>
+            <div className="flex items-center">
+              <FileText className="w-4 h-4 mr-2 text-green-600" />
+              Bank Statements
+            </div>
+            <div className="flex items-center">
+              <FileText className="w-4 h-4 mr-2 text-green-600" />
+              Receipts
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 hover:border-green-400 transition-colors cursor-pointer">
+            <Camera className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-600 mb-2">Drop PDF files here or click to browse</p>
+            <p className="text-xs text-gray-500">Supports PDF files up to 10MB</p>
+          </div>
+          <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700">
+            <Upload className="w-4 h-4 mr-2" />
+            Upload Document
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  );
 
   return (
     <div className="flex h-[calc(100vh-8rem)] bg-gradient-to-br from-slate-50/90 via-blue-50/90 to-indigo-50/90 relative">
@@ -631,640 +617,151 @@ export const VoucherEntryConsolidated: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Voucher Header */}
+        {/* Entry Mode Selection */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6"
+          className="mb-8"
         >
-          <Card className="p-6 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-              Voucher Details
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border-0 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></span>
+              Entry Mode
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Hash className="w-4 h-4 inline mr-1" />
-                  Voucher Number
-                </label>
-                <Input
-                  value={voucher.voucher_number}
-                  onChange={(e) => setVoucher(prev => ({ ...prev, voucher_number: e.target.value }))}
-                  placeholder="Auto-generated"
-                  className="bg-gray-50/80 border-gray-200"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Date
-                </label>
-                <Input
-                  type="date"
-                  value={voucher.date}
-                  onChange={(e) => setVoucher(prev => ({ ...prev, date: e.target.value }))}
-                  className="border-gray-200"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reference Number
-                </label>
-                <Input
-                  value={voucher.reference}
-                  onChange={(e) => setVoucher(prev => ({ ...prev, reference: e.target.value }))}
-                  placeholder="Reference number"
-                  className="border-gray-200"
-                />
-              </div>
+              {entryModes.map((mode) => {
+                const Icon = mode.icon;
+                const isActive = entryMode === mode.id;
+                
+                return (
+                  <motion.button
+                    key={mode.id}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setEntryMode(mode.id as any)}
+                    className={`p-6 rounded-xl border-2 transition-all duration-300 text-left ${
+                      isActive
+                        ? `bg-gradient-to-br ${mode.bgColor} border-current shadow-lg`
+                        : 'bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        isActive 
+                          ? `bg-gradient-to-r ${mode.color} shadow-lg` 
+                          : 'bg-gray-100'
+                      }`}>
+                        <Icon className={`w-6 h-6 ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className={`font-semibold ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
+                          {mode.label}
+                        </h4>
+                      </div>
+                    </div>
+                    <p className={`text-sm ${isActive ? 'text-gray-700' : 'text-gray-500'}`}>
+                      {mode.description}
+                    </p>
+                  </motion.button>
+                );
+              })}
             </div>
-          </Card>
+          </div>
         </motion.div>
 
-        {/* Party Details */}
-        {shouldShowPartyDetails() && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-6"
-          >
-            <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                <span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>
-                Party Details
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Party Name / Cash Bank Details */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <User className="w-4 h-4 inline mr-1" />
-                    {getPartyLabel()} *
-                  </label>
-                  <SearchableDropdown
-                    items={ledgers}
-                    value={voucher.party_ledger_id || ''}
-                    onSelect={(ledger) => setVoucher(prev => ({ 
-                      ...prev, 
-                      party_ledger_id: ledger.id,
-                      party_name: ledger.name 
-                    }))}
-                    placeholder={`Search ${getPartyLabel().toLowerCase()}...`}
-                    displayField="name"
-                    searchFields={['name']}
-                    renderItem={renderLedgerItem}
-                  />
-                </div>
+        {/* Conditional Content Based on Entry Mode */}
+        {entryMode === 'manual' && (
+          <>
+            {/* Voucher Header */}
+            <VoucherHeader voucher={voucher} setVoucher={setVoucher} />
 
-                {/* Sales/Purchase Ledger or Cash/Bank Ledger */}
-                {(['sales', 'purchase', 'debit_note', 'credit_note', 'receipt', 'payment'].includes(voucher.voucher_type)) && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {getSalesLedgerLabel()}
-                    </label>
-                    <SearchableDropdown
-                      items={ledgers}
-                      value={voucher.sales_ledger_id || voucher.cash_bank_ledger_id || ''}
-                      onSelect={(ledger) => {
-                        if (['receipt', 'payment'].includes(voucher.voucher_type)) {
-                          setVoucher(prev => ({ ...prev, cash_bank_ledger_id: ledger.id }));
-                        } else {
-                          setVoucher(prev => ({ ...prev, sales_ledger_id: ledger.id }));
-                        }
-                      }}
-                      placeholder={`Search ${getSalesLedgerLabel().toLowerCase()}...`}
-                      displayField="name"
-                      searchFields={['name']}
-                      renderItem={renderLedgerItem}
-                    />
-                  </div>
-                )}
-
-                {/* Place of Supply */}
-                {shouldShowPlaceOfSupply() && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <MapPin className="w-4 h-4 inline mr-1" />
-                      Place of Supply
-                    </label>
-                    <select
-                      value={voucher.place_of_supply || ''}
-                      onChange={(e) => setVoucher(prev => ({ ...prev, place_of_supply: e.target.value }))}
-                      className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
-                    >
-                      <option value="">Select State</option>
-                      <option value="01">01 - Jammu and Kashmir</option>
-                      <option value="02">02 - Himachal Pradesh</option>
-                      <option value="03">03 - Punjab</option>
-                      <option value="04">04 - Chandigarh</option>
-                      <option value="05">05 - Uttarakhand</option>
-                      <option value="06">06 - Haryana</option>
-                      <option value="07">07 - Delhi</option>
-                      <option value="08">08 - Rajasthan</option>
-                      <option value="09">09 - Uttar Pradesh</option>
-                      <option value="10">10 - Bihar</option>
-                      <option value="11">11 - Sikkim</option>
-                      <option value="12">12 - Arunachal Pradesh</option>
-                      <option value="13">13 - Nagaland</option>
-                      <option value="14">14 - Manipur</option>
-                      <option value="15">15 - Mizoram</option>
-                      <option value="16">16 - Tripura</option>
-                      <option value="17">17 - Meghalaya</option>
-                      <option value="18">18 - Assam</option>
-                      <option value="19">19 - West Bengal</option>
-                      <option value="20">20 - Jharkhand</option>
-                      <option value="21">21 - Odisha</option>
-                      <option value="22">22 - Chhattisgarh</option>
-                      <option value="23">23 - Madhya Pradesh</option>
-                      <option value="24">24 - Gujarat</option>
-                      <option value="25">25 - Daman and Diu</option>
-                      <option value="26">26 - Dadra and Nagar Haveli</option>
-                      <option value="27">27 - Maharashtra</option>
-                      <option value="28">28 - Andhra Pradesh</option>
-                      <option value="29">29 - Karnataka</option>
-                      <option value="30">30 - Goa</option>
-                      <option value="31">31 - Lakshadweep</option>
-                      <option value="32">32 - Kerala</option>
-                      <option value="33">33 - Tamil Nadu</option>
-                      <option value="34">34 - Puducherry</option>
-                      <option value="35">35 - Andaman and Nicobar Islands</option>
-                      <option value="36">36 - Telangana</option>
-                      <option value="37">37 - Andhra Pradesh (New)</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Stock Items Entry */}
-        {shouldShowStockItems() && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-6"
-          >
-            <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Package className="w-5 h-5 mr-2 text-blue-600" />
-                  Stock Items
-                </h3>
-                <Button size="sm" onClick={addStockEntry}>
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Item
-                </Button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-2 font-medium text-gray-700 w-2/5">Item</th>
-                      <th className="text-right py-3 px-2 font-medium text-gray-700 w-1/8">Qty</th>
-                      <th className="text-right py-3 px-2 font-medium text-gray-700 w-1/8">Rate</th>
-                      <th className="text-right py-3 px-2 font-medium text-gray-700 w-1/8">Amount</th>
-                      {selectedCompany?.enable_multi_godown && (
-                        <th className="text-left py-3 px-2 font-medium text-gray-700 w-1/6">Godown</th>
-                      )}
-                      <th className="w-10"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {voucher.stock_entries?.map((entry, index) => (
-                      <tr key={index} className="border-b border-gray-100 hover:bg-blue-50/50 transition-colors">
-                        <td className="py-3 px-2">
-                          <SearchableDropdown
-                            items={stockItems}
-                            value={entry.stock_item_id || ''}
-                            onSelect={(item) => {
-                              updateStockEntry(index, 'stock_item_id', item.id);
-                              updateStockEntry(index, 'stock_item_name', item.name);
-                              updateStockEntry(index, 'rate', item.rate || 0);
-                            }}
-                            placeholder="Search items..."
-                            displayField="name"
-                            searchFields={['name', 'hsn_code']}
-                            renderItem={renderStockItem}
-                            className="text-sm"
-                          />
-                        </td>
-                        <td className="py-3 px-2">
-                          <Input
-                            type="number"
-                            step="0.001"
-                            value={entry.quantity || ''}
-                            onChange={(e) => updateStockEntry(index, 'quantity', parseFloat(e.target.value) || 0)}
-                            className="text-right text-sm"
-                            placeholder="0"
-                          />
-                        </td>
-                        <td className="py-3 px-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={entry.rate || ''}
-                            onChange={(e) => updateStockEntry(index, 'rate', parseFloat(e.target.value) || 0)}
-                            className="text-right text-sm"
-                            placeholder="0.00"
-                          />
-                        </td>
-                        <td className="py-3 px-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={entry.amount || ''}
-                            readOnly
-                            className="text-right bg-gray-50 text-sm"
-                            placeholder="0.00"
-                          />
-                        </td>
-                        {selectedCompany?.enable_multi_godown && (
-                          <td className="py-3 px-2">
-                            <select
-                              value={entry.godown_id || ''}
-                              onChange={(e) => updateStockEntry(index, 'godown_id', e.target.value)}
-                              className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            >
-                              <option value="">Select Godown</option>
-                              {godowns.map((godown) => (
-                                <option key={godown.id} value={godown.id}>
-                                  {godown.name}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                        )}
-                        <td className="py-3 px-2">
-                          {voucher.stock_entries && voucher.stock_entries.length > 1 && (
-                            <button
-                              onClick={() => removeStockEntry(index)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t-2 border-gray-300 font-semibold bg-gray-50">
-                      <td className="py-3 px-2" colSpan={3}>Subtotal</td>
-                      <td className="py-3 px-2 text-right text-lg">₹{stockTotal.toFixed(2)}</td>
-                      <td colSpan={2}></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              {/* Tax Calculation */}
-              {currentVoucherType?.hasTax && stockTotal > 0 && (
-                <div className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                  <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                    <Percent className="w-4 h-4 mr-2 text-orange-600" />
-                    Tax Calculation (GST @ 18%)
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div className="text-center">
-                      <label className="block text-gray-600 mb-1">CGST (9%)</label>
-                      <div className="font-semibold text-lg">₹{(stockTotal * 0.09).toFixed(2)}</div>
-                    </div>
-                    <div className="text-center">
-                      <label className="block text-gray-600 mb-1">SGST (9%)</label>
-                      <div className="font-semibold text-lg">₹{(stockTotal * 0.09).toFixed(2)}</div>
-                    </div>
-                    <div className="text-center">
-                      <label className="block text-gray-600 mb-1">Total Tax</label>
-                      <div className="font-semibold text-lg text-orange-600">₹{(stockTotal * 0.18).toFixed(2)}</div>
-                    </div>
-                    <div className="text-center">
-                      <label className="block text-gray-600 mb-1">Grand Total</label>
-                      <div className="font-bold text-xl text-green-600">₹{(stockTotal * 1.18).toFixed(2)}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Accounting Entries */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mb-6"
-        >
-          <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Calculator className="w-5 h-5 mr-2 text-purple-600" />
-                Accounting Entries
-              </h3>
-              <Button size="sm" onClick={addEntry}>
-                <Plus className="w-4 h-4 mr-1" />
-                Add Entry
-              </Button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-2 font-medium text-gray-700 w-2/5">{getAccountingEntryLabel()}</th>
-                    {voucher.voucher_type === 'journal' ? (
-                      <>
-                        <th className="text-right py-3 px-2 font-medium text-gray-700 w-1/8">Debit (₹)</th>
-                        <th className="text-right py-3 px-2 font-medium text-gray-700 w-1/8">Credit (₹)</th>
-                      </>
-                    ) : (
-                      <th className="text-right py-3 px-2 font-medium text-gray-700 w-1/8">Amount (₹)</th>
-                    )}
-                    <th className="text-left py-3 px-2 font-medium text-gray-700 w-1/4">Narration</th>
-                    <th className="w-10"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {voucher.entries?.map((entry, index) => (
-                    <tr key={index} className="border-b border-gray-100 hover:bg-purple-50/50 transition-colors">
-                      <td className="py-3 px-2">
-                        <SearchableDropdown
-                          items={ledgers}
-                          value={entry.ledger_id || ''}
-                          onSelect={(ledger) => updateEntry(index, 'ledger_id', ledger.id)}
-                          placeholder="Search ledgers..."
-                          displayField="name"
-                          searchFields={['name']}
-                          renderItem={renderLedgerItem}
-                          className="text-sm"
-                        />
-                      </td>
-                      {voucher.voucher_type === 'journal' ? (
-                        <>
-                          <td className="py-3 px-2">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={entry.debit_amount || ''}
-                              onChange={(e) => updateEntry(index, 'debit_amount', parseFloat(e.target.value) || 0)}
-                              className="text-right text-sm"
-                              placeholder="0.00"
-                            />
-                          </td>
-                          <td className="py-3 px-2">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={entry.credit_amount || ''}
-                              onChange={(e) => updateEntry(index, 'credit_amount', parseFloat(e.target.value) || 0)}
-                              className="text-right text-sm"
-                              placeholder="0.00"
-                            />
-                          </td>
-                        </>
-                      ) : (
-                        <td className="py-3 px-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={entry.amount || ''}
-                            onChange={(e) => updateEntry(index, 'amount', parseFloat(e.target.value) || 0)}
-                            className="text-right text-sm"
-                            placeholder="0.00"
-                          />
-                        </td>
-                      )}
-                      <td className="py-3 px-2">
-                        <Input
-                          value={entry.narration || ''}
-                          onChange={(e) => updateEntry(index, 'narration', e.target.value)}
-                          placeholder="Entry description"
-                          className="text-sm"
-                        />
-                      </td>
-                      <td className="py-3 px-2">
-                        {voucher.entries && voucher.entries.length > (voucher.voucher_type === 'journal' ? 2 : 1) && (
-                          <button
-                            onClick={() => removeEntry(index)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t-2 border-gray-300 font-semibold bg-gray-50">
-                    <td className="py-3 px-2">Total</td>
-                    {voucher.voucher_type === 'journal' ? (
-                      <>
-                        <td className="py-3 px-2 text-right text-lg">₹{totalDebit.toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right text-lg">₹{totalCredit.toFixed(2)}</td>
-                      </>
-                    ) : (
-                      <td className="py-3 px-2 text-right text-lg">₹{totalDebit.toFixed(2)}</td>
-                    )}
-                    <td className="py-3 px-2"></td>
-                    <td className="py-3 px-2"></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-
-            {/* Balance Status */}
-            <div className="mt-4">
-              {voucher.voucher_type === 'journal' && !isBalanced && totalDebit > 0 && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center">
-                  <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-                  <p className="text-red-600 text-sm">
-                    <strong>Difference: ₹{Math.abs(totalDebit - totalCredit).toFixed(2)}</strong> - Debit and Credit must be equal
-                  </p>
-                </div>
-              )}
-              {isBalanced && totalDebit > 0 && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                  <p className="text-green-600 text-sm">
-                    Voucher is balanced - Ready to save
-                  </p>
-                </div>
-              )}
-            </div>
-          </Card>
-        </motion.div>
-
-        {/* Voucher Narration */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mb-6"
-        >
-          <Card className="p-6 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-              <MessageSquare className="w-4 h-4 mr-2 text-gray-600" />
-              Voucher Narration
-            </label>
-            <textarea
-              value={voucher.narration}
-              onChange={(e) => setVoucher(prev => ({ ...prev, narration: e.target.value }))}
-              placeholder="Enter detailed description of the transaction..."
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            {/* Party Details */}
+            <PartyDetailsSection
+              voucher={voucher}
+              setVoucher={setVoucher}
+              ledgers={ledgers}
+              getPartyLabel={getPartyLabel}
+              getSalesLedgerLabel={getSalesLedgerLabel}
+              shouldShowPartyDetails={shouldShowPartyDetails}
+              shouldShowPlaceOfSupply={shouldShowPlaceOfSupply}
+              renderLedgerItem={renderLedgerItem}
             />
-          </Card>
-        </motion.div>
 
-        {/* Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="flex justify-end space-x-3 mb-6"
-        >
-          <Button variant="outline" className="bg-white/90 backdrop-blur-sm shadow-lg border-gray-200/50">
-            Cancel
-          </Button>
-          <Button 
-            onClick={saveVoucher}
-            disabled={voucher.voucher_type === 'journal' ? !isBalanced : false || loading}
-            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
-            Save Voucher
-          </Button>
-        </motion.div>
+            {/* Stock Items Entry */}
+            <StockItemsSection
+              voucher={voucher}
+              setVoucher={setVoucher}
+              stockItems={stockItems}
+              godowns={godowns}
+              selectedCompany={selectedCompany}
+              shouldShowStockItems={shouldShowStockItems}
+              renderStockItem={renderStockItem}
+              addStockEntry={addStockEntry}
+              removeStockEntry={removeStockEntry}
+              updateStockEntry={updateStockEntry}
+              stockTotal={stockTotal}
+              currentVoucherType={currentVoucherType}
+            />
+
+            {/* Accounting Entries */}
+            <AccountingEntriesSection
+              voucher={voucher}
+              setVoucher={setVoucher}
+              ledgers={ledgers}
+              getAccountingEntryLabel={getAccountingEntryLabel}
+              renderLedgerItem={renderLedgerItem}
+              addEntry={addEntry}
+              removeEntry={removeEntry}
+              updateEntry={updateEntry}
+              totalDebit={totalDebit}
+              totalCredit={totalCredit}
+              isBalanced={isBalanced}
+            />
+
+            {/* Voucher Narration */}
+            <VoucherNarrationSection voucher={voucher} setVoucher={setVoucher} />
+
+            {/* Actions */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex justify-end space-x-3 mb-6"
+            >
+              <Button variant="outline" className="bg-white/90 backdrop-blur-sm shadow-lg border-gray-200/50">
+                Cancel
+              </Button>
+              <Button 
+                onClick={saveVoucher}
+                disabled={voucher.voucher_type === 'journal' ? !isBalanced : false || loading}
+                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Save Voucher
+              </Button>
+            </motion.div>
+          </>
+        )}
+
+        {entryMode === 'ai_assisted' && renderAIAssistedMode()}
+        {entryMode === 'pdf_import' && renderPDFImportMode()}
       </div>
 
-      {/* Right Panel */}
-      <AnimatePresence>
-        {rightPanelVisible && (
-          <motion.div
-            initial={{ x: 400, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 400, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 bg-white/95 backdrop-blur-md border-l border-gray-200/50 shadow-2xl z-50"
-            onMouseLeave={() => setRightPanelVisible(false)}
-          >
-            <div className="p-6 border-b border-gray-200/50">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">Voucher Options</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setRightPanelVisible(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Voucher Types */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">Voucher Types</h4>
-                <div className="space-y-2">
-                  {voucherTypes.map((type) => (
-                    <button
-                      key={type.value}
-                      onClick={() => handleVoucherTypeChange(type.value)}
-                      className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-all ${
-                        voucher.voucher_type === type.value
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                          : 'hover:bg-gray-50 text-gray-700'
-                      }`}
-                    >
-                      <span className="text-lg">{type.icon}</span>
-                      <span className="font-medium text-sm">{type.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Voucher Mode */}
-              {shouldShowVoucherMode() && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Voucher Mode</h4>
-                  <div className="space-y-2">
-                    {voucherModes.map((mode) => (
-                      <button
-                        key={mode.value}
-                        onClick={() => handleModeChange(mode.value)}
-                        className={`w-full text-left p-3 rounded-lg transition-all ${
-                          voucher.mode === mode.value
-                            ? 'bg-green-50 text-green-700 border border-green-200'
-                            : 'hover:bg-gray-50 text-gray-700'
-                        }`}
-                      >
-                        <div className="font-medium text-sm">{mode.label}</div>
-                        <div className="text-xs opacity-75">{mode.description}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Recent Vouchers */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-3">Recent Vouchers</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {recentVouchers.slice(0, 5).map((recentVoucher) => (
-                    <div
-                      key={recentVoucher.id}
-                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm text-gray-900">
-                          {recentVoucher.voucher_number}
-                        </span>
-                        <span className="text-xs text-gray-500 capitalize">
-                          {recentVoucher.voucher_type}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">
-                          {new Date(recentVoucher.date).toLocaleDateString()}
-                        </span>
-                        <span className="font-semibold text-sm text-gray-900">
-                          ₹{recentVoucher.total_amount?.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Settings */}
-              <div>
-                <button
-                  onClick={handleSettingsClick}
-                  className="w-full flex items-center space-x-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <Settings className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium text-sm text-gray-700">Voucher Settings</span>
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Enhanced Right Sidebar */}
+      <EnhancedRightSidebar
+        visible={rightPanelVisible}
+        onVisibilityChange={setRightPanelVisible}
+        voucher={voucher}
+        onVoucherChange={handleVoucherChange}
+        recentVouchers={recentVouchers}
+        totalAmount={stockTotal + totalDebit}
+      />
     </div>
   );
 };

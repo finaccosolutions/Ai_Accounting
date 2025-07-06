@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../ui/Button';
+import { Button } from '../ui/Button';
 import { 
   ChevronRight,
   Settings,
@@ -22,8 +22,86 @@ import {
   Activity,
   Building2,
   Package,
-  Receipt
+  Receipt,
+  ShoppingCart,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownRight,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react';
+
+const voucherTypes = [
+  { 
+    value: 'sales', 
+    label: 'Sales Invoice', 
+    icon: Receipt, 
+    color: 'from-blue-500 to-blue-600',
+    hasMode: true,
+    description: 'Record sales transactions'
+  },
+  { 
+    value: 'purchase', 
+    label: 'Purchase Bill', 
+    icon: ShoppingCart, 
+    color: 'from-green-500 to-green-600',
+    hasMode: true,
+    description: 'Record purchase transactions'
+  },
+  { 
+    value: 'debit_note', 
+    label: 'Debit Note', 
+    icon: ArrowUpRight, 
+    color: 'from-orange-500 to-orange-600',
+    hasMode: true,
+    description: 'Debit adjustments'
+  },
+  { 
+    value: 'credit_note', 
+    label: 'Credit Note', 
+    icon: ArrowDownRight, 
+    color: 'from-purple-500 to-purple-600',
+    hasMode: true,
+    description: 'Credit adjustments'
+  },
+  { 
+    value: 'receipt', 
+    label: 'Receipt Voucher', 
+    icon: DollarSign, 
+    color: 'from-emerald-500 to-emerald-600',
+    hasMode: false,
+    description: 'Money received'
+  },
+  { 
+    value: 'payment', 
+    label: 'Payment Voucher', 
+    icon: CreditCard, 
+    color: 'from-red-500 to-red-600',
+    hasMode: false,
+    description: 'Money paid'
+  },
+  { 
+    value: 'journal', 
+    label: 'Journal Entry', 
+    icon: FileText, 
+    color: 'from-indigo-500 to-indigo-600',
+    hasMode: false,
+    description: 'General journal entries'
+  },
+  { 
+    value: 'contra', 
+    label: 'Contra Entry', 
+    icon: Activity, 
+    color: 'from-teal-500 to-teal-600',
+    hasMode: false,
+    description: 'Bank to cash transfers'
+  }
+];
+
+const voucherModes = [
+  { value: 'item_invoice', label: 'Item Invoice', description: 'With stock items' },
+  { value: 'voucher_mode', label: 'As Voucher', description: 'Ledger entries only' }
+];
 
 const sidebarSections = [
   {
@@ -56,18 +134,6 @@ const sidebarSections = [
       { label: 'Day Book', icon: BarChart3, action: 'day_book' },
       { label: 'AI Assistant', icon: Bot, action: 'ai_assistant' }
     ]
-  },
-  {
-    id: 'shortcuts',
-    title: 'Voucher Shortcuts',
-    icon: Activity,
-    color: 'from-orange-500 to-orange-600',
-    items: [
-      { label: 'Sales Invoice', icon: Receipt, action: 'sales' },
-      { label: 'Purchase Bill', icon: Package, action: 'purchase' },
-      { label: 'Payment', icon: DollarSign, action: 'payment' },
-      { label: 'Receipt', icon: DollarSign, action: 'receipt' }
-    ]
   }
 ];
 
@@ -89,7 +155,7 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
   totalAmount
 }) => {
   const navigate = useNavigate();
-  const [expandedSections, setExpandedSections] = useState<string[]>(['stats', 'recent']);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['voucher_types', 'stats', 'recent']);
   const [isHovering, setIsHovering] = useState(false);
   const [showTrigger, setShowTrigger] = useState(true);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -145,12 +211,20 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
   };
 
   const handleVoucherTypeChange = (type: string) => {
-    onVoucherChange(prev => ({ 
-      ...prev, 
-      voucher_type: type
-    }));
-    // Auto-hide sidebar when selection is made
-    onVisibilityChange(false);
+    const selectedType = voucherTypes.find(vt => vt.value === type);
+    const newVoucher = {
+      ...voucher,
+      voucher_type: type,
+      mode: selectedType?.hasMode ? 'item_invoice' : 'voucher_mode'
+    };
+    onVoucherChange(newVoucher);
+  };
+
+  const handleVoucherModeChange = (mode: string) => {
+    onVoucherChange({
+      ...voucher,
+      mode: mode
+    });
   };
 
   const handleSettingsClick = () => {
@@ -174,6 +248,25 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
       hideTimeoutRef.current = setTimeout(() => {
         onVisibilityChange(false);
       }, 300); // 300ms delay before hiding
+    }
+  };
+
+  const getSectionLabel = (voucherType: string) => {
+    switch (voucherType) {
+      case 'sales':
+        return 'Sales Section';
+      case 'purchase':
+        return 'Purchase Section';
+      case 'debit_note':
+        return 'Debit Note Section';
+      case 'credit_note':
+        return 'Credit Note Section';
+      case 'receipt':
+        return 'Receipt Section';
+      case 'payment':
+        return 'Payment Section';
+      default:
+        return 'Ledger Section';
     }
   };
 
@@ -221,8 +314,8 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                     <FileText className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Voucher Settings</h3>
-                    <p className="text-sm text-gray-500">Always ready to help</p>
+                    <h3 className="font-semibold text-gray-900">Voucher Panel</h3>
+                    <p className="text-sm text-gray-500">Quick access & settings</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -250,6 +343,127 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
             {/* Content */}
             <div className="h-full overflow-y-auto p-6 pb-20">
               <div className="space-y-6">
+                {/* Voucher Types Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-100/50 overflow-hidden"
+                >
+                  <motion.button
+                    whileHover={{ backgroundColor: 'rgba(248, 250, 252, 0.9)' }}
+                    onClick={() => toggleSection('voucher_types')}
+                    className={`w-full p-4 flex items-center justify-between transition-all duration-300 ${
+                      expandedSections.includes('voucher_types') 
+                        ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white' 
+                        : 'text-gray-700 hover:text-blue-600'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <FileText className={`w-5 h-5 ${expandedSections.includes('voucher_types') ? 'text-white' : 'text-gray-600'}`} />
+                      <span className="font-medium text-sm">Voucher Types</span>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: expandedSections.includes('voucher_types') ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className={`w-4 h-4 ${expandedSections.includes('voucher_types') ? 'text-white' : 'text-gray-400'}`} />
+                    </motion.div>
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {expandedSections.includes('voucher_types') && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-4 bg-gray-50/50">
+                          <div className="grid grid-cols-2 gap-2 mb-4">
+                            {voucherTypes.map((type, index) => {
+                              const Icon = type.icon;
+                              const isActive = voucher.voucher_type === type.value;
+                              
+                              return (
+                                <motion.button
+                                  key={type.value}
+                                  initial={{ opacity: 0, scale: 0.9 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: index * 0.05 }}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => handleVoucherTypeChange(type.value)}
+                                  className={`p-3 rounded-lg text-left transition-all duration-200 ${
+                                    isActive
+                                      ? `bg-gradient-to-r ${type.color} text-white shadow-lg`
+                                      : 'bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300'
+                                  }`}
+                                >
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                                    <span className={`font-medium text-xs ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                                      {type.label}
+                                    </span>
+                                  </div>
+                                  <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
+                                    {type.description}
+                                  </p>
+                                </motion.button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Voucher Mode Selection */}
+                          {voucherTypes.find(vt => vt.value === voucher.voucher_type)?.hasMode && (
+                            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-900 mb-3 text-sm flex items-center">
+                                <ToggleLeft className="w-4 h-4 mr-2 text-blue-600" />
+                                Voucher Mode
+                              </h4>
+                              <div className="space-y-2">
+                                {voucherModes.map((mode) => (
+                                  <label key={mode.value} className="flex items-center space-x-3 cursor-pointer">
+                                    <input
+                                      type="radio"
+                                      name="voucher_mode"
+                                      value={mode.value}
+                                      checked={voucher.mode === mode.value}
+                                      onChange={(e) => handleVoucherModeChange(e.target.value)}
+                                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <div>
+                                      <span className="text-sm font-medium text-gray-900">{mode.label}</span>
+                                      <p className="text-xs text-gray-500">{mode.description}</p>
+                                    </div>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Current Section Info */}
+                          <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="text-sm font-medium text-blue-900">
+                                Current: {getSectionLabel(voucher.voucher_type)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-blue-700 mt-1">
+                              {voucher.mode === 'item_invoice' 
+                                ? 'Stock items section visible' 
+                                : 'Ledger entries only'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+
+                {/* Other Sections */}
                 {sidebarSections.map((section, index) => {
                   const Icon = section.icon;
                   const isExpanded = expandedSections.includes(section.id);
@@ -259,7 +473,7 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                       key={section.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: (index + 1) * 0.1 }}
                       className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-100/50 overflow-hidden"
                     >
                       {/* Section Header */}
@@ -362,8 +576,8 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                                 </div>
                               )}
 
-                              {/* Quick Actions & Shortcuts */}
-                              {(section.id === 'actions' || section.id === 'shortcuts') && (
+                              {/* Quick Actions */}
+                              {section.id === 'actions' && (
                                 <div className="space-y-2">
                                   {section.items.map((item, index) => {
                                     const ItemIcon = item.icon;
@@ -375,11 +589,6 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                                         transition={{ delay: index * 0.1 }}
                                         whileHover={{ scale: 1.02, x: 4 }}
                                         whileTap={{ scale: 0.98 }}
-                                        onClick={() => {
-                                          if (section.id === 'shortcuts' && item.action) {
-                                            handleVoucherTypeChange(item.action);
-                                          }
-                                        }}
                                         className="w-full flex items-center space-x-3 p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-all duration-300 text-left group"
                                       >
                                         <ItemIcon className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
