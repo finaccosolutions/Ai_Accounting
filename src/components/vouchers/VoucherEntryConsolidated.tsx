@@ -14,7 +14,10 @@ import {
   Upload,
   FileText,
   Sparkles,
-  Camera
+  Camera,
+  Zap,
+  Star,
+  Layers
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -25,7 +28,7 @@ import { TransactionDetailsSection } from './TransactionDetailsSection';
 import { ContraEntrySection } from './ContraEntrySection';
 import { AccountingEntriesSection } from './AccountingEntriesSection';
 import { VoucherNarrationSection } from './VoucherNarrationSection';
-import { CollapsibleRightPanel } from './CollapsibleRightPanel';
+import { EnhancedRightSidebar } from './EnhancedRightSidebar';
 
 interface VoucherEntry {
   id?: string;
@@ -66,11 +69,14 @@ interface Voucher {
   use_common_ledger?: boolean;
   total_amount?: number;
   // Contra entry specific fields
-  debit_ledger_id?: string;
-  credit_ledger_id?: string;
-  debit_ledger_name?: string;
-  credit_ledger_name?: string;
-  contra_amount?: number;
+  debit_entries?: Array<{
+    ledger_id: string;
+    amount: number;
+  }>;
+  credit_entries?: Array<{
+    ledger_id: string;
+    amount: number;
+  }>;
 }
 
 const voucherTypes = [
@@ -88,7 +94,7 @@ const entryModes = [
   {
     id: 'manual',
     label: 'Manual Entry',
-    description: 'Enter voucher details manually',
+    description: 'Enter voucher details manually with precision',
     icon: Edit3,
     color: 'from-blue-500 to-blue-600',
     bgColor: 'from-blue-50 to-blue-100'
@@ -96,7 +102,7 @@ const entryModes = [
   {
     id: 'ai_assisted',
     label: 'AI Assisted',
-    description: 'Let AI help create vouchers',
+    description: 'Let AI help create vouchers intelligently',
     icon: Bot,
     color: 'from-purple-500 to-purple-600',
     bgColor: 'from-purple-50 to-purple-100'
@@ -125,7 +131,9 @@ export const VoucherEntryConsolidated: React.FC = () => {
     entries: [],
     stock_entries: [{ stock_item_id: '', stock_item_name: '', quantity: 0, rate: 0, amount: 0 }],
     mode: 'item_invoice',
-    use_common_ledger: true
+    use_common_ledger: true,
+    debit_entries: [{ ledger_id: '', amount: 0 }],
+    credit_entries: [{ ledger_id: '', amount: 0 }]
   });
   
   const [ledgers, setLedgers] = useState<any[]>([]);
@@ -133,7 +141,7 @@ export const VoucherEntryConsolidated: React.FC = () => {
   const [godowns, setGodowns] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [recentVouchers, setRecentVouchers] = useState<any[]>([]);
-  const [rightPanelVisible, setRightPanelVisible] = useState(false);
+  const [rightPanelVisible, setRightPanelVisible] = useState(true); // Always visible by default
 
   useEffect(() => {
     if (selectedCompany) {
@@ -161,7 +169,9 @@ export const VoucherEntryConsolidated: React.FC = () => {
       // Contra entries are handled separately
       setVoucher(prev => ({
         ...prev,
-        entries: []
+        entries: [],
+        debit_entries: prev.debit_entries || [{ ledger_id: '', amount: 0 }],
+        credit_entries: prev.credit_entries || [{ ledger_id: '', amount: 0 }]
       }));
     } else {
       if (voucher.entries.length === 0) {
@@ -369,8 +379,9 @@ export const VoucherEntryConsolidated: React.FC = () => {
       const totalCredit = voucher.entries.reduce((sum, entry) => sum + (entry.credit_amount || 0), 0);
       return { totalDebit, totalCredit, stockTotal: 0, isBalanced: Math.abs(totalDebit - totalCredit) < 0.01 };
     } else if (voucher.voucher_type === 'contra') {
-      const contraAmount = voucher.contra_amount || 0;
-      return { totalDebit: contraAmount, totalCredit: contraAmount, stockTotal: 0, isBalanced: true };
+      const debitAmount = voucher.debit_entries?.reduce((sum, entry) => sum + (entry.amount || 0), 0) || 0;
+      const creditAmount = voucher.credit_entries?.reduce((sum, entry) => sum + (entry.amount || 0), 0) || 0;
+      return { totalDebit: debitAmount, totalCredit: creditAmount, stockTotal: 0, isBalanced: Math.abs(debitAmount - creditAmount) < 0.01 };
     } else {
       const totalAmount = voucher.entries.reduce((sum, entry) => sum + (entry.amount || 0), 0);
       const stockTotal = voucher.stock_entries?.reduce((sum, entry) => sum + (entry.amount || 0), 0) || 0;
@@ -387,8 +398,11 @@ export const VoucherEntryConsolidated: React.FC = () => {
     }
 
     if (voucher.voucher_type === 'contra') {
-      if (!voucher.debit_ledger_id || !voucher.credit_ledger_id || !voucher.contra_amount) {
-        toast.error('Please select both ledgers and enter amount for contra entry');
+      const hasValidDebitEntries = voucher.debit_entries?.some(entry => entry.ledger_id && entry.amount > 0);
+      const hasValidCreditEntries = voucher.credit_entries?.some(entry => entry.ledger_id && entry.amount > 0);
+      
+      if (!hasValidDebitEntries || !hasValidCreditEntries) {
+        toast.error('Please add at least one valid debit and credit entry');
         return;
       }
     }
@@ -414,7 +428,9 @@ export const VoucherEntryConsolidated: React.FC = () => {
         entries: [],
         stock_entries: [{ stock_item_id: '', stock_item_name: '', quantity: 0, rate: 0, amount: 0 }],
         mode: voucher.mode,
-        use_common_ledger: true
+        use_common_ledger: true,
+        debit_entries: [{ ledger_id: '', amount: 0 }],
+        credit_entries: [{ ledger_id: '', amount: 0 }]
       });
       
       generateVoucherNumber();
@@ -434,7 +450,9 @@ export const VoucherEntryConsolidated: React.FC = () => {
       entries: [],
       stock_entries: [{ stock_item_id: '', stock_item_name: '', quantity: 0, rate: 0, amount: 0 }],
       mode: ['sales', 'purchase', 'debit_note', 'credit_note'].includes(type) ? 'item_invoice' : 'voucher_mode',
-      use_common_ledger: true
+      use_common_ledger: true,
+      debit_entries: type === 'contra' ? [{ ledger_id: '', amount: 0 }] : [],
+      credit_entries: type === 'contra' ? [{ ledger_id: '', amount: 0 }] : []
     }));
     generateVoucherNumber();
   };
@@ -534,23 +552,50 @@ export const VoucherEntryConsolidated: React.FC = () => {
       className="text-center py-16"
     >
       <div className="max-w-md mx-auto">
-        <div className="w-24 h-24 bg-gradient-to-r from-purple-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-          <Bot className="w-12 h-12 text-white" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-4">AI-Assisted Voucher Creation</h3>
-        <p className="text-gray-600 mb-8">
-          Let our AI help you create vouchers by understanding your natural language commands.
+        <motion.div 
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-32 h-32 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl"
+        >
+          <Bot className="w-16 h-16 text-white" />
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="absolute w-40 h-40 border-4 border-purple-300 border-t-transparent rounded-full"
+          />
+        </motion.div>
+        <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-purple-800 bg-clip-text text-transparent mb-4">
+          AI-Assisted Voucher Creation
+        </h3>
+        <p className="text-gray-600 mb-8 text-lg">
+          Let our advanced AI help you create vouchers by understanding your natural language commands.
         </p>
         
-        <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-6 mb-8">
-          <h4 className="font-semibold text-gray-900 mb-3 flex items-center justify-center">
+        <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 rounded-2xl p-6 mb-8 border border-purple-200">
+          <h4 className="font-semibold text-gray-900 mb-4 flex items-center justify-center">
             <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
-            Try these commands:
+            Try these smart commands:
           </h4>
-          <div className="space-y-2 text-sm text-gray-700">
-            <div className="bg-white rounded-lg p-3">"Create a sales invoice for ABC Ltd for ₹50,000"</div>
-            <div className="bg-white rounded-lg p-3">"Record payment of ₹25,000 to XYZ Vendor"</div>
-            <div className="bg-white rounded-lg p-3">"Journal entry: Office rent ₹15,000 paid by cash"</div>
+          <div className="space-y-3 text-sm text-gray-700">
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-lg p-3 shadow-sm border border-purple-100"
+            >
+              "Create a sales invoice for ABC Ltd for ₹50,000"
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-lg p-3 shadow-sm border border-purple-100"
+            >
+              "Record payment of ₹25,000 to XYZ Vendor"
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="bg-white rounded-lg p-3 shadow-sm border border-purple-100"
+            >
+              "Journal entry: Office rent ₹15,000 paid by cash"
+            </motion.div>
           </div>
         </div>
 
@@ -558,12 +603,16 @@ export const VoucherEntryConsolidated: React.FC = () => {
           <textarea
             placeholder="Describe the transaction you want to create..."
             rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+            className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none shadow-sm"
           />
-          <Button className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Create with AI
-          </Button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:from-purple-600 hover:via-pink-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <Sparkles className="w-5 h-5 mr-2 inline" />
+            Create with AI Magic
+          </motion.button>
         </div>
       </div>
     </motion.div>
@@ -576,130 +625,208 @@ export const VoucherEntryConsolidated: React.FC = () => {
       className="text-center py-16"
     >
       <div className="max-w-md mx-auto">
-        <div className="w-24 h-24 bg-gradient-to-r from-green-500 to-green-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-          <Upload className="w-12 h-12 text-white" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-900 mb-4">PDF Import & Processing</h3>
-        <p className="text-gray-600 mb-8">
+        <motion.div 
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-32 h-32 bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl"
+        >
+          <Upload className="w-16 h-16 text-white" />
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute w-40 h-40 border-4 border-green-300 border-dashed rounded-full"
+          />
+        </motion.div>
+        <h3 className="text-3xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-green-800 bg-clip-text text-transparent mb-4">
+          PDF Import & Processing
+        </h3>
+        <p className="text-gray-600 mb-8 text-lg">
           Upload invoices, bills, bank statements, and other documents to automatically create vouchers.
         </p>
         
-        <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-2xl p-6 mb-8">
-          <h4 className="font-semibold text-gray-900 mb-3">Supported Documents:</h4>
+        <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 rounded-2xl p-6 mb-8 border border-green-200">
+          <h4 className="font-semibold text-gray-900 mb-4">Supported Documents:</h4>
           <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
-            <div className="flex items-center">
-              <FileText className="w-4 h-4 mr-2 text-green-600" />
-              Sales Invoices
-            </div>
-            <div className="flex items-center">
-              <FileText className="w-4 h-4 mr-2 text-green-600" />
-              Purchase Bills
-            </div>
-            <div className="flex items-center">
-              <FileText className="w-4 h-4 mr-2 text-green-600" />
-              Bank Statements
-            </div>
-            <div className="flex items-center">
-              <FileText className="w-4 h-4 mr-2 text-green-600" />
-              Receipts
-            </div>
+            {[
+              { label: 'Sales Invoices', icon: FileText },
+              { label: 'Purchase Bills', icon: FileText },
+              { label: 'Bank Statements', icon: FileText },
+              { label: 'Receipts', icon: FileText }
+            ].map((doc, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="flex items-center bg-white rounded-lg p-2 shadow-sm"
+              >
+                <doc.icon className="w-4 h-4 mr-2 text-green-600" />
+                {doc.label}
+              </motion.div>
+            ))}
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 hover:border-green-400 transition-colors cursor-pointer">
-            <Camera className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600 mb-2">Drop PDF files here or click to browse</p>
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="border-2 border-dashed border-green-300 rounded-xl p-8 hover:border-green-400 transition-colors cursor-pointer bg-green-50/50"
+          >
+            <Camera className="w-12 h-12 text-green-400 mx-auto mb-3" />
+            <p className="text-gray-600 mb-2 font-medium">Drop PDF files here or click to browse</p>
             <p className="text-xs text-gray-500">Supports PDF files up to 10MB</p>
-          </div>
-          <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700">
-            <Upload className="w-4 h-4 mr-2" />
+          </motion.div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 hover:from-green-600 hover:via-emerald-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <Upload className="w-5 h-5 mr-2 inline" />
             Upload Document
-          </Button>
+          </motion.button>
         </div>
       </div>
     </motion.div>
   );
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-gradient-to-br from-slate-50/90 via-blue-50/90 to-indigo-50/90 relative">
+    <div className="flex h-[calc(100vh-8rem)] bg-gradient-to-br from-slate-50/90 via-blue-50/90 to-indigo-50/90 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          animate={{ 
+            x: [0, 100, 0],
+            y: [0, -50, 0],
+            rotate: [0, 180, 360]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-10 left-10 w-32 h-32 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full blur-xl"
+        />
+        <motion.div
+          animate={{ 
+            x: [0, -80, 0],
+            y: [0, 100, 0],
+            rotate: [360, 180, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-10 right-10 w-40 h-40 bg-gradient-to-r from-pink-400/10 to-indigo-400/10 rounded-full blur-xl"
+        />
+      </div>
+
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-6">
-        {/* Header */}
+      <div className={`flex-1 overflow-y-auto p-6 transition-all duration-500 ${rightPanelVisible ? 'mr-20' : 'mr-0'}`}>
+        {/* Enhanced Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                {currentVoucherType?.label || 'Voucher Entry'}
-              </h1>
-              <p className="text-slate-600 text-lg">Create and manage accounting vouchers</p>
+            <div className="flex items-center space-x-4">
+              <motion.div
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                className="w-16 h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl"
+              >
+                <Layers className="w-8 h-8 text-white" />
+              </motion.div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                  {currentVoucherType?.label || 'Voucher Entry'}
+                </h1>
+                <p className="text-slate-600 text-lg flex items-center">
+                  <Star className="w-4 h-4 mr-2 text-yellow-500" />
+                  Create and manage accounting vouchers with intelligence
+                </p>
+              </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm" className="bg-white/90 backdrop-blur-sm shadow-lg border-gray-200/50">
-                <Search className="w-4 h-4 mr-2" />
-                Search
-              </Button>
-              <Button variant="outline" size="sm" className="bg-white/90 backdrop-blur-sm shadow-lg border-gray-200/50">
-                <Copy className="w-4 h-4 mr-2" />
-                Duplicate
-              </Button>
-              <Button 
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm shadow-lg border border-gray-200/50 rounded-xl hover:shadow-xl transition-all duration-300"
+              >
+                <Search className="w-4 h-4 mr-2 text-gray-600" />
+                <span className="text-gray-700">Search</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm shadow-lg border border-gray-200/50 rounded-xl hover:shadow-xl transition-all duration-300"
+              >
+                <Copy className="w-4 h-4 mr-2 text-gray-600" />
+                <span className="text-gray-700">Duplicate</span>
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setRightPanelVisible(!rightPanelVisible)}
-                variant="outline" 
-                size="sm" 
-                className="bg-white/90 backdrop-blur-sm shadow-lg border-gray-200/50"
+                className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg rounded-xl hover:shadow-xl transition-all duration-300"
               >
                 <Menu className="w-4 h-4 mr-2" />
-                Options
-              </Button>
+                <span>Panel</span>
+              </motion.button>
             </div>
           </div>
         </motion.div>
 
-        {/* Entry Mode Selection */}
+        {/* Enhanced Entry Mode Selection */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border-0 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></span>
-              Entry Mode
-            </h3>
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-8">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Entry Mode</h3>
+                <p className="text-gray-600">Choose your preferred method of voucher creation</p>
+              </div>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {entryModes.map((mode) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {entryModes.map((mode, index) => {
                 const Icon = mode.icon;
                 const isActive = entryMode === mode.id;
                 
                 return (
                   <motion.button
                     key={mode.id}
-                    whileHover={{ scale: 1.02, y: -2 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.03, y: -5 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setEntryMode(mode.id as any)}
-                    className={`p-6 rounded-xl border-2 transition-all duration-300 text-left ${
+                    className={`p-6 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden ${
                       isActive
-                        ? `bg-gradient-to-br ${mode.bgColor} border-current shadow-lg`
-                        : 'bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300'
+                        ? `bg-gradient-to-br ${mode.bgColor} border-current shadow-2xl`
+                        : 'bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300 shadow-lg hover:shadow-xl'
                     }`}
                   >
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    {isActive && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute top-4 right-4 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center"
+                      >
+                        <Star className="w-3 h-3 text-white" />
+                      </motion.div>
+                    )}
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
                         isActive 
-                          ? `bg-gradient-to-r ${mode.color} shadow-lg` 
+                          ? `bg-gradient-to-r ${mode.color}` 
                           : 'bg-gray-100'
                       }`}>
-                        <Icon className={`w-6 h-6 ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                        <Icon className={`w-7 h-7 ${isActive ? 'text-white' : 'text-gray-600'}`} />
                       </div>
                       <div className="flex-1">
-                        <h4 className={`font-semibold ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
+                        <h4 className={`font-bold text-lg ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
                           {mode.label}
                         </h4>
                       </div>
@@ -731,7 +858,7 @@ export const VoucherEntryConsolidated: React.FC = () => {
               renderLedgerItem={renderLedgerItem}
             />
 
-            {/* Transaction Details (replaces Stock Items Section) */}
+            {/* Transaction Details */}
             <TransactionDetailsSection
               voucher={voucher}
               setVoucher={setVoucher}
@@ -778,28 +905,39 @@ export const VoucherEntryConsolidated: React.FC = () => {
             {/* Voucher Narration */}
             <VoucherNarrationSection voucher={voucher} setVoucher={setVoucher} />
 
-            {/* Actions */}
+            {/* Enhanced Actions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="flex justify-end space-x-3 mb-6"
+              className="flex justify-end space-x-4 mb-6"
             >
-              <Button variant="outline" className="bg-white/90 backdrop-blur-sm shadow-lg border-gray-200/50">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-3 bg-white/90 backdrop-blur-sm shadow-lg border border-gray-200/50 rounded-xl hover:shadow-xl transition-all duration-300 text-gray-700 font-medium"
+              >
                 Cancel
-              </Button>
-              <Button 
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={saveVoucher}
                 disabled={voucher.voucher_type === 'journal' ? !isBalanced : false || loading}
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg"
+                className="px-8 py-3 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  <div className="flex items-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Saving...
+                  </div>
                 ) : (
-                  <Save className="w-4 h-4 mr-2" />
+                  <div className="flex items-center">
+                    <Save className="w-5 h-5 mr-2" />
+                    Save Voucher
+                  </div>
                 )}
-                Save Voucher
-              </Button>
+              </motion.button>
             </motion.div>
           </>
         )}
@@ -808,14 +946,22 @@ export const VoucherEntryConsolidated: React.FC = () => {
         {entryMode === 'pdf_import' && renderPDFImportMode()}
       </div>
 
-      {/* Collapsible Right Panel */}
-      <CollapsibleRightPanel
+      {/* Enhanced Right Sidebar */}
+      <EnhancedRightSidebar
         visible={rightPanelVisible}
         onVisibilityChange={setRightPanelVisible}
         voucher={voucher}
-        onVoucherChange={setVoucher}
-        onVoucherTypeChange={handleVoucherTypeChange}
-        onModeChange={handleModeChange}
+        onVoucherChange={(newVoucher) => {
+          setVoucher(newVoucher);
+          if (newVoucher.voucher_type !== voucher.voucher_type) {
+            handleVoucherTypeChange(newVoucher.voucher_type);
+          }
+          if (newVoucher.mode !== voucher.mode) {
+            handleModeChange(newVoucher.mode);
+          }
+        }}
+        recentVouchers={recentVouchers}
+        totalAmount={stockTotal}
       />
     </div>
   );

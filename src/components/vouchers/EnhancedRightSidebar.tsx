@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../ui/Button';
 import { 
   ChevronRight,
+  ChevronLeft,
+  X,
   Settings,
   FileText,
   TrendingUp,
@@ -11,7 +13,6 @@ import {
   DollarSign,
   Calendar,
   ChevronDown,
-  ChevronUp,
   Eye,
   Edit,
   Copy,
@@ -27,8 +28,9 @@ import {
   CreditCard,
   ArrowUpRight,
   ArrowDownRight,
-  ToggleLeft,
-  ToggleRight
+  ArrowRightLeft,
+  Sparkles,
+  Zap
 } from 'lucide-react';
 
 const voucherTypes = [
@@ -91,7 +93,7 @@ const voucherTypes = [
   { 
     value: 'contra', 
     label: 'Contra Entry', 
-    icon: Activity, 
+    icon: ArrowRightLeft, 
     color: 'from-teal-500 to-teal-600',
     hasMode: false,
     description: 'Bank to cash transfers'
@@ -115,38 +117,11 @@ const voucherModes = [
   }
 ];
 
-const sidebarSections = [
-  {
-    id: 'stats',
-    title: 'Quick Stats',
-    icon: TrendingUp,
-    color: 'from-blue-500 to-blue-600',
-    items: [
-      { label: "Today's Vouchers", value: '12', icon: FileText },
-      { label: 'This Month', value: '156', icon: Calendar },
-      { label: 'Pending', value: '3', icon: Clock, color: 'text-orange-600' },
-      { label: 'Total Amount', value: '₹2,45,680', icon: DollarSign, color: 'text-green-600' }
-    ]
-  },
-  {
-    id: 'recent',
-    title: 'Recent Vouchers',
-    icon: FileText,
-    color: 'from-green-500 to-green-600',
-    items: []
-  },
-  {
-    id: 'actions',
-    title: 'Quick Actions',
-    icon: Activity,
-    color: 'from-purple-500 to-purple-600',
-    items: [
-      { label: 'View All Vouchers', icon: FileText, action: 'view_all' },
-      { label: 'Trial Balance', icon: Calculator, action: 'trial_balance' },
-      { label: 'Day Book', icon: BarChart3, action: 'day_book' },
-      { label: 'AI Assistant', icon: Bot, action: 'ai_assistant' }
-    ]
-  }
+const quickActions = [
+  { id: 'reports', icon: BarChart3, label: 'Reports', color: 'from-blue-500 to-blue-600' },
+  { id: 'recent', icon: Clock, label: 'Recent', color: 'from-green-500 to-green-600' },
+  { id: 'settings', icon: Settings, label: 'Settings', color: 'from-purple-500 to-purple-600' },
+  { id: 'analytics', icon: Activity, label: 'Analytics', color: 'from-orange-500 to-orange-600' }
 ];
 
 interface EnhancedRightSidebarProps {
@@ -167,60 +142,8 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
   totalAmount
 }) => {
   const navigate = useNavigate();
-  const [expandedSections, setExpandedSections] = useState<string[]>(['voucher_types', 'voucher_modes', 'stats', 'recent']);
-  const [isHovering, setIsHovering] = useState(false);
-  const [showTrigger, setShowTrigger] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Auto-hide trigger when sidebar is visible and not hovering
-  useEffect(() => {
-    if (visible && !isHovering) {
-      const timer = setTimeout(() => setShowTrigger(false), 2000);
-      return () => clearTimeout(timer);
-    } else {
-      setShowTrigger(true);
-    }
-  }, [visible, isHovering]);
-
-  // Enhanced mouse detection for auto-show/hide
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const windowWidth = window.innerWidth;
-      const triggerZone = 30;
-      
-      if (e.clientX >= windowWidth - triggerZone) {
-        if (!visible) {
-          onVisibilityChange(true);
-        }
-        setShowTrigger(true);
-        
-        // Clear any pending hide timeout
-        if (hideTimeoutRef.current) {
-          clearTimeout(hideTimeoutRef.current);
-          hideTimeoutRef.current = null;
-        }
-      }
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current);
-      }
-    };
-  }, [visible, onVisibilityChange]);
-
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => 
-      prev.includes(sectionId) 
-        ? prev.filter(id => id !== sectionId)
-        : [...prev, sectionId]
-    );
-  };
 
   const handleVoucherTypeChange = (type: string) => {
     const selectedType = voucherTypes.find(vt => vt.value === type);
@@ -230,6 +153,11 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
       mode: selectedType?.hasMode ? 'item_invoice' : 'voucher_mode'
     };
     onVoucherChange(newVoucher);
+    
+    // Collapse panel after selection if it was expanded
+    if (isExpanded) {
+      setIsExpanded(false);
+    }
   };
 
   const handleVoucherModeChange = (mode: string) => {
@@ -237,458 +165,390 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
       ...voucher,
       mode: mode
     });
+    
+    // Collapse panel after selection if it was expanded
+    if (isExpanded) {
+      setIsExpanded(false);
+    }
   };
 
   const handleSettingsClick = () => {
-    onVisibilityChange(false);
     navigate('/voucher-settings');
   };
 
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-    // Clear any pending hide timeout
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current);
-      hideTimeoutRef.current = null;
-    }
+  const toggleExpansion = () => {
+    setIsExpanded(!isExpanded);
   };
 
-  const handleMouseLeave = (e: React.MouseEvent) => {
-    // Check if mouse is leaving to the left side of the sidebar
-    const rect = sidebarRef.current?.getBoundingClientRect();
-    if (rect && e.clientX < rect.left) {
-      setIsHovering(false);
-      // Set a timeout to hide the sidebar
-      if (visible) {
-        hideTimeoutRef.current = setTimeout(() => {
-          onVisibilityChange(false);
-        }, 500); // 500ms delay before hiding
-      }
-    }
-  };
-
-  const getSectionLabel = (voucherType: string) => {
-    switch (voucherType) {
-      case 'sales':
-        return 'Sales Section';
-      case 'purchase':
-        return 'Purchase Section';
-      case 'debit_note':
-        return 'Debit Note Section';
-      case 'credit_note':
-        return 'Credit Note Section';
-      case 'receipt':
-        return 'Receipt Section';
-      case 'payment':
-        return 'Payment Section';
-      default:
-        return 'Ledger Section';
-    }
+  const handleClose = () => {
+    onVisibilityChange(false);
+    setIsExpanded(false);
   };
 
   return (
-    <>
-      {/* Enhanced Trigger Area */}
-      <AnimatePresence>
-        {showTrigger && !visible && (
-          <motion.div 
-            ref={triggerRef}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="fixed right-0 top-1/2 transform -translate-y-1/2 z-40 cursor-pointer"
-            onMouseEnter={() => {
-              onVisibilityChange(true);
-              setIsHovering(true);
-            }}
-          >
-            <div className="bg-white/95 backdrop-blur-md border border-gray-200/50 rounded-l-xl shadow-xl p-3 hover:bg-white transition-all duration-300">
-              <ChevronRight className="w-5 h-5 text-gray-600 hover:text-blue-600 transition-colors transform rotate-180" />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          ref={sidebarRef}
+          initial={{ x: 400, opacity: 0 }}
+          animate={{ 
+            x: 0, 
+            opacity: 1,
+            width: isExpanded ? '400px' : '80px'
+          }}
+          exit={{ x: 400, opacity: 0 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          className="fixed right-0 top-16 h-[calc(100vh-4rem)] bg-gradient-to-br from-indigo-900/95 via-purple-900/95 to-pink-900/95 backdrop-blur-xl border-l border-purple-300/30 shadow-2xl z-50 overflow-hidden"
+        >
+          {/* Animated Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 animate-pulse"></div>
+          
+          {/* Header Controls */}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center space-y-3">
+            {/* Close Button */}
+            <motion.button
+              whileHover={{ scale: 1.15, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleClose}
+              className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-full shadow-xl flex items-center justify-center text-white hover:shadow-2xl transition-all duration-300"
+            >
+              <X className="w-5 h-5" />
+            </motion.button>
+            
+            {/* Expand/Collapse Button */}
+            <motion.button
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleExpansion}
+              className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-xl flex items-center justify-center text-white hover:shadow-2xl transition-all duration-300"
+            >
+              <motion.div
+                animate={{ rotate: isExpanded ? 0 : 180 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </motion.div>
+            </motion.button>
+          </div>
 
-      {/* Main Sidebar */}
-      <AnimatePresence>
-        {visible && (
-          <motion.div
-            ref={sidebarRef}
-            initial={{ x: 400, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 400, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-96 bg-gradient-to-br from-slate-100/95 via-blue-50/95 to-indigo-100/95 backdrop-blur-md border-l border-gray-200/50 shadow-2xl z-50"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            {/* Header */}
-            <div className="p-6 border-b border-gray-200/50 bg-gradient-to-r from-gray-50/90 to-blue-50/90 backdrop-blur-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Voucher Panel</h3>
-                    <p className="text-sm text-gray-500">Quick access & settings</p>
-                  </div>
+          <div className="h-full overflow-y-auto pt-24 pb-4">
+            {!isExpanded ? (
+              /* Collapsed View - Enhanced Icons */
+              <div className="px-3 space-y-4">
+                {/* Voucher Types */}
+                <div className="space-y-3">
+                  {voucherTypes.map((type, index) => {
+                    const Icon = type.icon;
+                    const isActive = voucher.voucher_type === type.value;
+                    
+                    return (
+                      <motion.button
+                        key={type.value}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ scale: 1.15, rotate: 5 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleVoucherTypeChange(type.value)}
+                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-2xl ${
+                          isActive
+                            ? `bg-gradient-to-r ${type.color} text-white shadow-2xl scale-110`
+                            : 'bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white'
+                        }`}
+                        title={type.label}
+                      >
+                        <Icon className="w-6 h-6" />
+                        {isActive && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center"
+                          >
+                            <Sparkles className="w-2 h-2 text-yellow-800" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSettingsClick}
-                    className="text-gray-500 hover:text-gray-700 hover:bg-gray-100/80"
-                    title="Open Voucher Settings"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onVisibilityChange(false)}
-                    className="text-gray-500 hover:text-gray-700 hover:bg-gray-100/80"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </Button>
+
+                {/* Divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-purple-300/50 to-transparent mx-2"></div>
+
+                {/* Mode Toggle */}
+                {['sales', 'purchase', 'debit_note', 'credit_note'].includes(voucher.voucher_type) && (
+                  <div className="space-y-3">
+                    <motion.button
+                      whileHover={{ scale: 1.15, rotate: -5 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleVoucherModeChange('item_invoice')}
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-2xl ${
+                        voucher.mode === 'item_invoice'
+                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-2xl scale-110'
+                          : 'bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white'
+                      }`}
+                      title="Item Invoice"
+                    >
+                      <Package className="w-6 h-6" />
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.15, rotate: 5 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleVoucherModeChange('voucher_mode')}
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-2xl ${
+                        voucher.mode === 'voucher_mode'
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-2xl scale-110'
+                          : 'bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white'
+                      }`}
+                      title="As Voucher"
+                    >
+                      <FileText className="w-6 h-6" />
+                    </motion.button>
+                  </div>
+                )}
+
+                {/* Divider */}
+                <div className="h-px bg-gradient-to-r from-transparent via-purple-300/50 to-transparent mx-2"></div>
+
+                {/* Quick Actions */}
+                <div className="space-y-3">
+                  {quickActions.map((action, index) => {
+                    const Icon = action.icon;
+                    
+                    return (
+                      <motion.button
+                        key={action.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: (voucherTypes.length + index) * 0.1 }}
+                        whileHover={{ scale: 1.15, rotate: action.id === 'settings' ? 180 : 0 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={action.id === 'settings' ? handleSettingsClick : undefined}
+                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-2xl bg-white/20 backdrop-blur-sm hover:bg-gradient-to-r hover:${action.color} text-white`}
+                        title={action.label}
+                      >
+                        <Icon className="w-6 h-6" />
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-
-            {/* Content */}
-            <div className="h-full overflow-y-auto p-6 pb-20">
-              <div className="space-y-6">
-                {/* Voucher Types Section */}
+            ) : (
+              /* Expanded View - Enhanced Content */
+              <div className="px-6 space-y-6">
+                {/* Header */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-100/50 overflow-hidden"
+                  className="text-center"
                 >
-                  <motion.button
-                    whileHover={{ backgroundColor: 'rgba(248, 250, 252, 0.9)' }}
-                    onClick={() => toggleSection('voucher_types')}
-                    className={`w-full p-4 flex items-center justify-between transition-all duration-300 ${
-                      expandedSections.includes('voucher_types') 
-                        ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white' 
-                        : 'text-gray-700 hover:text-blue-600'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <FileText className={`w-5 h-5 ${expandedSections.includes('voucher_types') ? 'text-white' : 'text-gray-600'}`} />
-                      <span className="font-medium text-sm">Voucher Types</span>
-                    </div>
-                    <motion.div
-                      animate={{ rotate: expandedSections.includes('voucher_types') ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronDown className={`w-4 h-4 ${expandedSections.includes('voucher_types') ? 'text-white' : 'text-gray-400'}`} />
-                    </motion.div>
-                  </motion.button>
-
-                  <AnimatePresence>
-                    {expandedSections.includes('voucher_types') && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="p-4 bg-gray-50/50">
-                          <div className="space-y-2">
-                            {voucherTypes.map((type, index) => {
-                              const Icon = type.icon;
-                              const isActive = voucher.voucher_type === type.value;
-                              
-                              return (
-                                <motion.button
-                                  key={type.value}
-                                  initial={{ opacity: 0, scale: 0.9 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ delay: index * 0.05 }}
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  onClick={() => handleVoucherTypeChange(type.value)}
-                                  className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
-                                    isActive
-                                      ? `bg-gradient-to-r ${type.color} text-white shadow-lg`
-                                      : 'bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300'
-                                  }`}
-                                >
-                                  <div className="flex items-center space-x-3">
-                                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-600'}`} />
-                                    <div className="flex-1">
-                                      <span className={`font-medium text-sm ${isActive ? 'text-white' : 'text-gray-900'}`}>
-                                        {type.label}
-                                      </span>
-                                      <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
-                                        {type.description}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </motion.button>
-                              );
-                            })}
-                          </div>
-
-                          {/* Current Section Info */}
-                          <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                            <div className="flex items-center space-x-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              <span className="text-sm font-medium text-blue-900">
-                                Current: {getSectionLabel(voucher.voucher_type)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <Zap className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Voucher Panel</h3>
+                  <p className="text-purple-200">Quick access & smart controls</p>
                 </motion.div>
 
-                {/* Voucher Mode Section */}
+                {/* Voucher Types */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 overflow-hidden"
+                >
+                  <div className="p-4 bg-gradient-to-r from-indigo-600/50 to-purple-600/50">
+                    <h4 className="font-bold text-white flex items-center">
+                      <FileText className="w-5 h-5 mr-2" />
+                      Voucher Types
+                    </h4>
+                  </div>
+                  
+                  <div className="p-4 space-y-3 max-h-64 overflow-y-auto">
+                    {voucherTypes.map((type, index) => {
+                      const Icon = type.icon;
+                      const isActive = voucher.voucher_type === type.value;
+                      
+                      return (
+                        <motion.button
+                          key={type.value}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          whileHover={{ scale: 1.02, x: 5 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleVoucherTypeChange(type.value)}
+                          className={`w-full p-3 rounded-xl text-left transition-all duration-300 ${
+                            isActive
+                              ? `bg-gradient-to-r ${type.color} text-white shadow-lg scale-105`
+                              : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Icon className="w-5 h-5" />
+                            <div className="flex-1">
+                              <span className="font-medium text-sm">{type.label}</span>
+                              <p className={`text-xs ${isActive ? 'text-white/80' : 'text-purple-200'}`}>
+                                {type.description}
+                              </p>
+                            </div>
+                            {isActive && (
+                              <Sparkles className="w-4 h-4 text-yellow-300" />
+                            )}
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+
+                {/* Voucher Mode */}
                 {voucherTypes.find(vt => vt.value === voucher.voucher_type)?.hasMode && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-100/50 overflow-hidden"
+                    transition={{ delay: 0.2 }}
+                    className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 overflow-hidden"
                   >
-                    <motion.button
-                      whileHover={{ backgroundColor: 'rgba(248, 250, 252, 0.9)' }}
-                      onClick={() => toggleSection('voucher_modes')}
-                      className={`w-full p-4 flex items-center justify-between transition-all duration-300 ${
-                        expandedSections.includes('voucher_modes') 
-                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white' 
-                          : 'text-gray-700 hover:text-blue-600'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <ToggleLeft className={`w-5 h-5 ${expandedSections.includes('voucher_modes') ? 'text-white' : 'text-gray-600'}`} />
-                        <span className="font-medium text-sm">Voucher Mode</span>
-                      </div>
-                      <motion.div
-                        animate={{ rotate: expandedSections.includes('voucher_modes') ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <ChevronDown className={`w-4 h-4 ${expandedSections.includes('voucher_modes') ? 'text-white' : 'text-gray-400'}`} />
-                      </motion.div>
-                    </motion.button>
-
-                    <AnimatePresence>
-                      {expandedSections.includes('voucher_modes') && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="p-4 bg-gray-50/50">
-                            <div className="space-y-2">
-                              {voucherModes.map((mode, index) => {
-                                const Icon = mode.icon;
-                                const isActive = voucher.mode === mode.value;
-                                
-                                return (
-                                  <motion.button
-                                    key={mode.value}
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => handleVoucherModeChange(mode.value)}
-                                    className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
-                                      isActive
-                                        ? `bg-gradient-to-r ${mode.color} text-white shadow-lg`
-                                        : 'bg-white hover:bg-purple-50 border border-gray-200 hover:border-purple-300'
-                                    }`}
-                                  >
-                                    <div className="flex items-center space-x-3">
-                                      <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-600'}`} />
-                                      <div className="flex-1">
-                                        <span className={`font-medium text-sm ${isActive ? 'text-white' : 'text-gray-900'}`}>
-                                          {mode.label}
-                                        </span>
-                                        <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
-                                          {mode.description}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </motion.button>
-                                );
-                              })}
-                            </div>
-
-                            {/* Mode Info */}
-                            <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                                <span className="text-sm font-medium text-purple-900">
-                                  Mode: {voucher.mode === 'item_invoice' 
-                                    ? 'Item Invoice with stock details' 
-                                    : 'Voucher mode with ledger entries only'
-                                  }
-                                </span>
+                    <div className="p-4 bg-gradient-to-r from-purple-600/50 to-pink-600/50">
+                      <h4 className="font-bold text-white flex items-center">
+                        <Package className="w-5 h-5 mr-2" />
+                        Voucher Mode
+                      </h4>
+                    </div>
+                    
+                    <div className="p-4 space-y-3">
+                      {voucherModes.map((mode, index) => {
+                        const Icon = mode.icon;
+                        const isActive = voucher.mode === mode.value;
+                        
+                        return (
+                          <motion.button
+                            key={mode.value}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            whileHover={{ scale: 1.02, x: 5 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleVoucherModeChange(mode.value)}
+                            className={`w-full p-3 rounded-xl text-left transition-all duration-300 ${
+                              isActive
+                                ? `bg-gradient-to-r ${mode.color} text-white shadow-lg scale-105`
+                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <Icon className="w-5 h-5" />
+                              <div className="flex-1">
+                                <span className="font-medium text-sm">{mode.label}</span>
+                                <p className={`text-xs ${isActive ? 'text-white/80' : 'text-purple-200'}`}>
+                                  {mode.description}
+                                </p>
                               </div>
+                              {isActive && (
+                                <Sparkles className="w-4 h-4 text-yellow-300" />
+                              )}
                             </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
                   </motion.div>
                 )}
 
-                {/* Other Sections */}
-                {sidebarSections.map((section, index) => {
-                  const Icon = section.icon;
-                  const isExpanded = expandedSections.includes(section.id);
+                {/* Quick Stats */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 overflow-hidden"
+                >
+                  <div className="p-4 bg-gradient-to-r from-green-600/50 to-emerald-600/50">
+                    <h4 className="font-bold text-white flex items-center">
+                      <TrendingUp className="w-5 h-5 mr-2" />
+                      Quick Stats
+                    </h4>
+                  </div>
                   
-                  return (
-                    <motion.div
-                      key={section.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: (index + 2) * 0.1 }}
-                      className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-100/50 overflow-hidden"
-                    >
-                      {/* Section Header */}
-                      <motion.button
-                        whileHover={{ backgroundColor: 'rgba(248, 250, 252, 0.9)' }}
-                        onClick={() => toggleSection(section.id)}
-                        className={`w-full p-4 flex items-center justify-between transition-all duration-300 ${
-                          isExpanded ? `bg-gradient-to-r ${section.color} text-white` : 'text-gray-700 hover:text-blue-600'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Icon className={`w-5 h-5 ${isExpanded ? 'text-white' : 'text-gray-600'}`} />
-                          <span className="font-medium text-sm">{section.title}</span>
-                        </div>
+                  <div className="p-4 space-y-3">
+                    {[
+                      { label: "Today's Vouchers", value: '12', icon: FileText, color: 'text-blue-300' },
+                      { label: 'This Month', value: '156', icon: Calendar, color: 'text-green-300' },
+                      { label: 'Total Amount', value: `₹${totalAmount.toLocaleString()}`, icon: DollarSign, color: 'text-yellow-300' }
+                    ].map((stat, index) => {
+                      const Icon = stat.icon;
+                      return (
                         <motion.div
-                          animate={{ rotate: isExpanded ? 180 : 0 }}
-                          transition={{ duration: 0.2 }}
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10"
                         >
-                          <ChevronDown className={`w-4 h-4 ${isExpanded ? 'text-white' : 'text-gray-400'}`} />
+                          <div className="flex items-center space-x-3">
+                            <Icon className={`w-4 h-4 ${stat.color}`} />
+                            <span className="text-sm text-purple-200">{stat.label}</span>
+                          </div>
+                          <span className="font-bold text-white">{stat.value}</span>
                         </motion.div>
-                      </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
 
-                      {/* Section Content */}
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="p-4 bg-gray-50/50">
-                              {/* Quick Stats */}
-                              {section.id === 'stats' && (
-                                <div className="space-y-3">
-                                  {section.items.map((item, index) => {
-                                    const ItemIcon = item.icon;
-                                    return (
-                                      <motion.div
-                                        key={index}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        className={`flex items-center justify-between p-3 ${item.bgColor || 'bg-gray-50'} rounded-lg border border-gray-200/50`}
-                                      >
-                                        <div className="flex items-center space-x-3">
-                                          <ItemIcon className="w-4 h-4 text-gray-600" />
-                                          <span className="text-sm text-gray-700">{item.label}</span>
-                                        </div>
-                                        <span className={`font-semibold text-sm ${item.color || 'text-gray-900'}`}>
-                                          {item.value}
-                                        </span>
-                                      </motion.div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-
-                              {/* Recent Vouchers */}
-                              {section.id === 'recent' && (
-                                <div className="space-y-3">
-                                  {recentVouchers.slice(0, 5).map((recentVoucher, index) => (
-                                    <motion.div
-                                      key={recentVoucher.id}
-                                      initial={{ opacity: 0, x: -20 }}
-                                      animate={{ opacity: 1, x: 0 }}
-                                      transition={{ delay: index * 0.05 }}
-                                      className="group p-3 bg-white rounded-lg hover:bg-blue-50 transition-all duration-200 cursor-pointer border border-gray-200/50 shadow-sm"
-                                    >
-                                      <div className="flex items-center justify-between mb-2">
-                                        <span className="font-medium text-sm text-gray-900">
-                                          {recentVoucher.voucher_number}
-                                        </span>
-                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <button className="p-1 hover:bg-blue-100 rounded">
-                                            <Eye className="w-3 h-3 text-blue-600" />
-                                          </button>
-                                          <button className="p-1 hover:bg-emerald-100 rounded">
-                                            <Edit className="w-3 h-3 text-emerald-600" />
-                                          </button>
-                                          <button className="p-1 hover:bg-orange-100 rounded">
-                                            <Copy className="w-3 h-3 text-orange-600" />
-                                          </button>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center justify-between">
-                                        <span className="text-xs text-gray-500 capitalize bg-gray-100 px-2 py-1 rounded">
-                                          {recentVoucher.voucher_type}
-                                        </span>
-                                        <span className="font-semibold text-sm text-gray-900">
-                                          ₹{recentVoucher.total_amount?.toLocaleString()}
-                                        </span>
-                                      </div>
-                                      <div className="text-xs text-gray-500 mt-2">
-                                        {new Date(recentVoucher.date).toLocaleDateString()}
-                                      </div>
-                                    </motion.div>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* Quick Actions */}
-                              {section.id === 'actions' && (
-                                <div className="space-y-2">
-                                  {section.items.map((item, index) => {
-                                    const ItemIcon = item.icon;
-                                    return (
-                                      <motion.button
-                                        key={index}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: index * 0.1 }}
-                                        whileHover={{ scale: 1.02, x: 4 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="w-full flex items-center space-x-3 p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-all duration-300 text-left group"
-                                      >
-                                        <ItemIcon className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
-                                        <span className="text-sm text-gray-700 group-hover:text-blue-700 transition-colors">
-                                          {item.label}
-                                        </span>
-                                      </motion.button>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-                  );
-                })}
+                {/* Recent Vouchers */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 overflow-hidden"
+                >
+                  <div className="p-4 bg-gradient-to-r from-orange-600/50 to-red-600/50">
+                    <h4 className="font-bold text-white flex items-center">
+                      <Clock className="w-5 h-5 mr-2" />
+                      Recent Vouchers
+                    </h4>
+                  </div>
+                  
+                  <div className="p-4 space-y-3 max-h-48 overflow-y-auto">
+                    {recentVouchers.slice(0, 3).map((recentVoucher, index) => (
+                      <motion.div
+                        key={recentVoucher.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="group p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all duration-200 cursor-pointer border border-white/10"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm text-white">
+                            {recentVoucher.voucher_number}
+                          </span>
+                          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button className="p-1 hover:bg-blue-500/20 rounded">
+                              <Eye className="w-3 h-3 text-blue-300" />
+                            </button>
+                            <button className="p-1 hover:bg-emerald-500/20 rounded">
+                              <Edit className="w-3 h-3 text-emerald-300" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-purple-300 capitalize bg-white/10 px-2 py-1 rounded">
+                            {recentVoucher.voucher_type}
+                          </span>
+                          <span className="font-semibold text-sm text-yellow-300">
+                            ₹{recentVoucher.total_amount?.toLocaleString()}
+                          </span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

@@ -51,10 +51,15 @@ export const AccountingEntriesSection: React.FC<AccountingEntriesSectionProps> =
             <Calculator className="w-5 h-5 mr-2 text-purple-600" />
             Accounting Entries
           </h3>
-          <Button size="sm" onClick={addEntry}>
-            <Plus className="w-4 h-4 mr-1" />
-            Add Entry
-          </Button>
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={addEntry}
+            className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            title="Add Entry"
+          >
+            <Plus className="w-5 h-5" />
+          </motion.button>
         </div>
 
         <div className="overflow-x-auto">
@@ -138,12 +143,14 @@ export const AccountingEntriesSection: React.FC<AccountingEntriesSectionProps> =
                   <td className="py-3 px-2">
                     {voucher.entries && voucher.entries.length > (voucher.voucher_type === 'journal' ? 2 : 1) && 
                      index < voucher.entries.length - 1 && (
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => removeEntry(index)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                        className="w-8 h-8 bg-red-500 hover:bg-red-600 rounded-lg flex items-center justify-center text-white shadow-md transition-all duration-200"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </motion.button>
                     )}
                   </td>
                 </tr>
