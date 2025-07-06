@@ -1,35 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../contexts/AppContext';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { 
+  ArrowLeft, 
   Building2, 
   Save, 
-  ArrowLeft,
-  MapPin,
-  Phone,
-  Mail,
+  MapPin, 
+  Phone, 
+  Mail, 
+  Globe, 
+  FileText, 
   CreditCard,
-  Hash,
-  Globe,
-  Sparkles,
-  Settings,
-  Shield,
   Calendar,
-  DollarSign,
-  FileText,
+  Settings,
   CheckCircle,
-  ChevronRight,
-  ChevronLeft,
+  AlertCircle,
+  Sparkles,
   Star,
   Zap,
+  Shield,
   Users,
+  TrendingUp,
   Package,
-  BarChart3
+  Calculator,
+  Database,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -38,146 +38,199 @@ interface CompanyFormProps {
   onSuccess: () => void;
 }
 
-const countries = [
-  { code: 'IN', name: 'India', flag: '🇮🇳' },
-  { code: 'US', name: 'United States', flag: '🇺🇸' },
-  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
-  { code: 'CA', name: 'Canada', flag: '🇨🇦' },
-  { code: 'AU', name: 'Australia', flag: '🇦🇺' },
-  { code: 'DE', name: 'Germany', flag: '🇩🇪' },
-  { code: 'FR', name: 'France', flag: '🇫🇷' },
-  { code: 'JP', name: 'Japan', flag: '🇯🇵' },
-];
-
-const indianStates = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
-  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh',
-  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
-  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
-  'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Puducherry',
-  'Chandigarh', 'Andaman and Nicobar Islands', 'Dadra and Nagar Haveli and Daman and Diu',
-  'Lakshadweep'
-];
-
-const currencies = [
-  { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
-  { code: 'USD', name: 'US Dollar', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'GBP', name: 'British Pound', symbol: '£' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-  { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-];
-
-const FORM_DATA_KEY = 'companySetupFormData';
-
 export const CompanyForm: React.FC<CompanyFormProps> = ({ onBack, onSuccess }) => {
-  const { userProfile } = useAuth();
   const { setSelectedCompany, setSelectedFinancialYear } = useApp();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
-
-  // Initialize form data from localStorage or defaults
-  const [formData, setFormData] = useState(() => {
-    const savedData = localStorage.getItem(FORM_DATA_KEY);
-    if (savedData) {
-      try {
-        return JSON.parse(savedData);
-      } catch (error) {
-        console.error('Error parsing saved form data:', error);
-      }
-    }
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    // Basic Information
+    name: '',
+    mailing_name: '',
+    industry: '',
+    company_type: 'private_limited',
     
-    return {
-      // Basic Information
-      name: '',
-      mailing_name: '',
-      industry: '',
-      company_type: 'private_limited',
-      
-      // Tax Information
-      gstin: '',
-      pan: '',
-      tan: '',
-      cin: '',
-      
-      // Address Information
-      address: '',
-      city: '',
-      state: '',
-      pincode: '',
-      country: 'IN',
-      
-      // Contact Information
-      phone: '',
-      email: '',
-      website: '',
-      fax: '',
-      
-      // Financial Configuration
-      financial_year_start: new Date().getFullYear() + '-04-01',
-      currency: 'INR',
-      decimal_places: 2,
-      
-      // System Features
-      enable_inventory: true,
-      enable_multi_currency: false,
-      enable_cost_center: false,
-      enable_job_costing: false,
-      enable_budget: false,
-      auto_voucher_numbering: true,
-      enable_audit_trail: true,
-      enable_multi_godown: false,
-      enable_batch_tracking: false,
-      enable_serial_tracking: false,
-      
-      // Security & Compliance
-      enable_data_encryption: true,
-      enable_backup: true,
-      backup_frequency: 'daily',
-      enable_user_access_control: true,
-    };
+    // Contact Information
+    email: '',
+    phone: '',
+    website: '',
+    fax: '',
+    
+    // Address Information
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    country: 'IN',
+    
+    // Legal Information
+    gstin: '',
+    pan: '',
+    tan: '',
+    cin: '',
+    
+    // Financial Configuration
+    currency: 'INR',
+    decimal_places: 2,
+    financial_year_start: new Date(new Date().getFullYear(), 3, 1).toISOString().split('T')[0], // April 1st
+    
+    // Feature Flags
+    enable_inventory: true,
+    enable_multi_currency: false,
+    enable_cost_center: false,
+    enable_job_costing: false,
+    enable_budget: false,
+    auto_voucher_numbering: true,
+    enable_audit_trail: true,
+    enable_multi_godown: false,
+    enable_batch_tracking: false,
+    enable_serial_tracking: false,
+    enable_data_encryption: true,
+    enable_backup: true,
+    backup_frequency: 'daily',
+    enable_user_access_control: true
   });
 
-  // Save form data to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem(FORM_DATA_KEY, JSON.stringify(formData));
-  }, [formData]);
+  const steps = [
+    {
+      id: 1,
+      title: 'Basic Information',
+      description: 'Company details and contact information',
+      icon: Building2,
+      color: 'from-blue-500 to-blue-600'
+    },
+    {
+      id: 2,
+      title: 'Legal & Tax Details',
+      description: 'Registration numbers and compliance',
+      icon: FileText,
+      color: 'from-green-500 to-green-600'
+    },
+    {
+      id: 3,
+      title: 'Financial Setup',
+      description: 'Currency and accounting preferences',
+      icon: Calculator,
+      color: 'from-purple-500 to-purple-600'
+    },
+    {
+      id: 4,
+      title: 'Features & Settings',
+      description: 'Enable modules and configure options',
+      icon: Settings,
+      color: 'from-orange-500 to-orange-600'
+    }
+  ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name.trim()) {
-      toast.error('Company name is required');
+  const industries = [
+    { value: 'manufacturing', label: 'Manufacturing' },
+    { value: 'trading', label: 'Trading' },
+    { value: 'services', label: 'Services' },
+    { value: 'retail', label: 'Retail' },
+    { value: 'construction', label: 'Construction' },
+    { value: 'healthcare', label: 'Healthcare' },
+    { value: 'education', label: 'Education' },
+    { value: 'technology', label: 'Technology' },
+    { value: 'finance', label: 'Finance' },
+    { value: 'real_estate', label: 'Real Estate' },
+    { value: 'hospitality', label: 'Hospitality' },
+    { value: 'transportation', label: 'Transportation' },
+    { value: 'agriculture', label: 'Agriculture' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const companyTypes = [
+    { value: 'private_limited', label: 'Private Limited Company' },
+    { value: 'public_limited', label: 'Public Limited Company' },
+    { value: 'partnership', label: 'Partnership Firm' },
+    { value: 'llp', label: 'Limited Liability Partnership (LLP)' },
+    { value: 'sole_proprietorship', label: 'Sole Proprietorship' },
+    { value: 'trust', label: 'Trust' },
+    { value: 'society', label: 'Society' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const currencies = [
+    { value: 'INR', label: '₹ Indian Rupee' },
+    { value: 'USD', label: '$ US Dollar' },
+    { value: 'EUR', label: '€ Euro' },
+    { value: 'GBP', label: '£ British Pound' },
+    { value: 'CAD', label: 'C$ Canadian Dollar' },
+    { value: 'AUD', label: 'A$ Australian Dollar' },
+    { value: 'JPY', label: '¥ Japanese Yen' }
+  ];
+
+  const states = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
+    'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh',
+    'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+    'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
+    'Uttarakhand', 'West Bengal', 'Delhi', 'Chandigarh', 'Puducherry'
+  ];
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const validateStep = (step: number) => {
+    switch (step) {
+      case 1:
+        return formData.name.trim() !== '';
+      case 2:
+        return true; // Optional fields
+      case 3:
+        return formData.currency !== '' && formData.financial_year_start !== '';
+      case 4:
+        return true; // All optional
+      default:
+        return true;
+    }
+  };
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 4));
+    } else {
+      toast.error('Please fill in all required fields');
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleSubmit = async () => {
+    if (!validateStep(currentStep)) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Create company
+      const { data: company, error: companyError } = await supabase
         .from('companies')
         .insert([{
           ...formData,
-          admin_id: userProfile?.id
+          admin_id: (await supabase.auth.getUser()).data.user?.id
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (companyError) throw companyError;
 
       // Create default financial year
-      const fyStart = new Date(formData.financial_year_start);
-      const fyEnd = new Date(fyStart);
-      fyEnd.setFullYear(fyEnd.getFullYear() + 1);
-      fyEnd.setDate(fyEnd.getDate() - 1);
+      const yearEnd = new Date(formData.financial_year_start);
+      yearEnd.setFullYear(yearEnd.getFullYear() + 1);
+      yearEnd.setDate(yearEnd.getDate() - 1);
 
-      const { data: fyData, error: fyError } = await supabase
+      const { data: financialYear, error: fyError } = await supabase
         .from('financial_years')
         .insert([{
-          company_id: data.id,
-          year_start: fyStart.toISOString().split('T')[0],
-          year_end: fyEnd.toISOString().split('T')[0],
+          company_id: company.id,
+          year_start: formData.financial_year_start,
+          year_end: yearEnd.toISOString().split('T')[0],
           is_active: true
         }])
         .select()
@@ -185,802 +238,452 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ onBack, onSuccess }) =
 
       if (fyError) throw fyError;
 
-      // Set the created company and financial year as selected
-      setSelectedCompany(data);
-      setSelectedFinancialYear(fyData);
-
       // Create default ledger groups
       const defaultGroups = [
-        { name: 'Current Assets', group_type: 'assets' },
-        { name: 'Fixed Assets', group_type: 'assets' },
-        { name: 'Investments', group_type: 'assets' },
-        { name: 'Current Liabilities', group_type: 'liabilities' },
-        { name: 'Long Term Liabilities', group_type: 'liabilities' },
-        { name: 'Capital Account', group_type: 'liabilities' },
-        { name: 'Reserves & Surplus', group_type: 'liabilities' },
-        { name: 'Direct Income', group_type: 'income' },
-        { name: 'Indirect Income', group_type: 'income' },
-        { name: 'Direct Expenses', group_type: 'expenses' },
-        { name: 'Indirect Expenses', group_type: 'expenses' },
-        { name: 'Purchase Accounts', group_type: 'expenses' },
-        { name: 'Sales Accounts', group_type: 'income' }
+        { name: 'Current Assets', group_type: 'assets', company_id: company.id },
+        { name: 'Fixed Assets', group_type: 'assets', company_id: company.id },
+        { name: 'Current Liabilities', group_type: 'liabilities', company_id: company.id },
+        { name: 'Long Term Liabilities', group_type: 'liabilities', company_id: company.id },
+        { name: 'Sales Accounts', group_type: 'income', company_id: company.id },
+        { name: 'Other Income', group_type: 'income', company_id: company.id },
+        { name: 'Direct Expenses', group_type: 'expenses', company_id: company.id },
+        { name: 'Indirect Expenses', group_type: 'expenses', company_id: company.id }
       ];
 
       const { error: groupsError } = await supabase
         .from('ledger_groups')
-        .insert(defaultGroups.map(group => ({
-          ...group,
-          company_id: data.id
-        })));
+        .insert(defaultGroups);
 
       if (groupsError) throw groupsError;
 
-      // Create default units
-      const defaultUnits = [
-        { name: 'Numbers', symbol: 'Nos' },
-        { name: 'Kilograms', symbol: 'Kg' },
-        { name: 'Grams', symbol: 'Gms' },
-        { name: 'Meters', symbol: 'Mtr' },
-        { name: 'Centimeters', symbol: 'Cms' },
-        { name: 'Liters', symbol: 'Ltr' },
-        { name: 'Milliliters', symbol: 'Ml' },
-        { name: 'Pieces', symbol: 'Pcs' },
-        { name: 'Boxes', symbol: 'Box' },
-        { name: 'Packets', symbol: 'Pkt' },
-        { name: 'Dozens', symbol: 'Dzn' },
-        { name: 'Pairs', symbol: 'Pr' }
-      ];
+      // Set as selected company and financial year
+      setSelectedCompany(company);
+      setSelectedFinancialYear(financialYear);
 
-      const { error: unitsError } = await supabase
-        .from('units')
-        .insert(defaultUnits.map(unit => ({
-          ...unit,
-          company_id: data.id
-        })));
-
-      if (unitsError) throw unitsError;
-
-      // Create default stock groups if inventory is enabled
-      if (formData.enable_inventory) {
-        const defaultStockGroups = [
-          { name: 'Raw Materials' },
-          { name: 'Finished Goods' },
-          { name: 'Work in Progress' },
-          { name: 'Trading Goods' },
-          { name: 'Consumables' },
-          { name: 'Spare Parts' }
-        ];
-
-        const { error: stockGroupsError } = await supabase
-          .from('stock_groups')
-          .insert(defaultStockGroups.map(group => ({
-            ...group,
-            company_id: data.id
-          })));
-
-        if (stockGroupsError) throw stockGroupsError;
-      }
-
-      // Clear the saved form data
-      localStorage.removeItem(FORM_DATA_KEY);
-      
       toast.success('Company created successfully!');
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating company:', error);
-      toast.error('Failed to create company');
+      toast.error(error.message || 'Failed to create company');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleCancel = () => {
-    localStorage.removeItem(FORM_DATA_KEY);
-    onBack();
-  };
-
-  const nextStep = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const getStepsData = () => [
-    { id: 1, title: 'Company Details', icon: Building2, description: 'Basic information', color: 'from-blue-500 to-blue-600' },
-    { id: 2, title: 'Address & Contact', icon: MapPin, description: 'Location & contact', color: 'from-green-500 to-green-600' },
-    { id: 3, title: 'Financial Setup', icon: DollarSign, description: 'Currency & year', color: 'from-purple-500 to-purple-600' },
-    { id: 4, title: 'Features & Security', icon: Settings, description: 'System configuration', color: 'from-orange-500 to-orange-600' }
-  ];
-
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-8">
-            {/* Company Name - Featured */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative"
-            >
-              <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-3xl p-8 border-2 border-blue-200/50 shadow-xl">
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <Building2 className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Company Identity</h3>
-                    <p className="text-gray-600">Define your company's core information</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-lg font-semibold text-gray-800 mb-3">
-                      Company Name *
-                    </label>
-                    <Input
-                      value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="Enter your company name"
-                      required
-                      className="text-xl font-medium h-16 text-center bg-white/80 border-2 border-blue-300/50 focus:border-blue-500 shadow-lg"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Mailing Name
-                      </label>
-                      <Input
-                        value={formData.mailing_name}
-                        onChange={(e) => handleInputChange('mailing_name', e.target.value)}
-                        placeholder="Name for correspondence"
-                        className="bg-white/80"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Industry Type
-                      </label>
-                      <select
-                        value={formData.industry}
-                        onChange={(e) => handleInputChange('industry', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-300/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 shadow-sm"
-                      >
-                        <option value="">Select Industry</option>
-                        <option value="manufacturing">Manufacturing</option>
-                        <option value="trading">Trading</option>
-                        <option value="services">Services</option>
-                        <option value="retail">Retail</option>
-                        <option value="construction">Construction</option>
-                        <option value="healthcare">Healthcare</option>
-                        <option value="education">Education</option>
-                        <option value="technology">Technology</option>
-                        <option value="finance">Finance</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Input
+                  label="Company Name *"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Enter company name"
+                  required
+                />
               </div>
-            </motion.div>
+              <div>
+                <Input
+                  label="Mailing Name"
+                  value={formData.mailing_name}
+                  onChange={(e) => handleInputChange('mailing_name', e.target.value)}
+                  placeholder="Name for correspondence"
+                />
+              </div>
+            </div>
 
-            {/* Company Type & Tax Information */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Card className="p-6 h-full bg-white/90 backdrop-blur-sm border-0 shadow-xl">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <FileText className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-gray-900">Legal Structure</h4>
-                      <p className="text-sm text-gray-600">Company type and registration</p>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Industry *
+                </label>
+                <select
+                  value={formData.industry}
+                  onChange={(e) => handleInputChange('industry', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200/60 rounded-2xl shadow-sm focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  required
+                >
+                  <option value="">Select Industry</option>
+                  {industries.map(industry => (
+                    <option key={industry.value} value={industry.value}>
+                      {industry.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Company Type *
+                </label>
+                <select
+                  value={formData.company_type}
+                  onChange={(e) => handleInputChange('company_type', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200/60 rounded-2xl shadow-sm focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  required
+                >
+                  {companyTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Company Type
-                    </label>
-                    <select
-                      value={formData.company_type}
-                      onChange={(e) => handleInputChange('company_type', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-300/60 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white shadow-sm"
-                    >
-                      <option value="private_limited">Private Limited</option>
-                      <option value="public_limited">Public Limited</option>
-                      <option value="partnership">Partnership</option>
-                      <option value="llp">LLP</option>
-                      <option value="sole_proprietorship">Sole Proprietorship</option>
-                      <option value="trust">Trust</option>
-                      <option value="society">Society</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                </Card>
-              </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Input
+                  label="Email Address"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="company@example.com"
+                  icon={<Mail className="w-4 h-4" />}
+                />
+              </div>
+              <div>
+                <Input
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="+91 98765 43210"
+                  icon={<Phone className="w-4 h-4" />}
+                />
+              </div>
+            </div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Card className="p-6 h-full bg-white/90 backdrop-blur-sm border-0 shadow-xl">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <Hash className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-gray-900">Tax Information</h4>
-                      <p className="text-sm text-gray-600">Registration numbers</p>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Input
+                  label="Website"
+                  value={formData.website}
+                  onChange={(e) => handleInputChange('website', e.target.value)}
+                  placeholder="https://www.company.com"
+                  icon={<Globe className="w-4 h-4" />}
+                />
+              </div>
+              <div>
+                <Input
+                  label="Fax Number"
+                  value={formData.fax}
+                  onChange={(e) => handleInputChange('fax', e.target.value)}
+                  placeholder="Fax number"
+                />
+              </div>
+            </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        GSTIN
-                      </label>
-                      <Input
-                        value={formData.gstin}
-                        onChange={(e) => handleInputChange('gstin', e.target.value.toUpperCase())}
-                        placeholder="22AAAAA0000A1Z5"
-                        maxLength={15}
-                        className="font-mono"
-                      />
-                    </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <MapPin className="w-4 h-4 inline mr-1" />
+                Address
+              </label>
+              <textarea
+                value={formData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                placeholder="Complete address"
+                rows={3}
+                className="w-full px-4 py-3 border-2 border-gray-200/60 rounded-2xl shadow-sm focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all duration-300 bg-white/80 backdrop-blur-sm resize-none"
+              />
+            </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          PAN
-                        </label>
-                        <Input
-                          value={formData.pan}
-                          onChange={(e) => handleInputChange('pan', e.target.value.toUpperCase())}
-                          placeholder="AAAAA0000A"
-                          maxLength={10}
-                          className="font-mono"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          TAN
-                        </label>
-                        <Input
-                          value={formData.tan}
-                          onChange={(e) => handleInputChange('tan', e.target.value.toUpperCase())}
-                          placeholder="AAAA00000A"
-                          maxLength={10}
-                          className="font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        CIN
-                      </label>
-                      <Input
-                        value={formData.cin}
-                        onChange={(e) => handleInputChange('cin', e.target.value.toUpperCase())}
-                        placeholder="U12345AB1234PTC123456"
-                        maxLength={21}
-                        className="font-mono"
-                      />
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <Input
+                  label="City"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  placeholder="City"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  State
+                </label>
+                <select
+                  value={formData.state}
+                  onChange={(e) => handleInputChange('state', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200/60 rounded-2xl shadow-sm focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                >
+                  <option value="">Select State</option>
+                  {states.map(state => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Input
+                  label="PIN Code"
+                  value={formData.pincode}
+                  onChange={(e) => handleInputChange('pincode', e.target.value)}
+                  placeholder="PIN Code"
+                />
+              </div>
             </div>
           </div>
         );
 
       case 2:
         return (
-          <div className="space-y-8">
-            {/* Address Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="p-8 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-0 shadow-xl">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <MapPin className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Business Address</h3>
-                    <p className="text-gray-600">Where your business is located</p>
-                  </div>
-                </div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Input
+                  label="GSTIN"
+                  value={formData.gstin}
+                  onChange={(e) => handleInputChange('gstin', e.target.value)}
+                  placeholder="22AAAAA0000A1Z5"
+                  icon={<FileText className="w-4 h-4" />}
+                />
+              </div>
+              <div>
+                <Input
+                  label="PAN"
+                  value={formData.pan}
+                  onChange={(e) => handleInputChange('pan', e.target.value)}
+                  placeholder="AAAAA0000A"
+                  icon={<CreditCard className="w-4 h-4" />}
+                />
+              </div>
+            </div>
 
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Complete Business Address
-                    </label>
-                    <textarea
-                      value={formData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      placeholder="Enter complete business address"
-                      rows={3}
-                      className="w-full px-4 py-3 border-2 border-gray-300/60 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none bg-white/80 shadow-sm"
-                    />
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Input
+                  label="TAN"
+                  value={formData.tan}
+                  onChange={(e) => handleInputChange('tan', e.target.value)}
+                  placeholder="AAAA00000A"
+                />
+              </div>
+              <div>
+                <Input
+                  label="CIN"
+                  value={formData.cin}
+                  onChange={(e) => handleInputChange('cin', e.target.value)}
+                  placeholder="U12345AB1234PTC123456"
+                />
+              </div>
+            </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        City
-                      </label>
-                      <Input
-                        value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
-                        placeholder="Enter city"
-                        className="bg-white/80"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        State
-                      </label>
-                      <select
-                        value={formData.state}
-                        onChange={(e) => handleInputChange('state', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-300/60 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white/80 shadow-sm"
-                      >
-                        <option value="">Select State</option>
-                        {indianStates.map(state => (
-                          <option key={state} value={state}>{state}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Pincode
-                      </label>
-                      <Input
-                        value={formData.pincode}
-                        onChange={(e) => handleInputChange('pincode', e.target.value)}
-                        placeholder="000000"
-                        maxLength={6}
-                        className="bg-white/80 font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Country
-                      </label>
-                      <select
-                        value={formData.country}
-                        onChange={(e) => handleInputChange('country', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-300/60 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white/80 shadow-sm"
-                      >
-                        {countries.map(country => (
-                          <option key={country.code} value={country.code}>
-                            {country.flag} {country.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-
-            {/* Contact Information */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="p-8 bg-white/90 backdrop-blur-sm border-0 shadow-xl">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <Phone className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Contact Information</h3>
-                    <p className="text-gray-600">How customers can reach you</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <Phone className="w-4 h-4 inline mr-1" />
-                      Phone Number
-                    </label>
-                    <Input
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="+91 9876543210"
-                      type="tel"
-                      className="bg-white/80"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Fax Number
-                    </label>
-                    <Input
-                      value={formData.fax}
-                      onChange={(e) => handleInputChange('fax', e.target.value)}
-                      placeholder="+91 11 12345678"
-                      type="tel"
-                      className="bg-white/80"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <Mail className="w-4 h-4 inline mr-1" />
-                      Email Address
-                    </label>
-                    <Input
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="company@example.com"
-                      type="email"
-                      className="bg-white/80"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <Globe className="w-4 h-4 inline mr-1" />
-                      Website
-                    </label>
-                    <Input
-                      value={formData.website}
-                      onChange={(e) => handleInputChange('website', e.target.value)}
-                      placeholder="https://www.company.com"
-                      type="url"
-                      className="bg-white/80"
-                    />
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
+            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                <AlertCircle className="w-5 h-5 mr-2 text-blue-600" />
+                Legal Information Guidelines
+              </h4>
+              <div className="text-sm text-gray-700 space-y-2">
+                <p><strong>GSTIN:</strong> 15-character Goods and Services Tax Identification Number</p>
+                <p><strong>PAN:</strong> 10-character Permanent Account Number</p>
+                <p><strong>TAN:</strong> 10-character Tax Deduction Account Number (for TDS)</p>
+                <p><strong>CIN:</strong> 21-character Corporate Identification Number (for companies)</p>
+              </div>
+            </div>
           </div>
         );
 
       case 3:
         return (
-          <div className="space-y-8">
-            {/* Financial Configuration */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="p-8 bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 border-0 shadow-xl">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <DollarSign className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Financial Configuration</h3>
-                    <p className="text-gray-600">Set up your accounting preferences</p>
-                  </div>
-                </div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Base Currency *
+                </label>
+                <select
+                  value={formData.currency}
+                  onChange={(e) => handleInputChange('currency', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200/60 rounded-2xl shadow-sm focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  required
+                >
+                  {currencies.map(currency => (
+                    <option key={currency.value} value={currency.value}>
+                      {currency.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Decimal Places
+                </label>
+                <select
+                  value={formData.decimal_places}
+                  onChange={(e) => handleInputChange('decimal_places', parseInt(e.target.value))}
+                  className="w-full px-4 py-3 border-2 border-gray-200/60 rounded-2xl shadow-sm focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                >
+                  <option value={0}>0 (No decimals)</option>
+                  <option value={2}>2 (Standard)</option>
+                  <option value={3}>3 (Precise)</option>
+                  <option value={4}>4 (Very precise)</option>
+                </select>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <Calendar className="w-4 h-4 inline mr-1" />
-                      Financial Year Start *
-                    </label>
-                    <Input
-                      type="date"
-                      value={formData.financial_year_start}
-                      onChange={(e) => handleInputChange('financial_year_start', e.target.value)}
-                      required
-                      className="bg-white/80"
-                    />
-                  </div>
+            <div>
+              <Input
+                label="Financial Year Start Date *"
+                type="date"
+                value={formData.financial_year_start}
+                onChange={(e) => handleInputChange('financial_year_start', e.target.value)}
+                icon={<Calendar className="w-4 h-4" />}
+                required
+              />
+            </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Base Currency *
-                    </label>
-                    <select
-                      value={formData.currency}
-                      onChange={(e) => handleInputChange('currency', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-300/60 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/80 shadow-sm"
-                      required
-                    >
-                      {currencies.map(currency => (
-                        <option key={currency.code} value={currency.code}>
-                          {currency.symbol} {currency.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Decimal Places
-                    </label>
-                    <select
-                      value={formData.decimal_places}
-                      onChange={(e) => handleInputChange('decimal_places', parseInt(e.target.value))}
-                      className="w-full px-4 py-3 border-2 border-gray-300/60 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/80 shadow-sm"
-                    >
-                      <option value={0}>0 (No decimals)</option>
-                      <option value={2}>2 (Standard)</option>
-                      <option value={3}>3 (Precise)</option>
-                      <option value={4}>4 (Very precise)</option>
-                    </select>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-
-            {/* What will be created */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="p-8 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200/50 shadow-xl">
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <CheckCircle className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-bold text-emerald-900">Automatic Setup</h4>
-                    <p className="text-emerald-700">We'll create these essentials for you</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    {[
-                      { icon: Calendar, text: 'Financial year configuration', color: 'text-blue-600' },
-                      { icon: BarChart3, text: 'Standard chart of accounts', color: 'text-green-600' },
-                      { icon: Package, text: 'Common units of measurement', color: 'text-purple-600' }
-                    ].map((item, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 + index * 0.1 }}
-                        className="flex items-center space-x-3 p-3 bg-white/80 rounded-xl shadow-sm"
-                      >
-                        <div className={`w-8 h-8 ${item.color} bg-current opacity-10 rounded-lg flex items-center justify-center`}>
-                          <item.icon className={`w-4 h-4 ${item.color}`} />
-                        </div>
-                        <span className="text-gray-800 font-medium">{item.text}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <div className="space-y-4">
-                    {[
-                      { icon: Users, text: 'Ledger groups structure', color: 'text-orange-600' },
-                      { icon: Package, text: 'Stock groups (if inventory enabled)', color: 'text-teal-600' },
-                      { icon: Settings, text: 'System configuration', color: 'text-indigo-600' }
-                    ].map((item, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.6 + index * 0.1 }}
-                        className="flex items-center space-x-3 p-3 bg-white/80 rounded-xl shadow-sm"
-                      >
-                        <div className={`w-8 h-8 ${item.color} bg-current opacity-10 rounded-lg flex items-center justify-center`}>
-                          <item.icon className={`w-4 h-4 ${item.color}`} />
-                        </div>
-                        <span className="text-gray-800 font-medium">{item.text}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
+            <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                Financial Configuration
+              </h4>
+              <div className="text-sm text-gray-700 space-y-2">
+                <p><strong>Currency:</strong> This will be the base currency for all transactions</p>
+                <p><strong>Decimal Places:</strong> Number of decimal places for amounts (2 is standard)</p>
+                <p><strong>Financial Year:</strong> Typically starts on April 1st in India</p>
+              </div>
+            </div>
           </div>
         );
 
       case 4:
         return (
-          <div className="space-y-8">
-            {/* Core Features */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="p-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-0 shadow-xl">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <Zap className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Core Features</h3>
-                    <p className="text-gray-600">Enable powerful accounting capabilities</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { key: 'enable_inventory', label: 'Inventory Management', desc: 'Track stock items, godowns, and movements', icon: Package, color: 'from-green-500 to-green-600' },
-                    { key: 'enable_multi_currency', label: 'Multi-Currency', desc: 'Support multiple currencies in transactions', icon: Globe, color: 'from-blue-500 to-blue-600' },
-                    { key: 'enable_cost_center', label: 'Cost Centers', desc: 'Track expenses by departments or projects', icon: BarChart3, color: 'from-purple-500 to-purple-600' },
-                    { key: 'enable_job_costing', label: 'Job Costing', desc: 'Track costs for specific jobs or projects', icon: FileText, color: 'from-orange-500 to-orange-600' },
-                    { key: 'enable_budget', label: 'Budget Management', desc: 'Create and track budgets vs actuals', icon: DollarSign, color: 'from-teal-500 to-teal-600' },
-                    { key: 'auto_voucher_numbering', label: 'Auto Voucher Numbering', desc: 'Automatically generate voucher numbers', icon: Hash, color: 'from-indigo-500 to-indigo-600' },
-                  ].map((feature, index) => (
-                    <motion.label
-                      key={feature.key}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="group flex items-start space-x-4 p-6 bg-white/80 backdrop-blur-sm rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-blue-200"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData[feature.key]}
-                        onChange={(e) => handleInputChange(feature.key, e.target.checked)}
-                        className="w-6 h-6 text-blue-600 rounded-lg mt-1 focus:ring-blue-500 focus:ring-2"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <div className={`w-10 h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                            <feature.icon className="w-5 h-5 text-white" />
-                          </div>
-                          <span className="font-bold text-gray-900 text-lg">{feature.label}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 leading-relaxed">{feature.desc}</p>
-                      </div>
-                    </motion.label>
-                  ))}
-                </div>
-              </Card>
-            </motion.div>
-
-            {/* Security & Compliance */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="p-8 bg-gradient-to-br from-red-50 via-pink-50 to-rose-50 border-0 shadow-xl">
-                <div className="flex items-center space-x-4 mb-8">
-                  <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl">
-                    <Shield className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Security & Compliance</h3>
-                    <p className="text-gray-600">Protect your data and ensure compliance</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { key: 'enable_audit_trail', label: 'Audit Trail', desc: 'Track all changes and user activities', icon: FileText, color: 'from-blue-500 to-blue-600' },
-                    { key: 'enable_data_encryption', label: 'Data Encryption', desc: 'Encrypt sensitive data for security', icon: Shield, color: 'from-green-500 to-green-600' },
-                    { key: 'enable_backup', label: 'Auto Backup', desc: 'Automatically backup your data', icon: Settings, color: 'from-purple-500 to-purple-600' },
-                    { key: 'enable_user_access_control', label: 'User Access Control', desc: 'Manage user permissions and roles', icon: Users, color: 'from-orange-500 to-orange-600' },
-                  ].map((feature, index) => (
-                    <motion.label
-                      key={feature.key}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.3 + index * 0.1 }}
-                      className="group flex items-start space-x-4 p-6 bg-white/80 backdrop-blur-sm rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-red-200"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData[feature.key]}
-                        onChange={(e) => handleInputChange(feature.key, e.target.checked)}
-                        className="w-6 h-6 text-red-600 rounded-lg mt-1 focus:ring-red-500 focus:ring-2"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <div className={`w-10 h-10 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                            <feature.icon className="w-5 h-5 text-white" />
-                          </div>
-                          <span className="font-bold text-gray-900 text-lg">{feature.label}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 leading-relaxed">{feature.desc}</p>
-                      </div>
-                    </motion.label>
-                  ))}
-                </div>
-
-                {formData.enable_backup && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="mt-6 p-4 bg-white/80 rounded-xl border border-gray-200"
-                  >
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Backup Frequency
-                    </label>
-                    <select
-                      value={formData.backup_frequency}
-                      onChange={(e) => handleInputChange('backup_frequency', e.target.value)}
-                      className="w-full max-w-xs px-4 py-2 border-2 border-gray-300/60 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white shadow-sm"
-                    >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                    </select>
-                  </motion.div>
-                )}
-              </Card>
-            </motion.div>
-
-            {/* Advanced Inventory Features */}
-            {formData.enable_inventory && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-6">
+              <h4 className="text-lg font-semibold text-gray-900">Feature Configuration</h4>
+              <button
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
               >
-                <Card className="p-8 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border-0 shadow-xl">
-                  <div className="flex items-center space-x-4 mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl">
-                      <Package className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900">Advanced Inventory</h3>
-                      <p className="text-gray-600">Enhanced inventory tracking features</p>
-                    </div>
-                  </div>
+                {showAdvanced ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span>{showAdvanced ? 'Hide' : 'Show'} Advanced Options</span>
+              </button>
+            </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[
-                      { key: 'enable_multi_godown', label: 'Multiple Godowns', desc: 'Manage stock across multiple locations', icon: Building2 },
-                      { key: 'enable_batch_tracking', label: 'Batch Tracking', desc: 'Track items by batch numbers', icon: Hash },
-                      { key: 'enable_serial_tracking', label: 'Serial Number Tracking', desc: 'Track individual items by serial numbers', icon: CreditCard },
-                    ].map((feature, index) => (
-                      <motion.label
-                        key={feature.key}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 + index * 0.1 }}
-                        className="group flex flex-col items-center text-center p-6 bg-white/80 backdrop-blur-sm rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-emerald-200"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData[feature.key]}
-                          onChange={(e) => handleInputChange(feature.key, e.target.checked)}
-                          className="w-6 h-6 text-emerald-600 rounded-lg mb-4 focus:ring-emerald-500 focus:ring-2"
-                        />
-                        <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 mb-3">
-                          <feature.icon className="w-6 h-6 text-white" />
-                        </div>
-                        <span className="font-bold text-gray-900 mb-2">{feature.label}</span>
-                        <p className="text-sm text-gray-600 leading-relaxed">{feature.desc}</p>
-                      </motion.label>
-                    ))}
+            {/* Core Features */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-colors">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.enable_inventory}
+                    onChange={(e) => handleInputChange('enable_inventory', e.target.checked)}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <Package className="w-5 h-5 text-blue-600" />
+                      <span className="font-medium text-gray-900">Inventory Management</span>
+                    </div>
+                    <p className="text-sm text-gray-600">Track stock items and inventory movements</p>
                   </div>
-                </Card>
-              </motion.div>
-            )}
+                </label>
+              </div>
+
+              <div className="p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-colors">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.auto_voucher_numbering}
+                    onChange={(e) => handleInputChange('auto_voucher_numbering', e.target.checked)}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <Zap className="w-5 h-5 text-green-600" />
+                      <span className="font-medium text-gray-900">Auto Voucher Numbering</span>
+                    </div>
+                    <p className="text-sm text-gray-600">Automatically generate voucher numbers</p>
+                  </div>
+                </label>
+              </div>
+
+              <div className="p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-colors">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.enable_audit_trail}
+                    onChange={(e) => handleInputChange('enable_audit_trail', e.target.checked)}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <Shield className="w-5 h-5 text-purple-600" />
+                      <span className="font-medium text-gray-900">Audit Trail</span>
+                    </div>
+                    <p className="text-sm text-gray-600">Track all changes and user activities</p>
+                  </div>
+                </label>
+              </div>
+
+              <div className="p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-colors">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.enable_user_access_control}
+                    onChange={(e) => handleInputChange('enable_user_access_control', e.target.checked)}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-5 h-5 text-orange-600" />
+                      <span className="font-medium text-gray-900">User Access Control</span>
+                    </div>
+                    <p className="text-sm text-gray-600">Manage user permissions and roles</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Advanced Features */}
+            <AnimatePresence>
+              {showAdvanced && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
+                  <div className="border-t border-gray-200 pt-6">
+                    <h5 className="font-medium text-gray-900 mb-4">Advanced Features</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {[
+                        { key: 'enable_multi_currency', label: 'Multi-Currency', icon: TrendingUp, description: 'Support multiple currencies' },
+                        { key: 'enable_cost_center', label: 'Cost Centers', icon: Database, description: 'Track expenses by departments' },
+                        { key: 'enable_job_costing', label: 'Job Costing', icon: Calculator, description: 'Track costs for specific jobs' },
+                        { key: 'enable_budget', label: 'Budget Management', icon: Star, description: 'Create and track budgets' },
+                        { key: 'enable_multi_godown', label: 'Multiple Godowns', icon: Package, description: 'Manage multiple locations' },
+                        { key: 'enable_batch_tracking', label: 'Batch Tracking', icon: Package, description: 'Track items by batch numbers' }
+                      ].map((feature) => {
+                        const Icon = feature.icon;
+                        return (
+                          <div key={feature.key} className="p-3 bg-gray-50 rounded-lg">
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={formData[feature.key as keyof typeof formData] as boolean}
+                                onChange={(e) => handleInputChange(feature.key, e.target.checked)}
+                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                              />
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2">
+                                  <Icon className="w-4 h-4 text-gray-600" />
+                                  <span className="text-sm font-medium text-gray-900">{feature.label}</span>
+                                </div>
+                                <p className="text-xs text-gray-500">{feature.description}</p>
+                              </div>
+                            </label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         );
 
@@ -990,7 +693,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ onBack, onSuccess }) =
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-y-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-y-auto">
       <div className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <motion.div
@@ -1000,186 +703,148 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ onBack, onSuccess }) =
         >
           <div className="flex items-center space-x-4">
             <Button
-              onClick={handleCancel}
+              onClick={onBack}
               variant="outline"
               size="sm"
-              className="bg-white/80 backdrop-blur-sm hover:bg-white shadow-lg"
+              className="bg-white/80 backdrop-blur-sm"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
             <div className="flex items-center space-x-4">
-              <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl flex items-center justify-center shadow-2xl">
-                  <Building2 className="w-10 h-10 text-white" />
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="absolute -top-2 -right-2 w-8 h-8 border-4 border-dashed border-yellow-400 rounded-full"
-                  />
-                </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-3 h-3 text-white" />
-                </div>
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl">
+                <Building2 className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
                   Create New Company
                 </h1>
-                <p className="text-gray-600 text-lg">Set up your intelligent accounting system with comprehensive configuration</p>
+                <p className="text-gray-600">Set up your company profile and accounting preferences</p>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Enhanced Progress Steps */}
+        {/* Progress Steps */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-10"
+          className="mb-8"
         >
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border-0">
-            <div className="flex items-center justify-between">
-              {getStepsData().map((step, index) => {
-                const Icon = step.icon;
-                const isActive = currentStep === step.id;
-                const isCompleted = currentStep > step.id;
-                
-                return (
-                  <div key={step.id} className="flex items-center">
-                    <motion.div 
-                      whileHover={{ scale: 1.05 }}
-                      className={`flex items-center space-x-4 p-4 rounded-2xl transition-all duration-500 ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-blue-100 to-purple-100 shadow-xl' 
-                          : isCompleted 
-                            ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-lg'
-                            : 'bg-gray-50 hover:bg-gray-100'
-                      }`}
-                    >
-                      <motion.div 
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        className={`relative w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-xl ${
-                          isActive 
-                            ? `bg-gradient-to-r ${step.color}` 
-                            : isCompleted 
-                              ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                              : 'bg-gray-300'
-                        }`}
-                      >
-                        {isCompleted ? (
-                          <CheckCircle className="w-8 h-8 text-white" />
-                        ) : (
-                          <Icon className="w-8 h-8 text-white" />
-                        )}
-                        
-                        {isActive && (
-                          <motion.div
-                            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${step.color} blur-md`}
-                          />
-                        )}
-                      </motion.div>
-                      
-                      <div className="hidden md:block">
-                        <p className={`font-bold text-lg transition-colors duration-500 ${
-                          isActive ? 'text-blue-700' : isCompleted ? 'text-green-700' : 'text-gray-600'
-                        }`}>
-                          {step.title}
-                        </p>
-                        <p className={`text-sm transition-colors duration-500 ${
-                          isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
-                        }`}>
-                          {step.description}
-                        </p>
-                      </div>
-                    </motion.div>
-                    {index < getStepsData().length - 1 && (
-                      <div className={`w-12 h-1 mx-4 rounded-full transition-all duration-500 ${
-                        isCompleted ? 'bg-gradient-to-r from-green-400 to-emerald-500' : 'bg-gray-300'
-                      }`} />
-                    )}
+          <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              const isActive = currentStep === step.id;
+              const isCompleted = currentStep > step.id;
+              
+              return (
+                <div key={step.id} className="flex items-center flex-1">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                      isActive 
+                        ? `bg-gradient-to-r ${step.color} text-white shadow-lg scale-110` 
+                        : isCompleted
+                        ? 'bg-green-500 text-white shadow-lg'
+                        : 'bg-gray-100 text-gray-400'
+                    }`}>
+                      {isCompleted ? (
+                        <CheckCircle className="w-6 h-6" />
+                      ) : (
+                        <Icon className="w-6 h-6" />
+                      )}
+                    </div>
+                    <div className="hidden md:block">
+                      <p className={`font-semibold text-sm ${isActive ? 'text-gray-900' : 'text-gray-600'}`}>
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-gray-500">{step.description}</p>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                  {index < steps.length - 1 && (
+                    <div className={`flex-1 h-1 mx-4 rounded-full transition-colors duration-300 ${
+                      isCompleted ? 'bg-green-500' : 'bg-gray-200'
+                    }`} />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </motion.div>
 
-        {/* Form Content with Scroll */}
-        <div className="max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <form onSubmit={handleSubmit}>
-              {renderStepContent()}
-            </form>
-          </motion.div>
-        </div>
+        {/* Form Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-8"
+        >
+          <Card className="p-8 bg-white/90 backdrop-blur-sm border-0 shadow-xl">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {steps[currentStep - 1]?.title}
+              </h2>
+              <p className="text-gray-600">{steps[currentStep - 1]?.description}</p>
+            </div>
 
-        {/* Enhanced Navigation */}
+            <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              {renderStepContent()}
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Navigation */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex justify-between items-center mt-10 pt-8 border-t border-gray-200/50"
+          className="flex justify-between items-center"
         >
-          <div>
-            {currentStep > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={prevStep}
-                className="bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl"
-              >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Previous Step
-              </Button>
-            )}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-gray-500">Step {currentStep} of {steps.length}</span>
+            <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-300"
+                style={{ width: `${(currentStep / steps.length) * 100}%` }}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-500">
-              Step {currentStep} of {totalSteps}
-            </div>
-            
-            {currentStep < totalSteps ? (
+          <div className="flex space-x-4">
+            {currentStep > 1 && (
               <Button
-                type="button"
+                onClick={prevStep}
+                variant="outline"
+                className="bg-white/80 backdrop-blur-sm"
+              >
+                Previous
+              </Button>
+            )}
+            
+            {currentStep < steps.length ? (
+              <Button
                 onClick={nextStep}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl hover:shadow-2xl"
+                disabled={!validateStep(currentStep)}
+                className="bg-gradient-to-r from-blue-500 to-blue-600"
               >
                 Next Step
-                <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             ) : (
               <Button
-                type="submit"
-                disabled={loading}
                 onClick={handleSubmit}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-xl hover:shadow-2xl px-8"
+                disabled={loading || !validateStep(currentStep)}
+                className="bg-gradient-to-r from-green-500 to-green-600"
               >
                 {loading ? (
                   <div className="flex items-center">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-6 h-6 border-2 border-white border-t-transparent rounded-full mr-3"
-                    />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                     Creating Company...
                   </div>
                 ) : (
-                  <>
+                  <div className="flex items-center">
                     <Save className="w-5 h-5 mr-2" />
                     Create Company
-                    <Star className="w-5 h-5 ml-2" />
-                  </>
+                  </div>
                 )}
               </Button>
             )}
