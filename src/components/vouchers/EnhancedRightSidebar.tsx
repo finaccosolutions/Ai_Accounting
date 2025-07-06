@@ -99,8 +99,20 @@ const voucherTypes = [
 ];
 
 const voucherModes = [
-  { value: 'item_invoice', label: 'Item Invoice', description: 'With stock items' },
-  { value: 'voucher_mode', label: 'As Voucher', description: 'Ledger entries only' }
+  { 
+    value: 'item_invoice', 
+    label: 'Item Invoice', 
+    description: 'With stock items and detailed entries',
+    icon: Package,
+    color: 'from-blue-500 to-blue-600'
+  },
+  { 
+    value: 'voucher_mode', 
+    label: 'As Voucher', 
+    description: 'Ledger entries only',
+    icon: FileText,
+    color: 'from-purple-500 to-purple-600'
+  }
 ];
 
 const sidebarSections = [
@@ -155,7 +167,7 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
   totalAmount
 }) => {
   const navigate = useNavigate();
-  const [expandedSections, setExpandedSections] = useState<string[]>(['voucher_types', 'stats', 'recent']);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['voucher_types', 'voucher_modes', 'stats', 'recent']);
   const [isHovering, setIsHovering] = useState(false);
   const [showTrigger, setShowTrigger] = useState(true);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -200,7 +212,7 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
         clearTimeout(hideTimeoutRef.current);
       }
     };
-  }, [visible, isHovering, onVisibilityChange]);
+  }, [visible, onVisibilityChange]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => 
@@ -241,13 +253,17 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
     }
   };
 
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    // Set a timeout to hide the sidebar
-    if (visible) {
-      hideTimeoutRef.current = setTimeout(() => {
-        onVisibilityChange(false);
-      }, 300); // 300ms delay before hiding
+  const handleMouseLeave = (e: React.MouseEvent) => {
+    // Check if mouse is leaving to the left side of the sidebar
+    const rect = sidebarRef.current?.getBoundingClientRect();
+    if (rect && e.clientX < rect.left) {
+      setIsHovering(false);
+      // Set a timeout to hide the sidebar
+      if (visible) {
+        hideTimeoutRef.current = setTimeout(() => {
+          onVisibilityChange(false);
+        }, 500); // 500ms delay before hiding
+      }
     }
   };
 
@@ -380,7 +396,7 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                         className="overflow-hidden"
                       >
                         <div className="p-4 bg-gray-50/50">
-                          <div className="grid grid-cols-2 gap-2 mb-4">
+                          <div className="space-y-2">
                             {voucherTypes.map((type, index) => {
                               const Icon = type.icon;
                               const isActive = voucher.voucher_type === type.value;
@@ -394,53 +410,27 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
                                   onClick={() => handleVoucherTypeChange(type.value)}
-                                  className={`p-3 rounded-lg text-left transition-all duration-200 ${
+                                  className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
                                     isActive
                                       ? `bg-gradient-to-r ${type.color} text-white shadow-lg`
                                       : 'bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300'
                                   }`}
                                 >
-                                  <div className="flex items-center space-x-2 mb-1">
-                                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-600'}`} />
-                                    <span className={`font-medium text-xs ${isActive ? 'text-white' : 'text-gray-900'}`}>
-                                      {type.label}
-                                    </span>
+                                  <div className="flex items-center space-x-3">
+                                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                                    <div className="flex-1">
+                                      <span className={`font-medium text-sm ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                                        {type.label}
+                                      </span>
+                                      <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
+                                        {type.description}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
-                                    {type.description}
-                                  </p>
                                 </motion.button>
                               );
                             })}
                           </div>
-
-                          {/* Voucher Mode Selection */}
-                          {voucherTypes.find(vt => vt.value === voucher.voucher_type)?.hasMode && (
-                            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200">
-                              <h4 className="font-medium text-gray-900 mb-3 text-sm flex items-center">
-                                <ToggleLeft className="w-4 h-4 mr-2 text-blue-600" />
-                                Voucher Mode
-                              </h4>
-                              <div className="space-y-2">
-                                {voucherModes.map((mode) => (
-                                  <label key={mode.value} className="flex items-center space-x-3 cursor-pointer">
-                                    <input
-                                      type="radio"
-                                      name="voucher_mode"
-                                      value={mode.value}
-                                      checked={voucher.mode === mode.value}
-                                      onChange={(e) => handleVoucherModeChange(e.target.value)}
-                                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                                    />
-                                    <div>
-                                      <span className="text-sm font-medium text-gray-900">{mode.label}</span>
-                                      <p className="text-xs text-gray-500">{mode.description}</p>
-                                    </div>
-                                  </label>
-                                ))}
-                              </div>
-                            </div>
-                          )}
 
                           {/* Current Section Info */}
                           <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
@@ -450,18 +440,105 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                                 Current: {getSectionLabel(voucher.voucher_type)}
                               </span>
                             </div>
-                            <p className="text-xs text-blue-700 mt-1">
-                              {voucher.mode === 'item_invoice' 
-                                ? 'Stock items section visible' 
-                                : 'Ledger entries only'
-                              }
-                            </p>
                           </div>
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </motion.div>
+
+                {/* Voucher Mode Section */}
+                {voucherTypes.find(vt => vt.value === voucher.voucher_type)?.hasMode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-100/50 overflow-hidden"
+                  >
+                    <motion.button
+                      whileHover={{ backgroundColor: 'rgba(248, 250, 252, 0.9)' }}
+                      onClick={() => toggleSection('voucher_modes')}
+                      className={`w-full p-4 flex items-center justify-between transition-all duration-300 ${
+                        expandedSections.includes('voucher_modes') 
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white' 
+                          : 'text-gray-700 hover:text-blue-600'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <ToggleLeft className={`w-5 h-5 ${expandedSections.includes('voucher_modes') ? 'text-white' : 'text-gray-600'}`} />
+                        <span className="font-medium text-sm">Voucher Mode</span>
+                      </div>
+                      <motion.div
+                        animate={{ rotate: expandedSections.includes('voucher_modes') ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronDown className={`w-4 h-4 ${expandedSections.includes('voucher_modes') ? 'text-white' : 'text-gray-400'}`} />
+                      </motion.div>
+                    </motion.button>
+
+                    <AnimatePresence>
+                      {expandedSections.includes('voucher_modes') && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="p-4 bg-gray-50/50">
+                            <div className="space-y-2">
+                              {voucherModes.map((mode, index) => {
+                                const Icon = mode.icon;
+                                const isActive = voucher.mode === mode.value;
+                                
+                                return (
+                                  <motion.button
+                                    key={mode.value}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleVoucherModeChange(mode.value)}
+                                    className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
+                                      isActive
+                                        ? `bg-gradient-to-r ${mode.color} text-white shadow-lg`
+                                        : 'bg-white hover:bg-purple-50 border border-gray-200 hover:border-purple-300'
+                                    }`}
+                                  >
+                                    <div className="flex items-center space-x-3">
+                                      <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-600'}`} />
+                                      <div className="flex-1">
+                                        <span className={`font-medium text-sm ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                                          {mode.label}
+                                        </span>
+                                        <p className={`text-xs ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
+                                          {mode.description}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </motion.button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Mode Info */}
+                            <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                                <span className="text-sm font-medium text-purple-900">
+                                  Mode: {voucher.mode === 'item_invoice' 
+                                    ? 'Item Invoice with stock details' 
+                                    : 'Voucher mode with ledger entries only'
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
 
                 {/* Other Sections */}
                 {sidebarSections.map((section, index) => {
@@ -473,7 +550,7 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                       key={section.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: (index + 1) * 0.1 }}
+                      transition={{ delay: (index + 2) * 0.1 }}
                       className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md border border-gray-100/50 overflow-hidden"
                     >
                       {/* Section Header */}

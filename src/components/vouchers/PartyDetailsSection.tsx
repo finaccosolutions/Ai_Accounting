@@ -9,7 +9,6 @@ interface PartyDetailsSectionProps {
   setVoucher: (updater: (prev: any) => any) => void;
   ledgers: any[];
   getPartyLabel: () => string;
-  getSalesLedgerLabel: () => string;
   shouldShowPartyDetails: () => boolean;
   shouldShowPlaceOfSupply: () => boolean;
   renderLedgerItem: (ledger: any) => React.ReactNode;
@@ -20,7 +19,6 @@ export const PartyDetailsSection: React.FC<PartyDetailsSectionProps> = ({
   setVoucher,
   ledgers,
   getPartyLabel,
-  getSalesLedgerLabel,
   shouldShowPartyDetails,
   shouldShowPlaceOfSupply,
   renderLedgerItem
@@ -40,8 +38,8 @@ export const PartyDetailsSection: React.FC<PartyDetailsSectionProps> = ({
           Party Details
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Party Name / Cash Bank Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Party Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <User className="w-4 h-4 inline mr-1" />
@@ -61,30 +59,6 @@ export const PartyDetailsSection: React.FC<PartyDetailsSectionProps> = ({
               renderItem={renderLedgerItem}
             />
           </div>
-
-          {/* Sales/Purchase Ledger or Cash/Bank Ledger */}
-          {(['sales', 'purchase', 'debit_note', 'credit_note', 'receipt', 'payment'].includes(voucher.voucher_type)) && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {getSalesLedgerLabel()}
-              </label>
-              <SearchableDropdown
-                items={ledgers}
-                value={voucher.sales_ledger_id || voucher.cash_bank_ledger_id || ''}
-                onSelect={(ledger) => {
-                  if (['receipt', 'payment'].includes(voucher.voucher_type)) {
-                    setVoucher(prev => ({ ...prev, cash_bank_ledger_id: ledger.id }));
-                  } else {
-                    setVoucher(prev => ({ ...prev, sales_ledger_id: ledger.id }));
-                  }
-                }}
-                placeholder={`Search ${getSalesLedgerLabel().toLowerCase()}...`}
-                displayField="name"
-                searchFields={['name']}
-                renderItem={renderLedgerItem}
-              />
-            </div>
-          )}
 
           {/* Place of Supply */}
           {shouldShowPlaceOfSupply() && (

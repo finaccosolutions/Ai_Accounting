@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { NumberInput } from '../ui/NumberInput';
 import { Input } from '../ui/Input';
 import { Calculator, Plus, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
 import { SearchableDropdown } from './SearchableDropdown';
@@ -33,6 +34,10 @@ export const AccountingEntriesSection: React.FC<AccountingEntriesSectionProps> =
   totalCredit,
   isBalanced
 }) => {
+  const handleEntryChange = (index: number, field: string, value: any) => {
+    updateEntry(index, field, value);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -76,7 +81,7 @@ export const AccountingEntriesSection: React.FC<AccountingEntriesSectionProps> =
                     <SearchableDropdown
                       items={ledgers}
                       value={entry.ledger_id || ''}
-                      onSelect={(ledger) => updateEntry(index, 'ledger_id', ledger.id)}
+                      onSelect={(ledger) => handleEntryChange(index, 'ledger_id', ledger.id)}
                       placeholder="Search ledgers..."
                       displayField="name"
                       searchFields={['name']}
@@ -87,48 +92,52 @@ export const AccountingEntriesSection: React.FC<AccountingEntriesSectionProps> =
                   {voucher.voucher_type === 'journal' ? (
                     <>
                       <td className="py-3 px-2">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={entry.debit_amount || ''}
-                          onChange={(e) => updateEntry(index, 'debit_amount', parseFloat(e.target.value) || 0)}
-                          className="text-right text-sm"
+                        <NumberInput
+                          value={entry.debit_amount || 0}
+                          onChange={(value) => handleEntryChange(index, 'debit_amount', value)}
+                          step={0.01}
+                          min={0}
                           placeholder="0.00"
+                          className="text-right text-sm"
+                          showControls={true}
                         />
                       </td>
                       <td className="py-3 px-2">
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={entry.credit_amount || ''}
-                          onChange={(e) => updateEntry(index, 'credit_amount', parseFloat(e.target.value) || 0)}
-                          className="text-right text-sm"
+                        <NumberInput
+                          value={entry.credit_amount || 0}
+                          onChange={(value) => handleEntryChange(index, 'credit_amount', value)}
+                          step={0.01}
+                          min={0}
                           placeholder="0.00"
+                          className="text-right text-sm"
+                          showControls={true}
                         />
                       </td>
                     </>
                   ) : (
                     <td className="py-3 px-2">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={entry.amount || ''}
-                        onChange={(e) => updateEntry(index, 'amount', parseFloat(e.target.value) || 0)}
-                        className="text-right text-sm"
+                      <NumberInput
+                        value={entry.amount || 0}
+                        onChange={(value) => handleEntryChange(index, 'amount', value)}
+                        step={0.01}
+                        min={0}
                         placeholder="0.00"
+                        className="text-right text-sm"
+                        showControls={true}
                       />
                     </td>
                   )}
                   <td className="py-3 px-2">
                     <Input
                       value={entry.narration || ''}
-                      onChange={(e) => updateEntry(index, 'narration', e.target.value)}
+                      onChange={(e) => handleEntryChange(index, 'narration', e.target.value)}
                       placeholder="Entry description"
                       className="text-sm"
                     />
                   </td>
                   <td className="py-3 px-2">
-                    {voucher.entries && voucher.entries.length > (voucher.voucher_type === 'journal' ? 2 : 1) && (
+                    {voucher.entries && voucher.entries.length > (voucher.voucher_type === 'journal' ? 2 : 1) && 
+                     index < voucher.entries.length - 1 && (
                       <button
                         onClick={() => removeEntry(index)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"

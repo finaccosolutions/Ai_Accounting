@@ -21,10 +21,11 @@ import toast from 'react-hot-toast';
 // Import the new components
 import { VoucherHeader } from './VoucherHeader';
 import { PartyDetailsSection } from './PartyDetailsSection';
-import { StockItemsSection } from './StockItemsSection';
+import { TransactionDetailsSection } from './TransactionDetailsSection';
+import { ContraEntrySection } from './ContraEntrySection';
 import { AccountingEntriesSection } from './AccountingEntriesSection';
 import { VoucherNarrationSection } from './VoucherNarrationSection';
-import { EnhancedRightSidebar } from './EnhancedRightSidebar';
+import { CollapsibleRightPanel } from './CollapsibleRightPanel';
 
 interface VoucherEntry {
   id?: string;
@@ -44,6 +45,7 @@ interface StockEntry {
   rate: number;
   amount: number;
   godown_id?: string;
+  individual_ledger_id?: string;
 }
 
 interface Voucher {
@@ -55,11 +57,20 @@ interface Voucher {
   party_ledger_id?: string;
   party_name?: string;
   sales_ledger_id?: string;
+  purchase_ledger_id?: string;
   cash_bank_ledger_id?: string;
   place_of_supply?: string;
   entries: VoucherEntry[];
   stock_entries?: StockEntry[];
   mode?: 'item_invoice' | 'voucher_mode';
+  use_common_ledger?: boolean;
+  total_amount?: number;
+  // Contra entry specific fields
+  debit_ledger_id?: string;
+  credit_ledger_id?: string;
+  debit_ledger_name?: string;
+  credit_ledger_name?: string;
+  contra_amount?: number;
 }
 
 const voucherTypes = [
@@ -112,8 +123,9 @@ export const VoucherEntryConsolidated: React.FC = () => {
     narration: '',
     party_name: '',
     entries: [],
-    stock_entries: [],
-    mode: 'item_invoice'
+    stock_entries: [{ stock_item_id: '', stock_item_name: '', quantity: 0, rate: 0, amount: 0 }],
+    mode: 'item_invoice',
+    use_common_ledger: true
   });
   
   const [ledgers, setLedgers] = useState<any[]>([]);
@@ -145,6 +157,12 @@ export const VoucherEntryConsolidated: React.FC = () => {
           ]
         }));
       }
+    } else if (voucher.voucher_type === 'contra') {
+      // Contra entries are handled separately
+      setVoucher(prev => ({
+        ...prev,
+        entries: []
+      }));
     } else {
       if (voucher.entries.length === 0) {
         setVoucher(prev => ({
@@ -296,6 +314,11 @@ export const VoucherEntryConsolidated: React.FC = () => {
             }
           }
           
+          // Auto-add new entry if this is the last entry and user entered data
+          if (i === prev.entries.length - 1 && value && field === 'ledger_id') {
+            setTimeout(() => addEntry(), 100);
+          }
+          
           return updatedEntry;
         }
         return entry;
@@ -345,6 +368,9 @@ export const VoucherEntryConsolidated: React.FC = () => {
       const totalDebit = voucher.entries.reduce((sum, entry) => sum + (entry.debit_amount || 0), 0);
       const totalCredit = voucher.entries.reduce((sum, entry) => sum + (entry.credit_amount || 0), 0);
       return { totalDebit, totalCredit, stockTotal: 0, isBalanced: Math.abs(totalDebit - totalCredit) < 0.01 };
+    } else if (voucher.voucher_type === 'contra') {
+      const contraAmount = voucher.contra_amount || 0;
+      return { totalDebit: contraAmount, totalCredit: contraAmount, stockTotal: 0, isBalanced: true };
     } else {
       const totalAmount = voucher.entries.reduce((sum, entry) => sum + (entry.amount || 0), 0);
       const stockTotal = voucher.stock_entries?.reduce((sum, entry) => sum + (entry.amount || 0), 0) || 0;
@@ -358,6 +384,13 @@ export const VoucherEntryConsolidated: React.FC = () => {
     if (voucher.voucher_type === 'journal' && !isBalanced) {
       toast.error('Debit and Credit amounts must be equal for journal entries');
       return;
+    }
+
+    if (voucher.voucher_type === 'contra') {
+      if (!voucher.debit_ledger_id || !voucher.credit_ledger_id || !voucher.contra_amount) {
+        toast.error('Please select both ledgers and enter amount for contra entry');
+        return;
+      }
     }
 
     if (!selectedCompany) {
@@ -379,8 +412,9 @@ export const VoucherEntryConsolidated: React.FC = () => {
         narration: '',
         party_name: '',
         entries: [],
-        stock_entries: [],
-        mode: voucher.mode
+        stock_entries: [{ stock_item_id: '', stock_item_name: '', quantity: 0, rate: 0, amount: 0 }],
+        mode: voucher.mode,
+        use_common_ledger: true
       });
       
       generateVoucherNumber();
@@ -393,15 +427,20 @@ export const VoucherEntryConsolidated: React.FC = () => {
     }
   };
 
-  const handleVoucherChange = (updatedVoucher: any) => {
+  const handleVoucherTypeChange = (type: string) => {
     setVoucher(prev => ({ 
       ...prev, 
-      ...updatedVoucher,
+      voucher_type: type,
       entries: [],
-      stock_entries: [],
-      mode: ['sales', 'purchase', 'debit_note', 'credit_note'].includes(updatedVoucher.voucher_type) ? 'item_invoice' : 'voucher_mode'
+      stock_entries: [{ stock_item_id: '', stock_item_name: '', quantity: 0, rate: 0, amount: 0 }],
+      mode: ['sales', 'purchase', 'debit_note', 'credit_note'].includes(type) ? 'item_invoice' : 'voucher_mode',
+      use_common_ledger: true
     }));
-    setRightPanelVisible(false);
+    generateVoucherNumber();
+  };
+
+  const handleModeChange = (mode: string) => {
+    setVoucher(prev => ({ ...prev, mode: mode as any }));
   };
 
   const { totalDebit, totalCredit, stockTotal, isBalanced } = calculateTotals();
@@ -480,8 +519,12 @@ export const VoucherEntryConsolidated: React.FC = () => {
     return ['sales', 'purchase', 'debit_note', 'credit_note'].includes(voucher.voucher_type);
   };
 
-  const shouldShowStockItems = () => {
-    return ['sales', 'purchase', 'debit_note', 'credit_note'].includes(voucher.voucher_type) && voucher.mode === 'item_invoice';
+  const shouldShowTransactionDetails = () => {
+    return ['sales', 'purchase', 'debit_note', 'credit_note'].includes(voucher.voucher_type);
+  };
+
+  const shouldShowAccountingEntries = () => {
+    return !['contra'].includes(voucher.voucher_type);
   };
 
   const renderAIAssistedMode = () => (
@@ -683,42 +726,54 @@ export const VoucherEntryConsolidated: React.FC = () => {
               setVoucher={setVoucher}
               ledgers={ledgers}
               getPartyLabel={getPartyLabel}
-              getSalesLedgerLabel={getSalesLedgerLabel}
               shouldShowPartyDetails={shouldShowPartyDetails}
               shouldShowPlaceOfSupply={shouldShowPlaceOfSupply}
               renderLedgerItem={renderLedgerItem}
             />
 
-            {/* Stock Items Entry */}
-            <StockItemsSection
+            {/* Transaction Details (replaces Stock Items Section) */}
+            <TransactionDetailsSection
               voucher={voucher}
               setVoucher={setVoucher}
               stockItems={stockItems}
               godowns={godowns}
+              ledgers={ledgers}
               selectedCompany={selectedCompany}
-              shouldShowStockItems={shouldShowStockItems}
+              shouldShowTransactionDetails={shouldShowTransactionDetails}
               renderStockItem={renderStockItem}
+              renderLedgerItem={renderLedgerItem}
               addStockEntry={addStockEntry}
               removeStockEntry={removeStockEntry}
               updateStockEntry={updateStockEntry}
               stockTotal={stockTotal}
               currentVoucherType={currentVoucherType}
+              getSalesLedgerLabel={getSalesLedgerLabel}
             />
 
-            {/* Accounting Entries */}
-            <AccountingEntriesSection
+            {/* Contra Entry Section */}
+            <ContraEntrySection
               voucher={voucher}
               setVoucher={setVoucher}
               ledgers={ledgers}
-              getAccountingEntryLabel={getAccountingEntryLabel}
               renderLedgerItem={renderLedgerItem}
-              addEntry={addEntry}
-              removeEntry={removeEntry}
-              updateEntry={updateEntry}
-              totalDebit={totalDebit}
-              totalCredit={totalCredit}
-              isBalanced={isBalanced}
             />
+
+            {/* Accounting Entries */}
+            {shouldShowAccountingEntries() && (
+              <AccountingEntriesSection
+                voucher={voucher}
+                setVoucher={setVoucher}
+                ledgers={ledgers}
+                getAccountingEntryLabel={getAccountingEntryLabel}
+                renderLedgerItem={renderLedgerItem}
+                addEntry={addEntry}
+                removeEntry={removeEntry}
+                updateEntry={updateEntry}
+                totalDebit={totalDebit}
+                totalCredit={totalCredit}
+                isBalanced={isBalanced}
+              />
+            )}
 
             {/* Voucher Narration */}
             <VoucherNarrationSection voucher={voucher} setVoucher={setVoucher} />
@@ -753,14 +808,14 @@ export const VoucherEntryConsolidated: React.FC = () => {
         {entryMode === 'pdf_import' && renderPDFImportMode()}
       </div>
 
-      {/* Enhanced Right Sidebar */}
-      <EnhancedRightSidebar
+      {/* Collapsible Right Panel */}
+      <CollapsibleRightPanel
         visible={rightPanelVisible}
         onVisibilityChange={setRightPanelVisible}
         voucher={voucher}
-        onVoucherChange={handleVoucherChange}
-        recentVouchers={recentVouchers}
-        totalAmount={stockTotal + totalDebit}
+        onVoucherChange={setVoucher}
+        onVoucherTypeChange={handleVoucherTypeChange}
+        onModeChange={handleModeChange}
       />
     </div>
   );
