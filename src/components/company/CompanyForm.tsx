@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
+import { useApp } from '../../contexts/AppContext';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -65,6 +66,7 @@ const FORM_DATA_KEY = 'companySetupFormData';
 
 export const CompanyForm: React.FC<CompanyFormProps> = ({ onBack, onSuccess }) => {
   const { userProfile } = useAuth();
+  const { setSelectedCompany, setSelectedFinancialYear } = useApp();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
@@ -163,16 +165,22 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ onBack, onSuccess }) =
       fyEnd.setFullYear(fyEnd.getFullYear() + 1);
       fyEnd.setDate(fyEnd.getDate() - 1);
 
-      const { error: fyError } = await supabase
+      const { data: fyData, error: fyError } = await supabase
         .from('financial_years')
         .insert([{
           company_id: data.id,
           year_start: fyStart.toISOString().split('T')[0],
           year_end: fyEnd.toISOString().split('T')[0],
           is_active: true
-        }]);
+        }])
+        .select()
+        .single();
 
       if (fyError) throw fyError;
+
+      // Set the created company and financial year as selected
+      setSelectedCompany(data);
+      setSelectedFinancialYear(fyData);
 
       // Create default ledger groups
       const defaultGroups = [

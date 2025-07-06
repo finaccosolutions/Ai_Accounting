@@ -7,6 +7,7 @@ import { Button } from '../ui/Button';
 import { VoucherEntry } from '../vouchers/VoucherEntry';
 import { MasterManagement } from '../masters/MasterManagement';
 import { Reports } from '../reports/Reports';
+import { CompanySettings } from '../company/CompanySettings';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -196,6 +197,10 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
 
   if (currentModule === 'reports') {
     return <Reports />;
+  }
+
+  if (currentModule === 'settings') {
+    return <CompanySettings />;
   }
 
   if (currentModule !== 'dashboard') {
