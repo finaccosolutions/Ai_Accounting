@@ -51,7 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -300, opacity: 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-white/95 backdrop-blur-md border-r border-gray-200/50 z-40 shadow-xl transition-all duration-300 ${
+      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-100/95 via-blue-50/95 to-indigo-100/95 backdrop-blur-md border-r border-gray-200/50 z-40 shadow-xl transition-all duration-300 ${
         isOpen ? 'w-80' : 'w-16'
       }`}
     >
@@ -81,8 +81,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => setCurrentModule(item.id)}
                   className={`w-full group relative overflow-hidden rounded-2xl transition-all duration-300 ${
                     isActive
-                      ? 'bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-100/50'
-                      : 'hover:bg-gray-50/80'
+                      ? 'bg-gradient-to-r from-blue-50/90 to-indigo-50/90 shadow-lg shadow-blue-100/50 border border-blue-200/50'
+                      : 'hover:bg-gray-50/80 border border-transparent'
                   }`}
                   title={!isOpen ? item.label : undefined}
                 >
@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <div className={`relative p-2 rounded-xl transition-all duration-300 ${
                       isActive 
                         ? `bg-gradient-to-r ${item.color} shadow-lg` 
-                        : 'bg-gray-100 group-hover:bg-gray-200'
+                        : 'bg-gray-100/80 group-hover:bg-gray-200/80'
                     }`}>
                       <Icon className={`w-5 h-5 transition-colors duration-300 ${
                         isActive ? 'text-white' : 'text-gray-600 group-hover:text-gray-800'

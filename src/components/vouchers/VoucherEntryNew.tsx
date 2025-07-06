@@ -46,8 +46,10 @@ interface Voucher {
   date: string;
   reference?: string;
   narration?: string;
+  party_ledger_id?: string;
   party_name?: string;
-  party_gstin?: string;
+  sales_ledger_id?: string;
+  place_of_supply?: string;
   entries: VoucherEntry[];
   stock_entries?: StockEntry[];
   tax_details?: {
@@ -67,7 +69,9 @@ const voucherTypeLabels = {
   receipt: 'Receipt Voucher',
   payment: 'Payment Voucher',
   journal: 'Journal Entry',
-  contra: 'Contra Entry'
+  contra: 'Contra Entry',
+  debit_note: 'Debit Note',
+  credit_note: 'Credit Note'
 };
 
 export const VoucherEntryNew: React.FC = () => {
@@ -79,10 +83,7 @@ export const VoucherEntryNew: React.FC = () => {
     reference: '',
     narration: '',
     party_name: '',
-    entries: [
-      { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' },
-      { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' }
-    ],
+    entries: [],
     stock_entries: [],
     mode: 'item_invoice',
     entry_method: 'manual'
@@ -111,7 +112,10 @@ export const VoucherEntryNew: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('ledgers')
-        .select('id, name, group_id')
+        .select(`
+          id, name, group_id, current_balance,
+          ledger_groups(name, group_type)
+        `)
         .eq('company_id', selectedCompany?.id)
         .eq('is_active', true)
         .order('name');
@@ -285,10 +289,7 @@ export const VoucherEntryNew: React.FC = () => {
         reference: '',
         narration: '',
         party_name: '',
-        entries: [
-          { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' },
-          { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' }
-        ],
+        entries: [],
         stock_entries: [],
         mode: voucher.mode,
         entry_method: voucher.entry_method
@@ -308,7 +309,7 @@ export const VoucherEntryNew: React.FC = () => {
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative">
+    <div className="flex h-[calc(100vh-8rem)] bg-gradient-to-br from-slate-50/90 via-blue-50/90 to-indigo-50/90 relative">
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-6">
         {/* Header with Voucher Type */}
@@ -325,11 +326,11 @@ export const VoucherEntryNew: React.FC = () => {
               <p className="text-slate-600 text-lg">Create and manage accounting vouchers with AI assistance</p>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm shadow-lg">
+              <Button variant="outline" size="sm" className="bg-white/90 backdrop-blur-sm shadow-lg border-gray-200/50">
                 <Search className="w-4 h-4 mr-2" />
                 Search
               </Button>
-              <Button variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm shadow-lg">
+              <Button variant="outline" size="sm" className="bg-white/90 backdrop-blur-sm shadow-lg border-gray-200/50">
                 <Copy className="w-4 h-4 mr-2" />
                 Duplicate
               </Button>
@@ -441,7 +442,7 @@ export const VoucherEntryNew: React.FC = () => {
           transition={{ delay: 0.7 }}
           className="flex justify-end space-x-3 mb-6"
         >
-          <Button variant="outline" className="bg-white/80 backdrop-blur-sm shadow-lg">
+          <Button variant="outline" className="bg-white/90 backdrop-blur-sm shadow-lg border-gray-200/50">
             Cancel
           </Button>
           <Button 

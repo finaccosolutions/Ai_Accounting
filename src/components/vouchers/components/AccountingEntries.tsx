@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card } from '../../ui/Card';
-import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
-import { Calculator, Plus, Trash2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calculator, AlertCircle } from 'lucide-react';
+import { SearchableDropdown } from './SearchableDropdown';
+import { NumericInput } from './NumericInput';
 
 interface AccountingEntriesProps {
   voucher: any;
@@ -21,15 +22,66 @@ export const AccountingEntries: React.FC<AccountingEntriesProps> = ({
   totalCredit,
   isBalanced
 }) => {
-  const addEntry = () => {
+  // Initialize with one empty row if no entries exist
+  useEffect(() => {
+    if (!voucher.entries || voucher.entries.length === 0) {
+      onVoucherChange(prev => ({
+        ...prev,
+        entries: [
+          { ledger_id: '', ledger_name: '', debit_amount: 0, credit_amount: 0, narration: '' }
+        ]
+      }));
+    }
+  }, []);
+
+  const updateEntry = (index: number, field: string, value: any) => {
+    const updatedEntries = [...(voucher.entries || [])];
+    
+    if (!updatedEntries[index]) {
+      updatedEntries[index] = { 
+        ledger_id: '', 
+        ledger_name: '',
+        debit_amount: 0, 
+        credit_amount: 0, 
+        narration: '' 
+      };
+    }
+
+    // Validation: Don't allow both debit and credit to be greater than 0
+    if (field === 'debit_amount' && value > 0) {
+      updatedEntries[index].credit_amount = 0;
+    } else if (field === 'credit_amount' && value > 0) {
+      updatedEntries[index].debit_amount = 0;
+    }
+
+    updatedEntries[index] = { ...updatedEntries[index], [field]: value };
+    
+    onVoucherChange(prev => ({ ...prev, entries: updatedEntries }));
+
+    // Auto-add new row if current row has ledger selected and amount entered and this is the last row
+    if ((field === 'debit_amount' || field === 'credit_amount') && value > 0 && 
+        updatedEntries[index].ledger_id && index === updatedEntries.length - 1) {
+      addNewRow();
+    }
+  };
+
+  const addNewRow = () => {
+    const newEntry = { 
+      ledger_id: '', 
+      ledger_name: '',
+      debit_amount: 0, 
+      credit_amount: 0, 
+      narration: '' 
+    };
+    
     onVoucherChange(prev => ({
       ...prev,
-      entries: [...prev.entries, { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' }]
+      entries: [...(prev.entries || []), newEntry]
     }));
   };
 
   const removeEntry = (index: number) => {
-    if (voucher.entries.length > 2) {
+    if (voucher.entries && voucher.entries.length > 1) {
       onVoucherChange(prev => ({
         ...prev,
         entries: prev.entries.filter((_, i) => i !== index)
@@ -37,91 +89,91 @@ export const AccountingEntries: React.FC<AccountingEntriesProps> = ({
     }
   };
 
-  const updateEntry = (index: number, field: string, value: any) => {
-    onVoucherChange(prev => ({
-      ...prev,
-      entries: prev.entries.map((entry, i) => 
-        i === index ? { ...entry, [field]: value } : entry
-      )
-    }));
+  const handleLedgerSelect = (index: number, ledger: any) => {
+    updateEntry(index, 'ledger_id', ledger.id);
+    updateEntry(index, 'ledger_name', ledger.name);
   };
 
+  const renderLedgerItem = (ledger: any) => (
+    <div>
+      <div className="font-medium text-gray-900">{ledger.name}</div>
+      <div className="text-sm text-gray-500">
+        {ledger.ledger_groups?.name} • Balance: ₹{ledger.current_balance?.toFixed(2) || '0.00'}
+      </div>
+    </div>
+  );
+
   return (
-    <Card className="p-6 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-      <div className="flex items-center justify-between mb-4">
+    <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+      <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center">
           <Calculator className="w-5 h-5 mr-2 text-purple-600" />
           Accounting Entries
         </h3>
-        <Button size="sm" onClick={addEntry} className="bg-gradient-to-r from-purple-500 to-purple-600">
-          <Plus className="w-4 h-4 mr-1" />
-          Add Entry
-        </Button>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-3 font-medium text-gray-700">Ledger Account</th>
-              <th className="text-right py-3 px-3 font-medium text-gray-700">Debit (₹)</th>
-              <th className="text-right py-3 px-3 font-medium text-gray-700">Credit (₹)</th>
-              <th className="text-left py-3 px-3 font-medium text-gray-700">Narration</th>
+              <th className="text-left py-3 px-2 font-medium text-gray-700 w-2/5">Ledger Account</th>
+              <th className="text-right py-3 px-2 font-medium text-gray-700 w-1/8">Debit (₹)</th>
+              <th className="text-right py-3 px-2 font-medium text-gray-700 w-1/8">Credit (₹)</th>
+              <th className="text-left py-3 px-2 font-medium text-gray-700 w-1/4">Narration</th>
               <th className="w-10"></th>
             </tr>
           </thead>
           <tbody>
-            {voucher.entries.map((entry, index) => (
+            {voucher.entries?.map((entry, index) => (
               <tr key={index} className="border-b border-gray-100 hover:bg-purple-50/50 transition-colors">
-                <td className="py-3 px-3">
-                  <select
-                    value={entry.ledger_id}
-                    onChange={(e) => updateEntry(index, 'ledger_id', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="">Select Ledger</option>
-                    {ledgers.map((ledger) => (
-                      <option key={ledger.id} value={ledger.id}>
-                        {ledger.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="py-3 px-3">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={entry.debit_amount || ''}
-                    onChange={(e) => updateEntry(index, 'debit_amount', parseFloat(e.target.value) || 0)}
-                    className="text-right"
+                <td className="py-3 px-2">
+                  <SearchableDropdown
+                    items={ledgers}
+                    value={entry.ledger_id || ''}
+                    onSelect={(ledger) => handleLedgerSelect(index, ledger)}
+                    placeholder="Search ledgers..."
+                    displayField="name"
+                    searchFields={['name']}
+                    renderItem={renderLedgerItem}
+                    className="text-sm"
                   />
                 </td>
-                <td className="py-3 px-3">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={entry.credit_amount || ''}
-                    onChange={(e) => updateEntry(index, 'credit_amount', parseFloat(e.target.value) || 0)}
-                    className="text-right"
+                <td className="py-3 px-2">
+                  <NumericInput
+                    value={entry.debit_amount || 0}
+                    onChange={(value) => updateEntry(index, 'debit_amount', value)}
+                    step={0.01}
+                    placeholder="0.00"
+                    className="text-sm"
                   />
                 </td>
-                <td className="py-3 px-3">
+                <td className="py-3 px-2">
+                  <NumericInput
+                    value={entry.credit_amount || 0}
+                    onChange={(value) => updateEntry(index, 'credit_amount', value)}
+                    step={0.01}
+                    placeholder="0.00"
+                    className="text-sm"
+                  />
+                </td>
+                <td className="py-3 px-2">
                   <Input
                     value={entry.narration || ''}
                     onChange={(e) => updateEntry(index, 'narration', e.target.value)}
                     placeholder="Entry description"
+                    className="text-sm"
                   />
                 </td>
-                <td className="py-3 px-3">
-                  {voucher.entries.length > 2 && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
+                <td className="py-3 px-2">
+                  {voucher.entries && voucher.entries.length > 1 && (
+                    <button
                       onClick={() => removeEntry(index)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   )}
                 </td>
               </tr>
@@ -129,11 +181,11 @@ export const AccountingEntries: React.FC<AccountingEntriesProps> = ({
           </tbody>
           <tfoot>
             <tr className="border-t-2 border-gray-300 font-semibold bg-gray-50">
-              <td className="py-3 px-3">Total</td>
-              <td className="py-3 px-3 text-right text-lg">₹{totalDebit.toFixed(2)}</td>
-              <td className="py-3 px-3 text-right text-lg">₹{totalCredit.toFixed(2)}</td>
-              <td className="py-3 px-3"></td>
-              <td className="py-3 px-3"></td>
+              <td className="py-3 px-2">Total</td>
+              <td className="py-3 px-2 text-right text-lg">₹{totalDebit.toFixed(2)}</td>
+              <td className="py-3 px-2 text-right text-lg">₹{totalCredit.toFixed(2)}</td>
+              <td className="py-3 px-2"></td>
+              <td className="py-3 px-2"></td>
             </tr>
           </tfoot>
         </table>
@@ -146,15 +198,6 @@ export const AccountingEntries: React.FC<AccountingEntriesProps> = ({
             <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
             <p className="text-red-600 text-sm">
               <strong>Difference: ₹{Math.abs(totalDebit - totalCredit).toFixed(2)}</strong> - Debit and Credit must be equal
-            </p>
-          </div>
-        )}
-
-        {isBalanced && totalDebit > 0 && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center">
-            <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-            <p className="text-green-600 text-sm">
-              <strong>Voucher is balanced</strong> - Ready to save (₹{totalDebit.toFixed(2)})
             </p>
           </div>
         )}
