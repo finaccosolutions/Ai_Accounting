@@ -21,9 +21,14 @@ import {
   Calculator,
   Tag,
   Warehouse,
-  Receipt
+  Receipt,
+  CheckSquare,
+  Square,
+  ChevronDown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Ledger, LedgerGroup, StockItem, StockGroup, Unit, Godown } from '../../types';
+import { SearchableDropdown } from '../vouchers/SearchableDropdown'; // Re-using SearchableDropdown
 
 const masterTypes = [
   { 
@@ -81,20 +86,71 @@ export const MasterManagement: React.FC = () => {
   const [aiCommand, setAiCommand] = useState('');
   const [aiProcessing, setAiProcessing] = useState(false);
 
+  // Data for dropdowns in MasterForm
+  const [allLedgerGroups, setAllLedgerGroups] = useState<LedgerGroup[]>([]);
+  const [allStockGroups, setAllStockGroups] = useState<StockGroup[]>([]);
+  const [allUnits, setAllUnits] = useState<Unit[]>([]);
+  const [allLedgers, setAllLedgers] = useState<Ledger[]>([]); // For parent ledger groups
+
   const gemini = new GeminiAI(import.meta.env.VITE_GEMINI_API_KEY);
 
   useEffect(() => {
     if (selectedCompany) {
+      fetchMasterDataForDropdowns();
       fetchData();
     }
   }, [selectedCompany, selectedMaster]);
 
+  const fetchMasterDataForDropdowns = async () => {
+    if (!selectedCompany) return;
+    try {
+      const { data: lgData, error: lgError } = await supabase
+        .from('ledger_groups')
+        .select('*')
+        .eq('company_id', selectedCompany.id);
+      if (lgError) throw lgError;
+      setAllLedgerGroups(lgData || []);
+
+      const { data: sgData, error: sgError } = await supabase
+        .from('stock_groups')
+        .select('*')
+        .eq('company_id', selectedCompany.id);
+      if (sgError) throw sgError;
+      setAllStockGroups(sgData || []);
+
+      const { data: uData, error: uError } = await supabase
+        .from('units')
+        .select('*')
+        .eq('company_id', selectedCompany.id);
+      if (uError) throw uError;
+      setAllUnits(uData || []);
+
+      const { data: lData, error: lError } = await supabase
+        .from('ledgers')
+        .select('id, name')
+        .eq('company_id', selectedCompany.id);
+      if (lError) throw lError;
+      setAllLedgers(lData || []);
+
+    } catch (error) {
+      console.error('Error fetching dropdown data:', error);
+      toast.error('Failed to fetch dropdown data');
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      let query = supabase.from(selectedMaster).select('*');
+      let query;
+      if (selectedMaster === 'ledgers') {
+        query = supabase.from(selectedMaster).select(`*, ledger_groups(name, group_type)`);
+      } else if (selectedMaster === 'stock_items') {
+        query = supabase.from(selectedMaster).select(`*, stock_groups(name), units(name, symbol)`);
+      } else {
+        query = supabase.from(selectedMaster).select('*');
+      }
       
-      if (selectedMaster !== 'units') {
+      if (selectedMaster !== 'units') { // Units can be global or company-specific
         query = query.eq('company_id', selectedCompany?.id);
       }
       
@@ -119,12 +175,12 @@ export const MasterManagement: React.FC = () => {
         Create a ${selectedMaster.slice(0, -1)} based on this command: "${aiCommand}"
         
         Respond with JSON containing the fields needed for ${selectedMaster}:
-        ${selectedMaster === 'ledgers' ? '- name, group_id (optional), opening_balance (default 0)' : ''}
+        ${selectedMaster === 'ledgers' ? '- name, group_id (optional), opening_balance (default 0), is_active (boolean)' : ''}
         ${selectedMaster === 'ledger_groups' ? '- name, group_type (assets/liabilities/income/expenses), parent_group_id (optional)' : ''}
-        ${selectedMaster === 'stock_items' ? '- name, group_id (optional), unit_id (optional), rate (default 0), opening_stock (default 0)' : ''}
+        ${selectedMaster === 'stock_items' ? '- name, group_id (optional), unit_id (optional), rate (default 0), opening_stock (default 0), hsn_code (optional), is_active (boolean)' : ''}
         ${selectedMaster === 'stock_groups' ? '- name, parent_group_id (optional)' : ''}
         ${selectedMaster === 'units' ? '- name, symbol' : ''}
-        ${selectedMaster === 'godowns' ? '- name, address (optional)' : ''}
+        ${selectedMaster === 'godowns' ? '- name, address (optional), is_active (boolean)' : ''}
         
         Only respond with valid JSON, no additional text.
       `;
@@ -170,6 +226,7 @@ export const MasterManagement: React.FC = () => {
       setShowForm(false);
       setEditingItem(null);
       fetchData();
+      fetchMasterDataForDropdowns(); // Refresh dropdown data after save
     } catch (error) {
       console.error('Error saving:', error);
       toast.error('Failed to save');
@@ -188,6 +245,7 @@ export const MasterManagement: React.FC = () => {
       if (error) throw error;
       toast.success('Deleted successfully!');
       fetchData();
+      fetchMasterDataForDropdowns(); // Refresh dropdown data after delete
     } catch (error) {
       console.error('Error deleting:', error);
       toast.error('Failed to delete');
@@ -330,18 +388,39 @@ export const MasterManagement: React.FC = () => {
                       <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
                       {selectedMaster === 'ledgers' && (
                         <>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Group</th>
                           <th className="text-right py-3 px-4 font-medium text-gray-700">Opening Balance</th>
                           <th className="text-right py-3 px-4 font-medium text-gray-700">Current Balance</th>
+                          <th className="text-center py-3 px-4 font-medium text-gray-700">Active</th>
+                        </>
+                      )}
+                      {selectedMaster === 'ledger_groups' && (
+                        <>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Type</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Parent Group</th>
                         </>
                       )}
                       {selectedMaster === 'stock_items' && (
                         <>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Group</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Unit</th>
                           <th className="text-right py-3 px-4 font-medium text-gray-700">Rate</th>
                           <th className="text-right py-3 px-4 font-medium text-gray-700">Stock</th>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">HSN</th>
+                          <th className="text-center py-3 px-4 font-medium text-gray-700">Active</th>
                         </>
+                      )}
+                      {selectedMaster === 'stock_groups' && (
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">Parent Group</th>
                       )}
                       {selectedMaster === 'units' && (
                         <th className="text-left py-3 px-4 font-medium text-gray-700">Symbol</th>
+                      )}
+                      {selectedMaster === 'godowns' && (
+                        <>
+                          <th className="text-left py-3 px-4 font-medium text-gray-700">Address</th>
+                          <th className="text-center py-3 px-4 font-medium text-gray-700">Active</th>
+                        </>
                       )}
                       <th className="text-center py-3 px-4 font-medium text-gray-700">Actions</th>
                     </tr>
@@ -352,18 +431,45 @@ export const MasterManagement: React.FC = () => {
                         <td className="py-3 px-4 font-medium text-gray-900">{item.name}</td>
                         {selectedMaster === 'ledgers' && (
                           <>
+                            <td className="py-3 px-4">{item.ledger_groups?.name || 'N/A'}</td>
                             <td className="py-3 px-4 text-right">₹{item.opening_balance?.toFixed(2) || '0.00'}</td>
                             <td className="py-3 px-4 text-right">₹{item.current_balance?.toFixed(2) || '0.00'}</td>
+                            <td className="py-3 px-4 text-center">
+                              {item.is_active ? <CheckSquare className="w-5 h-5 text-green-500 mx-auto" /> : <Square className="w-5 h-5 text-gray-400 mx-auto" />}
+                            </td>
+                          </>
+                        )}
+                        {selectedMaster === 'ledger_groups' && (
+                          <>
+                            <td className="py-3 px-4 capitalize">{item.group_type}</td>
+                            <td className="py-3 px-4">{allLedgerGroups.find(g => g.id === item.parent_group_id)?.name || 'N/A'}</td>
                           </>
                         )}
                         {selectedMaster === 'stock_items' && (
                           <>
+                            <td className="py-3 px-4">{item.stock_groups?.name || 'N/A'}</td>
+                            <td className="py-3 px-4">{item.units?.symbol || 'N/A'}</td>
                             <td className="py-3 px-4 text-right">₹{item.rate?.toFixed(2) || '0.00'}</td>
                             <td className="py-3 px-4 text-right">{item.current_stock?.toFixed(2) || '0.00'}</td>
+                            <td className="py-3 px-4">{item.hsn_code || 'N/A'}</td>
+                            <td className="py-3 px-4 text-center">
+                              {item.is_active ? <CheckSquare className="w-5 h-5 text-green-500 mx-auto" /> : <Square className="w-5 h-5 text-gray-400 mx-auto" />}
+                            </td>
                           </>
+                        )}
+                        {selectedMaster === 'stock_groups' && (
+                          <td className="py-3 px-4">{allStockGroups.find(g => g.id === item.parent_group_id)?.name || 'N/A'}</td>
                         )}
                         {selectedMaster === 'units' && (
                           <td className="py-3 px-4">{item.symbol}</td>
+                        )}
+                        {selectedMaster === 'godowns' && (
+                          <>
+                            <td className="py-3 px-4">{item.address || 'N/A'}</td>
+                            <td className="py-3 px-4 text-center">
+                              {item.is_active ? <CheckSquare className="w-5 h-5 text-green-500 mx-auto" /> : <Square className="w-5 h-5 text-gray-400 mx-auto" />}
+                            </td>
+                          </>
                         )}
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-center space-x-2">
@@ -437,6 +543,10 @@ export const MasterManagement: React.FC = () => {
                   setShowForm(false);
                   setEditingItem(null);
                 }}
+                allLedgerGroups={allLedgerGroups}
+                allStockGroups={allStockGroups}
+                allUnits={allUnits}
+                allLedgers={allLedgers}
               />
             </motion.div>
           </motion.div>
@@ -447,18 +557,55 @@ export const MasterManagement: React.FC = () => {
 };
 
 // Master Form Component
-const MasterForm: React.FC<{
+interface MasterFormProps {
   masterType: string;
   editingItem: any;
   onSave: (data: any) => void;
   onCancel: () => void;
-}> = ({ masterType, editingItem, onSave, onCancel }) => {
+  allLedgerGroups: LedgerGroup[];
+  allStockGroups: StockGroup[];
+  allUnits: Unit[];
+  allLedgers: Ledger[];
+}
+
+const MasterForm: React.FC<MasterFormProps> = ({
+  masterType,
+  editingItem,
+  onSave,
+  onCancel,
+  allLedgerGroups,
+  allStockGroups,
+  allUnits,
+  allLedgers
+}) => {
   const [formData, setFormData] = useState(editingItem || {});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
   };
+
+  const renderLedgerGroupItem = (item: LedgerGroup) => (
+    <div className="flex items-center justify-between">
+      <span className="font-medium">{item.name}</span>
+      <span className="text-xs text-gray-500 capitalize">{item.group_type}</span>
+    </div>
+  );
+
+  const renderStockGroupItem = (item: StockGroup) => (
+    <div className="font-medium">{item.name}</div>
+  );
+
+  const renderUnitItem = (item: Unit) => (
+    <div className="flex items-center justify-between">
+      <span className="font-medium">{item.name}</span>
+      <span className="text-xs text-gray-500">{item.symbol}</span>
+    </div>
+  );
+
+  const renderLedgerItem = (item: Ledger) => (
+    <div className="font-medium">{item.name}</div>
+  );
 
   const renderFormFields = () => {
     switch (masterType) {
@@ -469,15 +616,84 @@ const MasterForm: React.FC<{
               label="Ledger Name"
               value={formData.name || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g., Cash, Sales Account"
               required
             />
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Group *
+              </label>
+              <SearchableDropdown
+                items={allLedgerGroups}
+                value={formData.group_id || ''}
+                onSelect={(item) => setFormData(prev => ({ ...prev, group_id: item.id }))}
+                placeholder="Search ledger group..."
+                displayField="name"
+                searchFields={['name', 'group_type']}
+                renderItem={renderLedgerGroupItem}
+              />
+            </div>
             <Input
               label="Opening Balance"
               type="number"
               step="0.01"
-              value={formData.opening_balance || ''}
+              value={formData.opening_balance || 0}
               onChange={(e) => setFormData(prev => ({ ...prev, opening_balance: parseFloat(e.target.value) || 0 }))}
+              placeholder="0.00"
             />
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.is_active ?? true}
+                onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Is Active</span>
+            </label>
+          </>
+        );
+      
+      case 'ledger_groups':
+        return (
+          <>
+            <Input
+              label="Group Name"
+              value={formData.name || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g., Current Assets, Direct Expenses"
+              required
+            />
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Group Type *
+              </label>
+              <select
+                value={formData.group_type || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, group_type: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                required
+              >
+                <option value="">Select Type</option>
+                <option value="assets">Assets</option>
+                <option value="liabilities">Liabilities</option>
+                <option value="income">Income</option>
+                <option value="expenses">Expenses</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Parent Group (Optional)
+              </label>
+              <SearchableDropdown
+                items={allLedgerGroups.filter(g => g.id !== formData.id)} // Prevent self-selection
+                value={formData.parent_group_id || ''}
+                onSelect={(item) => setFormData(prev => ({ ...prev, parent_group_id: item.id }))}
+                placeholder="Search parent group..."
+                displayField="name"
+                searchFields={['name', 'group_type']}
+                renderItem={renderLedgerGroupItem}
+              />
+            </div>
           </>
         );
       
@@ -488,22 +704,96 @@ const MasterForm: React.FC<{
               label="Item Name"
               value={formData.name || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g., Laptop, Printer"
               required
             />
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Group (Optional)
+              </label>
+              <SearchableDropdown
+                items={allStockGroups}
+                value={formData.group_id || ''}
+                onSelect={(item) => setFormData(prev => ({ ...prev, group_id: item.id }))}
+                placeholder="Search stock group..."
+                displayField="name"
+                searchFields={['name']}
+                renderItem={renderStockGroupItem}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Unit *
+              </label>
+              <SearchableDropdown
+                items={allUnits}
+                value={formData.unit_id || ''}
+                onSelect={(item) => setFormData(prev => ({ ...prev, unit_id: item.id }))}
+                placeholder="Search unit..."
+                displayField="name"
+                searchFields={['name', 'symbol']}
+                renderItem={renderUnitItem}
+                required
+              />
+            </div>
             <Input
               label="Rate"
               type="number"
               step="0.01"
-              value={formData.rate || ''}
+              value={formData.rate || 0}
               onChange={(e) => setFormData(prev => ({ ...prev, rate: parseFloat(e.target.value) || 0 }))}
+              placeholder="0.00"
             />
             <Input
               label="Opening Stock"
               type="number"
-              step="0.01"
-              value={formData.opening_stock || ''}
+              step="0.001"
+              value={formData.opening_stock || 0}
               onChange={(e) => setFormData(prev => ({ ...prev, opening_stock: parseFloat(e.target.value) || 0 }))}
+              placeholder="0.000"
             />
+            <Input
+              label="HSN Code (Optional)"
+              value={formData.hsn_code || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, hsn_code: e.target.value }))}
+              placeholder="e.g., 8471"
+            />
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.is_active ?? true}
+                onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Is Active</span>
+            </label>
+          </>
+        );
+      
+      case 'stock_groups':
+        return (
+          <>
+            <Input
+              label="Group Name"
+              value={formData.name || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g., Electronics, Furniture"
+              required
+            />
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Parent Group (Optional)
+              </label>
+              <SearchableDropdown
+                items={allStockGroups.filter(g => g.id !== formData.id)} // Prevent self-selection
+                value={formData.parent_group_id || ''}
+                onSelect={(item) => setFormData(prev => ({ ...prev, parent_group_id: item.id }))}
+                placeholder="Search parent group..."
+                displayField="name"
+                searchFields={['name']}
+                renderItem={renderStockGroupItem}
+              />
+            </div>
           </>
         );
       
@@ -514,14 +804,50 @@ const MasterForm: React.FC<{
               label="Unit Name"
               value={formData.name || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g., Kilograms, Pieces"
               required
             />
             <Input
               label="Symbol"
               value={formData.symbol || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, symbol: e.target.value }))}
+              placeholder="e.g., Kg, Pcs"
               required
             />
+          </>
+        );
+
+      case 'godowns':
+        return (
+          <>
+            <Input
+              label="Godown Name"
+              value={formData.name || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="e.g., Main Warehouse, Store A"
+              required
+            />
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Address (Optional)
+              </label>
+              <textarea
+                value={formData.address || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Full address of the godown"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.is_active ?? true}
+                onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Is Active</span>
+            </label>
           </>
         );
       
@@ -540,7 +866,7 @@ const MasterForm: React.FC<{
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900">
-        {editingItem ? 'Edit' : 'Create'} {masterType.slice(0, -1).replace('_', ' ')}
+        {editingItem ? 'Edit' : 'Create'} {masterType.replace('_', ' ').replace(/s$/, '')}
       </h3>
       
       {renderFormFields()}

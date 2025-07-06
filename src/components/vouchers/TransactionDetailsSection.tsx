@@ -4,19 +4,20 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { NumberInput } from '../ui/NumberInput';
 import { Input } from '../ui/Input';
-import { Package, Plus, Trash2, Percent, DollarSign, Calculator } from 'lucide-react';
+import { Package, Plus, Trash2, Percent, DollarSign, Calculator, Tag, Hash } from 'lucide-react'; // Added Tag, Hash
 import { SearchableDropdown } from './SearchableDropdown';
+import { Company, StockItem, Godown, Ledger } from '../../types'; // Import types
 
 interface TransactionDetailsSectionProps {
   voucher: any;
   setVoucher: (updater: (prev: any) => any) => void;
-  stockItems: any[];
-  godowns: any[];
-  ledgers: any[];
-  selectedCompany: any;
+  stockItems: StockItem[];
+  godowns: Godown[];
+  ledgers: Ledger[];
+  selectedCompany: Company | null; // Updated type
   shouldShowTransactionDetails: () => boolean;
-  renderStockItem: (item: any) => React.ReactNode;
-  renderLedgerItem: (ledger: any) => React.ReactNode;
+  renderStockItem: (item: StockItem) => React.ReactNode; // Updated type
+  renderLedgerItem: (ledger: Ledger) => React.ReactNode; // Updated type
   addStockEntry: () => void;
   removeStockEntry: (index: number) => void;
   updateStockEntry: (index: number, field: string, value: any) => void;
@@ -48,10 +49,11 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
     updateStockEntry(index, field, value);
     
     // Auto-add new row if this is the last row and user entered data
-    if (index === voucher.stock_entries.length - 1 && value && field !== 'amount') {
-      const hasData = voucher.stock_entries[index].stock_item_id || 
-                     voucher.stock_entries[index].quantity || 
-                     voucher.stock_entries[index].rate;
+    if (index === (voucher.stock_entries?.length || 0) - 1 && value && field !== 'amount') {
+      const currentEntry = voucher.stock_entries?.[index];
+      const hasData = currentEntry?.stock_item_id || 
+                     currentEntry?.quantity || 
+                     currentEntry?.rate;
       
       if (hasData) {
         addStockEntry();
@@ -178,6 +180,12 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
                     {selectedCompany?.enable_multi_godown && (
                       <th className="text-left py-3 px-2 font-medium text-gray-700 w-1/6">Godown</th>
                     )}
+                    {selectedCompany?.enable_batch_tracking && (
+                      <th className="text-left py-3 px-2 font-medium text-gray-700 w-1/8">Batch</th>
+                    )}
+                    {selectedCompany?.enable_serial_tracking && (
+                      <th className="text-left py-3 px-2 font-medium text-gray-700 w-1/8">Serial</th>
+                    )}
                     <th className="w-10"></th>
                   </tr>
                 </thead>
@@ -262,6 +270,26 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
                           </select>
                         </td>
                       )}
+                      {selectedCompany?.enable_batch_tracking && (
+                        <td className="py-3 px-2">
+                          <Input
+                            value={entry.batch_number || ''}
+                            onChange={(e) => handleStockEntryChange(index, 'batch_number', e.target.value)}
+                            placeholder="Batch No."
+                            className="text-sm"
+                          />
+                        </td>
+                      )}
+                      {selectedCompany?.enable_serial_tracking && (
+                        <td className="py-3 px-2">
+                          <Input
+                            value={entry.serial_number || ''}
+                            onChange={(e) => handleStockEntryChange(index, 'serial_number', e.target.value)}
+                            placeholder="Serial No."
+                            className="text-sm"
+                          />
+                        </td>
+                      )}
                       <td className="py-3 px-2">
                         {voucher.stock_entries && voucher.stock_entries.length > 1 && index < voucher.stock_entries.length - 1 && (
                           <motion.button
@@ -281,7 +309,9 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
                   <tr className="border-t-2 border-gray-300 font-semibold bg-gray-50">
                     <td className="py-3 px-2" colSpan={3}>Subtotal</td>
                     <td className="py-3 px-2 text-right text-lg">₹{stockTotal.toFixed(2)}</td>
-                    <td colSpan={3}></td>
+                    <td colSpan={selectedCompany?.enable_multi_godown ? 3 : 2}></td> {/* Adjust colspan based on godown */}
+                    {selectedCompany?.enable_batch_tracking && <td colSpan={1}></td>}
+                    {selectedCompany?.enable_serial_tracking && <td colSpan={1}></td>}
                   </tr>
                 </tfoot>
               </table>

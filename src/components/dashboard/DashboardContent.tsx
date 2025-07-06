@@ -9,12 +9,14 @@ import { VoucherSettings } from '../vouchers/VoucherSettings';
 import { MasterManagement } from '../masters/MasterManagement';
 import { Reports } from '../reports/Reports';
 import { CompanySettings } from '../company/CompanySettings';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  FileText, 
-  Users, 
+import { SmartImport } from '../import/SmartImport';
+import { AuditPanel } from '../audit/AuditPanel'; // Import AuditPanel component
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  FileText,
+  Users,
   AlertCircle,
   PieChart,
   BarChart3,
@@ -49,20 +51,20 @@ import {
   BarChart,
   LineChart
 } from 'lucide-react';
-import { 
-  LineChart as RechartsLineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  PieChart as RechartsPieChart, 
-  Cell, 
-  Pie, 
-  AreaChart, 
-  Area, 
-  BarChart as RechartsBarChart, 
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Cell,
+  Pie,
+  AreaChart,
+  Area,
+  BarChart as RechartsBarChart,
   Bar,
   ComposedChart,
   Legend
@@ -134,6 +136,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to fetch dashboard data');
     } finally {
       setLoading(false);
     }
@@ -146,10 +149,10 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
     const receiptVouchers = vouchers.filter(v => v.voucher_type === 'receipt');
     const paymentVouchers = vouchers.filter(v => v.voucher_type === 'payment');
 
-    const totalRevenue = salesVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0) + 
+    const totalRevenue = salesVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0) +
                         receiptVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0);
-    
-    const totalExpenses = purchaseVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0) + 
+
+    const totalExpenses = purchaseVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0) +
                          paymentVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0);
 
     const netProfit = totalRevenue - totalExpenses;
@@ -157,13 +160,13 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
     // Calculate assets and liabilities from ledgers
     const assets = ledgers.filter(l => l.ledger_groups?.group_type === 'assets');
     const liabilities = ledgers.filter(l => l.ledger_groups?.group_type === 'liabilities');
-    
+
     const totalAssets = assets.reduce((sum, l) => sum + Math.abs(l.current_balance || 0), 0);
     const totalLiabilities = liabilities.reduce((sum, l) => sum + Math.abs(l.current_balance || 0), 0);
 
     // Calculate cash position
-    const cashLedgers = ledgers.filter(l => 
-      l.name.toLowerCase().includes('cash') || 
+    const cashLedgers = ledgers.filter(l =>
+      l.name.toLowerCase().includes('cash') ||
       l.name.toLowerCase().includes('bank')
     );
     const cashPosition = cashLedgers.reduce((sum, l) => sum + (l.current_balance || 0), 0);
@@ -250,7 +253,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
       date.setMonth(date.getMonth() - i);
       const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
       const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-      
+
       const monthVouchers = vouchers.filter(v => {
         const vDate = new Date(v.date);
         return vDate >= monthStart && vDate <= monthEnd;
@@ -259,7 +262,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
       const monthRevenue = monthVouchers
         .filter(v => ['sales', 'receipt'].includes(v.voucher_type))
         .reduce((sum, v) => sum + (v.total_amount || 0), 0);
-      
+
       const monthExpenses = monthVouchers
         .filter(v => ['purchase', 'payment'].includes(v.voucher_type))
         .reduce((sum, v) => sum + (v.total_amount || 0), 0);
@@ -365,6 +368,14 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
     return <CompanySettings />;
   }
 
+  if (currentModule === 'import') {
+    return <SmartImport />;
+  }
+
+  if (currentModule === 'audit') { // New condition for AuditPanel
+    return <AuditPanel />;
+  }
+
   if (currentModule !== 'dashboard') {
     return (
       <div className="flex items-center justify-center h-96">
@@ -392,7 +403,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
           className="text-center py-20"
         >
           <div className="max-w-2xl mx-auto">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
@@ -407,8 +418,8 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                 className="absolute inset-0 w-32 h-32 mx-auto border-4 border-dashed border-blue-300 rounded-full"
               />
             </motion.div>
-            
-            <motion.h2 
+
+            <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -416,8 +427,8 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
             >
               Welcome to AccounTech! 🎉
             </motion.h2>
-            
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
@@ -425,8 +436,8 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
             >
               Get started by creating your first company to unlock the full power of AI-assisted accounting.
             </motion.p>
-            
-            <motion.div 
+
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -443,7 +454,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                   { icon: Shield, text: 'Automated compliance', color: 'text-purple-600' },
                   { icon: Activity, text: 'Real-time insights', color: 'text-orange-600' }
                 ].map((feature, index) => (
-                  <motion.div 
+                  <motion.div
                     key={index}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -505,7 +516,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                 </motion.div>
               </motion.div>
               <div>
-                <motion.h1 
+                <motion.h1
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
@@ -513,7 +524,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                 >
                   Financial Dashboard
                 </motion.h1>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
@@ -534,10 +545,10 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                 <option value="90">Last 3 months</option>
                 <option value="365">Last year</option>
               </select>
-              <Button 
+              <Button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                variant="outline" 
+                variant="outline"
                 size="sm"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
@@ -575,7 +586,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
               >
                 <Card className={`p-6 bg-gradient-to-br ${stat.bgGradient} border-0 shadow-xl hover:shadow-2xl ${stat.shadowColor} transition-all duration-500`}>
                   <div className="flex items-center justify-between mb-6">
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       className={`p-4 rounded-3xl bg-gradient-to-r ${stat.iconBg} shadow-xl group-hover:shadow-2xl transition-all duration-500`}
                     >
@@ -590,7 +601,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                       <span>{stat.change}</span>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-sm font-semibold text-gray-600 mb-2">{stat.title}</h3>
                     <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
@@ -631,14 +642,14 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
                     <YAxis stroke="#6b7280" fontSize={12} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                        border: 'none', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        border: 'none',
                         borderRadius: '16px',
                         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
                         backdropFilter: 'blur(10px)'
-                      }} 
+                      }}
                       formatter={(value: any) => [`₹${value.toLocaleString()}`, '']}
                     />
                     <Bar dataKey="revenue" fill="#3B82F6" radius={[4, 4, 0, 0]} />
@@ -677,21 +688,21 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Amount']}
-                          contentStyle={{ 
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                            border: 'none', 
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            border: 'none',
                             borderRadius: '16px',
                             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
                             backdropFilter: 'blur(10px)'
-                          }} 
+                          }}
                         />
                       </RechartsPieChart>
                     </ResponsiveContainer>
                     <div className="grid grid-cols-2 gap-4 mt-6">
                       {dashboardData.assetLiability.map((item: any, index: number) => (
-                        <motion.div 
+                        <motion.div
                           key={index}
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
@@ -860,7 +871,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                   View All
                 </Button>
               </div>
-              
+
               {dashboardData.recentActivities.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full">

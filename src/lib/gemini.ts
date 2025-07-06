@@ -103,11 +103,6 @@ export class GeminiAI {
       7. For payments, ask if cash or bank payment
       8. For bank payments, ask which bank account
       
-      Examples of clarification needed:
-      - "payment to ABC Ltd 5000" → Ask: Cash or bank payment? Which bank account? What is the payment for?
-      - "received money" → Ask: From whom? How much? Cash or bank? What is it for?
-      - "sold goods" → Ask: To whom? What items? Quantity? Rate? With or without GST?
-      
       Only respond with valid JSON, no additional text.
     `;
 
@@ -308,43 +303,66 @@ export class GeminiAI {
     return await this.generateContent(prompt);
   }
 
-  async auditAnalysis(voucherData: any[], ledgerData: any[]): Promise<string> {
-    const prompt = `
-      Perform an audit analysis on the following accounting data:
+  async auditAnalysis(voucherData: any[], ledgerData: any[], auditType: string, auditTrailData?: any[]): Promise<string> {
+    let prompt = `
+      Perform an audit analysis on the provided accounting data for "${auditType}" check.
       
       Vouchers: ${JSON.stringify(voucherData.slice(0, 50), null, 2)}
       Ledgers: ${JSON.stringify(ledgerData.slice(0, 20), null, 2)}
-      
-      Analyze for:
-      
-      1. **Data Quality Issues:**
-         - Missing or incomplete entries
-         - Inconsistent naming conventions
-         - Unusual amounts or patterns
-      
-      2. **Compliance Checks:**
-         - GST compliance issues
-         - TDS/TCS compliance
-         - Voucher numbering sequence
-      
-      3. **Audit Red Flags:**
-         - Duplicate entries
-         - Round number bias
-         - Unusual timing of transactions
-         - Missing supporting documents
-      
-      4. **Internal Control Weaknesses:**
-         - Segregation of duties issues
-         - Authorization concerns
-         - Documentation gaps
-      
-      5. **Recommendations:**
-         - Process improvements
-         - Control enhancements
-         - Training needs
-      
-      Provide specific examples and actionable recommendations for each finding.
     `;
+
+    if (auditTrailData) {
+      prompt += `\nAudit Trail: ${JSON.stringify(auditTrailData.slice(0, 20), null, 2)}`;
+    }
+
+    prompt += `\n\nBased on the auditType "${auditType}", analyze for:`;
+
+    switch (auditType) {
+      case 'data_consistency':
+        prompt += `
+          - **Data Quality Issues:**
+            - Missing or incomplete entries (e.g., null amounts, missing ledger IDs)
+            - Inconsistent data (e.g., voucher total not matching sum of entries)
+            - Unusual amounts or patterns (e.g., very large or very small transactions)
+          - **Recommendations:** Suggest ways to improve data entry and validation.
+        `;
+        break;
+      case 'duplicate_entries':
+        prompt += `
+          - **Duplicate Entries:**
+            - Identify vouchers with identical voucher numbers, dates, and amounts.
+            - Look for similar voucher entries (same ledger, amount, narration) across different vouchers.
+          - **Recommendations:** Suggest methods to prevent duplicates and how to rectify them.
+        `;
+        break;
+      case 'voucher_sequence':
+        prompt += `
+          - **Voucher Numbering Sequence:**
+            - Check for gaps in sequential voucher numbers for each voucher type.
+            - Identify out-of-sequence entries.
+          - **Recommendations:** Advise on maintaining proper numbering and handling manual entries.
+        `;
+        break;
+      case 'full_analysis':
+        prompt += `
+          - **Comprehensive Audit Findings:**
+            - Data Quality Issues (missing/inconsistent data, unusual patterns)
+            - Compliance Checks (potential GST/TDS issues based on data patterns, if inferable)
+            - Audit Red Flags (duplicate entries, round number bias, unusual timing, missing references)
+            - Internal Control Weaknesses (e.g., if audit trail shows frequent manual changes without reason)
+          - **Overall Recommendations:** Provide strategic and actionable advice for improving financial integrity and operational efficiency.
+        `;
+        break;
+      default:
+        prompt += `
+          - **General Audit Observations:**
+            - Provide a general overview of the data quality and potential areas of concern.
+          - **Recommendations:** Suggest further specific audit checks.
+        `;
+        break;
+    }
+
+    prompt += `\n\nProvide specific examples and actionable recommendations for each finding. Use clear, concise language with bullet points.`;
 
     return await this.generateContent(prompt);
   }

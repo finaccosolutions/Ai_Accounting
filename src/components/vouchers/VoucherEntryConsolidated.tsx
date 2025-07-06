@@ -30,55 +30,7 @@ import { ContraEntrySection } from './ContraEntrySection';
 import { AccountingEntriesSection } from './AccountingEntriesSection';
 import { VoucherNarrationSection } from './VoucherNarrationSection';
 import { EnhancedRightSidebar } from './EnhancedRightSidebar';
-
-interface VoucherEntry {
-  id?: string;
-  ledger_id: string;
-  ledger_name?: string;
-  debit_amount: number;
-  credit_amount: number;
-  amount?: number; // For non-journal entries
-  narration?: string;
-}
-
-interface StockEntry {
-  id?: string;
-  stock_item_id: string;
-  stock_item_name?: string;
-  quantity: number;
-  rate: number;
-  amount: number;
-  godown_id?: string;
-  individual_ledger_id?: string;
-}
-
-interface Voucher {
-  voucher_type: string;
-  voucher_number: string;
-  date: string;
-  reference?: string;
-  narration?: string;
-  party_ledger_id?: string;
-  party_name?: string;
-  sales_ledger_id?: string;
-  purchase_ledger_id?: string;
-  cash_bank_ledger_id?: string;
-  place_of_supply?: string;
-  entries: VoucherEntry[];
-  stock_entries?: StockEntry[];
-  mode?: 'item_invoice' | 'voucher_mode';
-  use_common_ledger?: boolean;
-  total_amount?: number;
-  // Contra entry specific fields
-  debit_entries?: Array<{
-    ledger_id: string;
-    amount: number;
-  }>;
-  credit_entries?: Array<{
-    ledger_id: string;
-    amount: number;
-  }>;
-}
+import { Voucher, VoucherEntry, StockEntry, Ledger, StockItem, Godown } from '../../types'; // Import types
 
 const voucherTypes = [
   { value: 'sales', label: 'Sales Invoice', icon: '💰', hasParty: true, hasStock: true, hasTax: true },
@@ -133,17 +85,17 @@ export const VoucherEntryConsolidated: React.FC = () => {
     party_name: '',
     entries: [],
     stock_entries: [{ stock_item_id: '', stock_item_name: '', quantity: 0, rate: 0, amount: 0 }],
-    mode: 'item_invoice',
+    mode: 'item_invoice', // Default mode for sales
     use_common_ledger: true,
     debit_entries: [{ ledger_id: '', amount: 0 }],
     credit_entries: [{ ledger_id: '', amount: 0 }]
   });
   
-  const [ledgers, setLedgers] = useState<any[]>([]);
-  const [stockItems, setStockItems] = useState<any[]>([]);
-  const [godowns, setGodowns] = useState<any[]>([]);
+  const [ledgers, setLedgers] = useState<Ledger[]>([]);
+  const [stockItems, setStockItems] = useState<StockItem[]>([]);
+  const [godowns, setGodowns] = useState<Godown[]>([]);
   const [loading, setLoading] = useState(false);
-  const [recentVouchers, setRecentVouchers] = useState<any[]>([]);
+  const [recentVouchers, setRecentVouchers] = useState<Voucher[]>([]);
   const [rightPanelVisible, setRightPanelVisible] = useState(true); // Always visible by default
 
   useEffect(() => {
@@ -163,8 +115,8 @@ export const VoucherEntryConsolidated: React.FC = () => {
         setVoucher(prev => ({
           ...prev,
           entries: [
-            { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' },
-            { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' }
+            { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' } as VoucherEntry,
+            { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' } as VoucherEntry
           ]
         }));
       }
@@ -173,15 +125,16 @@ export const VoucherEntryConsolidated: React.FC = () => {
       setVoucher(prev => ({
         ...prev,
         entries: [],
-        debit_entries: prev.debit_entries || [{ ledger_id: '', amount: 0 }],
-        credit_entries: prev.credit_entries || [{ ledger_id: '', amount: 0 }]
+        debit_entries: prev.debit_entries && prev.debit_entries.length > 0 ? prev.debit_entries : [{ ledger_id: '', amount: 0 }],
+        credit_entries: prev.credit_entries && prev.credit_entries.length > 0 ? prev.credit_entries : [{ ledger_id: '', amount: 0 }]
       }));
     } else {
+      // For other voucher types, ensure at least one entry for total amount calculation
       if (voucher.entries.length === 0) {
         setVoucher(prev => ({
           ...prev,
           entries: [
-            { ledger_id: '', amount: 0, debit_amount: 0, credit_amount: 0, narration: '' }
+            { ledger_id: '', amount: 0, debit_amount: 0, credit_amount: 0, narration: '' } as VoucherEntry
           ]
         }));
       }
@@ -291,12 +244,12 @@ export const VoucherEntryConsolidated: React.FC = () => {
     if (voucher.voucher_type === 'journal') {
       setVoucher(prev => ({
         ...prev,
-        entries: [...prev.entries, { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' }]
+        entries: [...prev.entries, { ledger_id: '', debit_amount: 0, credit_amount: 0, narration: '' } as VoucherEntry]
       }));
     } else {
       setVoucher(prev => ({
         ...prev,
-        entries: [...prev.entries, { ledger_id: '', amount: 0, debit_amount: 0, credit_amount: 0, narration: '' }]
+        entries: [...prev.entries, { ledger_id: '', amount: 0, debit_amount: 0, credit_amount: 0, narration: '' } as VoucherEntry]
       }));
     }
   };
@@ -347,8 +300,12 @@ export const VoucherEntryConsolidated: React.FC = () => {
         stock_item_name: '',
         quantity: 0, 
         rate: 0, 
-        amount: 0 
-      }]
+        amount: 0,
+        godown_id: '',
+        individual_ledger_id: '',
+        batch_number: '',
+        serial_number: ''
+      } as StockEntry]
     }));
   };
 
@@ -533,7 +490,7 @@ export const VoucherEntryConsolidated: React.FC = () => {
     }
   };
 
-  const renderLedgerItem = (ledger: any) => (
+  const renderLedgerItem = (ledger: Ledger) => (
     <div>
       <div className="font-medium text-gray-900">{ledger.name}</div>
       <div className="text-sm text-gray-500">
@@ -542,7 +499,7 @@ export const VoucherEntryConsolidated: React.FC = () => {
     </div>
   );
 
-  const renderStockItem = (item: any) => (
+  const renderStockItem = (item: StockItem) => (
     <div>
       <div className="font-medium text-gray-900">{item.name}</div>
       <div className="text-sm text-gray-500">
@@ -831,7 +788,7 @@ export const VoucherEntryConsolidated: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm shadow-lg border border-gray-200/50 rounded-xl hover:shadow-xl transition-all duration-300"
+                className="px-4 py-2 bg-white/90 backdrop-blur-sm shadow-lg border border-gray-200/50 rounded-xl hover:shadow-xl transition-all duration-300 text-gray-700 font-medium"
               >
                 <Copy className="w-4 h-4 mr-2 text-gray-600" />
                 <span className="text-gray-700">Duplicate</span>
@@ -1032,6 +989,7 @@ export const VoucherEntryConsolidated: React.FC = () => {
         voucher={voucher}
         onVoucherChange={(newVoucher) => {
           setVoucher(newVoucher);
+          // Only trigger type/mode change if they actually changed
           if (newVoucher.voucher_type !== voucher.voucher_type) {
             handleVoucherTypeChange(newVoucher.voucher_type);
           }
