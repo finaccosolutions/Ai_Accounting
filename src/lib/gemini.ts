@@ -7,6 +7,10 @@ export class GeminiAI {
   }
 
   async generateContent(prompt: string): Promise<string> {
+    if (!this.apiKey || this.apiKey === 'your_gemini_api_key_here') {
+      throw new Error('Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your environment variables.');
+    }
+
     try {
       const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
         method: 'POST',
@@ -23,6 +27,9 @@ export class GeminiAI {
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Invalid API key or endpoint not found. Please check your Gemini API key.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -36,27 +43,99 @@ export class GeminiAI {
 
   async parseVoucherCommand(command: string): Promise<any> {
     const prompt = `
-      You are an expert accounting assistant. Parse the following natural language command into a structured voucher entry for an Indian accounting system:
+      You are an expert accounting assistant for an Indian accounting system. Parse this natural language command into a structured voucher entry:
       
       Command: "${command}"
       
-      Please respond with a JSON object containing:
-      - voucher_type: (sales/purchase/receipt/payment/journal/contra/debit_note/credit_note)
-      - amount: number (total amount)
-      - party: string (customer/vendor name if applicable)
-      - ledger_entries: array of {ledger_name: string, debit_amount: number, credit_amount: number, narration: string}
-      - narration: string (overall transaction description)
-      - items: array of {name: string, quantity: number, rate: number, amount: number} (if applicable)
-      - tax_details: {cgst: number, sgst: number, igst: number} (if applicable)
-      - reference: string (invoice/bill number if mentioned)
+      First, determine if you need more information to create a complete voucher entry. If the command is unclear or missing critical details, respond with:
+      {
+        "needs_clarification": true,
+        "questions": ["What questions to ask the user"],
+        "suggested_voucher_type": "payment/receipt/sales/purchase/journal"
+      }
       
-      Rules:
-      1. For sales: Debit Customer/Cash, Credit Sales Account
-      2. For purchases: Debit Purchase Account, Credit Vendor/Cash
-      3. For receipts: Debit Cash/Bank, Credit Customer/Income
-      4. For payments: Debit Expense/Vendor, Credit Cash/Bank
+      If you have enough information, respond with:
+      {
+        "needs_clarification": false,
+        "voucher_type": "payment/receipt/sales/purchase/journal/contra/debit_note/credit_note",
+        "amount": number,
+        "party_name": "string (if applicable)",
+        "payment_method": "cash/bank/cheque/online",
+        "bank_account": "string (if bank payment)",
+        "reference_number": "string (cheque/transaction number if applicable)",
+        "date": "YYYY-MM-DD (today's date if not specified)",
+        "ledger_entries": [
+          {
+            "ledger_name": "string",
+            "debit_amount": number,
+            "credit_amount": number,
+            "narration": "string"
+          }
+        ],
+        "narration": "string (overall description)",
+        "items": [
+          {
+            "name": "string",
+            "quantity": number,
+            "rate": number,
+            "amount": number,
+            "hsn_code": "string (if applicable)"
+          }
+        ],
+        "tax_details": {
+          "cgst_rate": number,
+          "sgst_rate": number,
+          "igst_rate": number,
+          "cgst_amount": number,
+          "sgst_amount": number,
+          "igst_amount": number,
+          "total_tax": number
+        }
+      }
+      
+      Accounting Rules:
+      1. Payment: Debit Expense/Party Account, Credit Cash/Bank
+      2. Receipt: Debit Cash/Bank, Credit Income/Party Account
+      3. Sales: Debit Customer/Cash, Credit Sales Account + Tax Accounts
+      4. Purchase: Debit Purchase Account + Tax Accounts, Credit Vendor/Cash
       5. Always ensure total debits = total credits
-      6. Include GST calculations if amounts suggest tax inclusion
+      6. Include GST at 18% if not specified and amount suggests business transaction
+      7. For payments, ask if cash or bank payment
+      8. For bank payments, ask which bank account
+      
+      Examples of clarification needed:
+      - "payment to ABC Ltd 5000" → Ask: Cash or bank payment? Which bank account? What is the payment for?
+      - "received money" → Ask: From whom? How much? Cash or bank? What is it for?
+      - "sold goods" → Ask: To whom? What items? Quantity? Rate? With or without GST?
+      
+      Only respond with valid JSON, no additional text.
+    `;
+
+    const response = await this.generateContent(prompt);
+    try {
+      const parsed = JSON.parse(response);
+      return parsed;
+    } catch (error) {
+      console.error('Failed to parse AI response:', error);
+      return {
+        needs_clarification: true,
+        questions: ["I couldn't understand your command. Could you please provide more details about the transaction?"],
+        suggested_voucher_type: "journal"
+      };
+    }
+  }
+
+  async askFollowUpQuestion(originalCommand: string, previousResponse: any, userAnswer: string): Promise<any> {
+    const prompt = `
+      Original command: "${originalCommand}"
+      Previous AI response: ${JSON.stringify(previousResponse)}
+      User's answer: "${userAnswer}"
+      
+      Based on the user's answer, either:
+      1. Ask another clarifying question if still need more info
+      2. Generate the complete voucher entry if you have enough information
+      
+      Use the same JSON format as parseVoucherCommand.
       
       Only respond with valid JSON, no additional text.
     `;
@@ -65,8 +144,12 @@ export class GeminiAI {
     try {
       return JSON.parse(response);
     } catch (error) {
-      console.error('Failed to parse AI response:', error);
-      return null;
+      console.error('Failed to parse follow-up response:', error);
+      return {
+        needs_clarification: true,
+        questions: ["I need more information to process this transaction. Could you provide more details?"],
+        suggested_voucher_type: "journal"
+      };
     }
   }
 
@@ -335,5 +418,6 @@ export class GeminiAI {
   }
 }
 
-// Create a singleton instance with the API key
-export const geminiAI = new GeminiAI('AIzaSyBHoEz1DmTs55w2ed30X2GpaNhvUlmHETo');
+// Create a singleton instance with the API key from environment variables
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+export const geminiAI = new GeminiAI(apiKey || '');
