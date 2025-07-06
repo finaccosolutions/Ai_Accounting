@@ -4,7 +4,7 @@ import { useApp } from '../../contexts/AppContext';
 import { supabase } from '../../lib/supabase';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { VoucherEntryNew } from '../vouchers/VoucherEntryNew';
+import { VoucherEntryConsolidated } from '../vouchers/VoucherEntryConsolidated';
 import { VoucherSettings } from '../vouchers/VoucherSettings';
 import { MasterManagement } from '../masters/MasterManagement';
 import { Reports } from '../reports/Reports';
@@ -189,7 +189,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
 
   // Handle different modules
   if (currentModule === 'vouchers') {
-    return <VoucherEntryNew />;
+    return <VoucherEntryConsolidated />;
   }
 
   if (currentModule === 'voucher-settings') {
