@@ -1,3 +1,4 @@
+// src/types/index.ts
 export interface User {
   id: string;
   email: string;
@@ -71,7 +72,7 @@ export interface LedgerGroup {
 export interface Ledger {
   id: string;
   company_id: string;
-  financial_year_id: string;
+  financial_year_id?: string; // Made optional as it might not be set on creation
   name: string;
   group_id: string;
   ledger_groups?: LedgerGroup; // Added for nested data
@@ -80,6 +81,27 @@ export interface Ledger {
   is_active?: boolean;
   created_at: string;
   updated_at: string;
+  // New fields for LedgerForm
+  alias?: string;
+  mailing_name?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  pincode?: string;
+  state?: string;
+  country?: string;
+  phone?: string;
+  gst_registration_type?: 'Regular' | 'Composition' | 'Unregistered' | 'Consumer' | 'SEZ' | 'Exempt';
+  gstin?: string;
+  pan_number?: string;
+  is_rcm_applicable?: boolean;
+  type_of_dealer?: 'Regular' | 'Composition' | 'Unregistered';
+  applicable_tax_rate?: number;
+  bank_name?: string;
+  account_number?: string;
+  ifsc_code?: string;
+  branch?: string;
+  opening_balance_type?: 'Dr' | 'Cr'; // Added for opening balance
 }
 
 export interface Voucher {
@@ -145,7 +167,6 @@ export interface StockItem {
   units?: Unit; // Added for nested data
   rate: number;
   opening_stock: number;
-  current_stock: number;
   hsn_code?: string; // Added
   is_active?: boolean;
   created_at: string;
@@ -187,3 +208,4 @@ export interface Dashboard {
   recentVouchers: Voucher[];
   monthlyTrend: Array<{month: string; income: number; expense: number}>;
 }
+

@@ -1,3 +1,4 @@
+// src/components/masters/MasterManagement.tsx
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../contexts/AppContext';
@@ -6,12 +7,12 @@ import { GeminiAI } from '../../lib/gemini';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { 
-  Database, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Search, 
+import {
+  Database,
+  Plus,
+  Edit,
+  Trash2,
+  Search,
   Filter,
   Bot,
   Sparkles,
@@ -29,47 +30,48 @@ import {
 import toast from 'react-hot-toast';
 import { Ledger, LedgerGroup, StockItem, StockGroup, Unit, Godown } from '../../types';
 import { SearchableDropdown } from '../vouchers/SearchableDropdown'; // Re-using SearchableDropdown
+import { LedgerForm } from './LedgerForm'; // Import LedgerForm
 
 const masterTypes = [
-  { 
-    id: 'ledgers', 
-    name: 'Ledgers', 
-    icon: Calculator, 
+  {
+    id: 'ledgers',
+    name: 'Ledgers',
+    icon: Calculator,
     color: 'from-blue-500 to-blue-600',
     description: 'Chart of accounts and ledger management'
   },
-  { 
-    id: 'ledger_groups', 
-    name: 'Ledger Groups', 
-    icon: Database, 
+  {
+    id: 'ledger_groups',
+    name: 'Ledger Groups',
+    icon: Database,
     color: 'from-green-500 to-green-600',
     description: 'Organize ledgers into groups'
   },
-  { 
-    id: 'stock_items', 
-    name: 'Stock Items', 
-    icon: Package, 
+  {
+    id: 'stock_items',
+    name: 'Stock Items',
+    icon: Package,
     color: 'from-purple-500 to-purple-600',
     description: 'Inventory items and products'
   },
-  { 
-    id: 'stock_groups', 
-    name: 'Stock Groups', 
-    icon: Tag, 
+  {
+    id: 'stock_groups',
+    name: 'Stock Groups',
+    icon: Tag,
     color: 'from-orange-500 to-orange-600',
     description: 'Categorize stock items'
   },
-  { 
-    id: 'units', 
-    name: 'Units', 
-    icon: Receipt, 
+  {
+    id: 'units',
+    name: 'Units',
+    icon: Receipt,
     color: 'from-teal-500 to-teal-600',
     description: 'Units of measurement'
   },
-  { 
-    id: 'godowns', 
-    name: 'Godowns', 
-    icon: Warehouse, 
+  {
+    id: 'godowns',
+    name: 'Godowns',
+    icon: Warehouse,
     color: 'from-indigo-500 to-indigo-600',
     description: 'Storage locations'
   }
@@ -149,11 +151,11 @@ export const MasterManagement: React.FC = () => {
       } else {
         query = supabase.from(selectedMaster).select('*');
       }
-      
+
       if (selectedMaster !== 'units') { // Units can be global or company-specific
         query = query.eq('company_id', selectedCompany?.id);
       }
-      
+
       const { data: result, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -173,7 +175,7 @@ export const MasterManagement: React.FC = () => {
     try {
       const prompt = `
         Create a ${selectedMaster.slice(0, -1)} based on this command: "${aiCommand}"
-        
+
         Respond with JSON containing the fields needed for ${selectedMaster}:
         ${selectedMaster === 'ledgers' ? '- name, group_id (optional), opening_balance (default 0), is_active (boolean)' : ''}
         ${selectedMaster === 'ledger_groups' ? '- name, group_type (assets/liabilities/income/expenses), parent_group_id (optional)' : ''}
@@ -181,13 +183,13 @@ export const MasterManagement: React.FC = () => {
         ${selectedMaster === 'stock_groups' ? '- name, parent_group_id (optional)' : ''}
         ${selectedMaster === 'units' ? '- name, symbol' : ''}
         ${selectedMaster === 'godowns' ? '- name, address (optional), is_active (boolean)' : ''}
-        
+
         Only respond with valid JSON, no additional text.
       `;
 
       const response = await gemini.generateContent(prompt);
       const result = JSON.parse(response);
-      
+
       if (result) {
         setEditingItem({ ...result, company_id: selectedCompany?.id });
         setShowForm(true);
@@ -210,7 +212,7 @@ export const MasterManagement: React.FC = () => {
           .from(selectedMaster)
           .update(formData)
           .eq('id', editingItem.id);
-        
+
         if (error) throw error;
         toast.success('Updated successfully!');
       } else {
@@ -218,11 +220,11 @@ export const MasterManagement: React.FC = () => {
         const { error } = await supabase
           .from(selectedMaster)
           .insert([{ ...formData, company_id: selectedCompany?.id }]);
-        
+
         if (error) throw error;
         toast.success('Created successfully!');
       }
-      
+
       setShowForm(false);
       setEditingItem(null);
       fetchData();
@@ -241,7 +243,7 @@ export const MasterManagement: React.FC = () => {
         .from(selectedMaster)
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
       toast.success('Deleted successfully!');
       fetchData();
@@ -257,6 +259,22 @@ export const MasterManagement: React.FC = () => {
   );
 
   const currentMaster = masterTypes.find(m => m.id === selectedMaster);
+
+  // Render LedgerForm directly if showForm is true and selectedMaster is 'ledgers'
+  if (showForm && selectedMaster === 'ledgers') {
+    return (
+      <LedgerForm
+        masterType={selectedMaster}
+        editingItem={editingItem}
+        onSave={handleSave}
+        onCancel={() => {
+          setShowForm(false);
+          setEditingItem(null);
+        }}
+        allLedgerGroups={allLedgerGroups}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -279,7 +297,7 @@ export const MasterManagement: React.FC = () => {
             <p className="text-sm text-gray-600">Create masters using natural language</p>
           </div>
         </div>
-        
+
         <div className="flex space-x-3">
           <input
             type="text"
@@ -289,7 +307,7 @@ export const MasterManagement: React.FC = () => {
             className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             onKeyPress={(e) => e.key === 'Enter' && handleAiCommand()}
           />
-          <Button 
+          <Button
             onClick={handleAiCommand}
             disabled={aiProcessing || !aiCommand.trim()}
             className="bg-gradient-to-r from-blue-500 to-purple-600"
@@ -520,9 +538,10 @@ export const MasterManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Form Modal */}
+      {/* Original MasterForm content (for other master types) */}
+      {/* This section will only be rendered if showForm is true AND selectedMaster is NOT 'ledgers' */}
       <AnimatePresence>
-        {showForm && (
+        {showForm && selectedMaster !== 'ledgers' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -556,7 +575,7 @@ export const MasterManagement: React.FC = () => {
   );
 };
 
-// Master Form Component
+// Master Form Component (Original, kept for other master types)
 interface MasterFormProps {
   masterType: string;
   editingItem: any;
@@ -652,7 +671,7 @@ const MasterForm: React.FC<MasterFormProps> = ({
             </label>
           </>
         );
-      
+
       case 'ledger_groups':
         return (
           <>
@@ -696,7 +715,7 @@ const MasterForm: React.FC<MasterFormProps> = ({
             </div>
           </>
         );
-      
+
       case 'stock_items':
         return (
           <>
@@ -769,7 +788,7 @@ const MasterForm: React.FC<MasterFormProps> = ({
             </label>
           </>
         );
-      
+
       case 'stock_groups':
         return (
           <>
@@ -796,7 +815,7 @@ const MasterForm: React.FC<MasterFormProps> = ({
             </div>
           </>
         );
-      
+
       case 'units':
         return (
           <>
@@ -850,7 +869,7 @@ const MasterForm: React.FC<MasterFormProps> = ({
             </label>
           </>
         );
-      
+
       default:
         return (
           <Input
@@ -868,9 +887,9 @@ const MasterForm: React.FC<MasterFormProps> = ({
       <h3 className="text-lg font-semibold text-gray-900">
         {editingItem ? 'Edit' : 'Create'} {masterType.replace('_', ' ').replace(/s$/, '')}
       </h3>
-      
+
       {renderFormFields()}
-      
+
       <div className="flex justify-end space-x-3 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
@@ -882,3 +901,4 @@ const MasterForm: React.FC<MasterFormProps> = ({
     </form>
   );
 };
+
