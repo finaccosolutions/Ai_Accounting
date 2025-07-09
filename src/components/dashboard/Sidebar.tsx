@@ -1,3 +1,4 @@
+// src/components/dashboard/Sidebar.tsx
 import React from 'react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,13 +18,13 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 
 const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'accountant', 'owner', 'viewer', 'auditor'], color: 'from-blue-500 to-blue-600', description: 'Overview & insights' },
-  { id: 'vouchers', label: 'Voucher Entry', icon: FileText, roles: ['admin', 'accountant'], color: 'from-green-500 to-green-600', description: 'Create transactions' },
-  { id: 'masters', label: 'Master Management', icon: Database, roles: ['admin', 'accountant'], color: 'from-purple-500 to-purple-600', description: 'Manage accounts' },
-  { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'accountant', 'owner', 'auditor', 'viewer'], color: 'from-orange-500 to-orange-600', description: 'Financial reports' },
-  { id: 'import', label: 'Smart Import', icon: Sparkles, roles: ['admin', 'accountant'], color: 'from-teal-500 to-teal-600', description: 'AI-powered data import' }, // New Smart Import item
-  { id: 'audit', label: 'Audit Panel', icon: Shield, roles: ['admin', 'auditor'], color: 'from-red-500 to-red-600', description: 'Audit & compliance' },
-  { id: 'users', label: 'User Management', icon: Users, roles: ['admin'], color: 'from-indigo-500 to-indigo-600', description: 'Manage users' },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'accountant', 'owner', 'viewer', 'auditor'], color: 'from-emerald-500 to-teal-600', description: 'Overview & insights' },
+  { id: 'vouchers', label: 'Voucher Entry', icon: FileText, roles: ['admin', 'accountant'], color: 'from-green-500 to-emerald-600', description: 'Create transactions' },
+  { id: 'masters', label: 'Master Management', icon: Database, roles: ['admin', 'accountant'], color: 'from-purple-500 to-indigo-600', description: 'Manage accounts' },
+  { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'accountant', 'owner', 'auditor', 'viewer'], color: 'from-orange-500 to-yellow-600', description: 'Financial reports' },
+  { id: 'import', label: 'Smart Import', icon: Sparkles, roles: ['admin', 'accountant'], color: 'from-teal-500 to-cyan-600', description: 'AI-powered data import' }, // New Smart Import item
+  { id: 'audit', label: 'Audit Panel', icon: Shield, roles: ['admin', 'auditor'], color: 'from-red-500 to-pink-600', description: 'Audit & compliance' },
+  { id: 'users', label: 'User Management', icon: Users, roles: ['admin'], color: 'from-indigo-500 to-blue-600', description: 'Manage users' },
   { id: 'settings', label: 'Settings', icon: Settings, roles: ['admin'], color: 'from-gray-500 to-gray-600', description: 'System settings' },
 ];
 
@@ -52,13 +53,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -300, opacity: 0 }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
-      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-700/95 backdrop-blur-xl border-r border-slate-300/20 z-40 shadow-2xl transition-all duration-500 ${
-        isOpen ? 'w-80' : 'w-20'
+      className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-to-br from-gray-800 to-gray-900 border-r border-gray-700 z-40 shadow-2xl transition-all duration-500 ${
+        isOpen ? 'w-60' : 'w-14'
       }`}
     >
       {/* Animated Background Pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-700/20 via-gray-600/20 to-gray-500/20"></div>
         <motion.div
           animate={{
             backgroundPosition: ['0% 0%', '100% 100%'],
@@ -66,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute inset-0 opacity-30"
           style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)',
+            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)',
             backgroundSize: '20px 20px'
           }}
         />
@@ -79,22 +80,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="p-6 border-b border-slate-300/20"
+            className="p-2 border-b border-gray-700"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl">
+              <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 via-teal-600 to-green-600 rounded-2xl flex items-center justify-center shadow-xl">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Navigation</h2>
-                <p className="text-sm text-slate-300">Manage your accounting</p>
+                <h2 className="text-lg font-bold text-white">Menu</h2>
               </div>
             </div>
           </motion.div>
         )}
 
         {/* Navigation */}
-        <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 p-3 overflow-y-auto custom-scrollbar">
           <nav className="space-y-2">
             {filteredMenuItems.map((item, index) => {
               const Icon = item.icon;
@@ -111,8 +111,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => setCurrentModule(item.id)}
                   className={`w-full group relative overflow-hidden rounded-2xl transition-all duration-500 ${
                     isActive
-                      ? 'bg-gradient-to-r from-white/20 to-white/10 shadow-xl border border-white/30'
-                      : 'hover:bg-white/10 border border-transparent hover:border-white/20'
+                      ? 'bg-white/10 shadow-md border border-gray-700'
+                      : 'hover:bg-white/5 border border-transparent hover:border-gray-700'
                   }`}
                   title={!isOpen ? item.label : undefined}
                 >
@@ -120,25 +120,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {isActive && (
                     <motion.div
                       layoutId="activeIndicator"
-                      className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 via-purple-500 to-pink-500 rounded-r-full"
+                      className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 via-teal-500 to-green-500 rounded-r-full"
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
 
                   {/* Hover glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                  <div className={`flex items-center p-4 relative z-10 ${!isOpen ? 'justify-center' : 'space-x-4'}`}>
+                  <div className={`flex items-center p-3 relative z-10 ${!isOpen ? 'justify-center' : 'space-x-3'}`}>
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
-                      className={`relative p-3 rounded-2xl transition-all duration-500 ${
+                      className={`relative p-2 rounded-2xl transition-all duration-500 ${
                         isActive
-                          ? `bg-gradient-to-r ${item.color} shadow-xl`
+                          ? `bg-gradient-to-r ${item.color} shadow-lg`
                           : 'bg-white/10 group-hover:bg-white/20'
                       }`}
                     >
-                      <Icon className={`w-6 h-6 transition-colors duration-500 ${
-                        isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'
+                      <Icon className={`w-5 h-5 transition-colors duration-500 ${
+                        isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
                       }`} />
 
                       {/* Icon glow effect */}
@@ -159,12 +159,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         className="flex-1 text-left"
                       >
                         <span className={`font-semibold transition-colors duration-500 ${
-                          isActive ? 'text-white' : 'text-slate-200 group-hover:text-white'
+                          isActive ? 'text-white' : 'text-gray-200 group-hover:text-white'
                         }`}>
                           {item.label}
                         </span>
                         <p className={`text-xs transition-colors duration-500 ${
-                          isActive ? 'text-white/80' : 'text-slate-400 group-hover:text-slate-300'
+                          isActive ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300'
                         }`}>
                           {item.description}
                         </p>
@@ -172,10 +172,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     )}
 
                     {isOpen && (
-                      <ChevronRight className={`w-5 h-5 transition-all duration-500 ${
+                      <ChevronRight className={`w-4 h-4 transition-all duration-500 ${
                         isActive
                           ? 'text-white transform translate-x-1'
-                          : 'text-slate-400 group-hover:text-white group-hover:transform group-hover:translate-x-1'
+                          : 'text-gray-400 group-hover:text-white group-hover:transform group-hover:translate-x-1'
                       }`} />
                     )}
                   </div>
@@ -186,12 +186,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Enhanced AI Assistant */}
-        <div className={`p-4 border-t border-slate-300/20 ${!isOpen ? 'px-2' : 'px-6'}`}>
+        <div className={`p-3 border-t border-gray-700 ${!isOpen ? 'px-2' : 'px-6'}`}>
           <motion.button
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={onToggleAIChat}
-            className={`w-full relative overflow-hidden bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 group ${
+            className={`w-full relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-600 to-green-600 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 group ${
               !isOpen ? 'p-3' : 'p-4'
             }`}
             title={!isOpen ? 'AI Assistant' : undefined}
@@ -202,7 +202,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
               }}
               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-700 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-700 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
               style={{ backgroundSize: '200% 100%' }}
             />
 
@@ -213,11 +213,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <motion.div
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className={`bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg ${
+                className={`bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg ${
                   !isOpen ? 'w-10 h-10' : 'w-14 h-14'
                 }`}
               >
-                <Bot className={`text-white ${!isOpen ? 'w-5 h-5' : 'w-7 h-7'}`} />
+                <Bot className={`text-white ${!isOpen ? 'w-4 h-4' : 'w-6 h-6'}`} />
               </motion.div>
               {isOpen && (
                 <motion.div
@@ -227,7 +227,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className="flex-1 text-left"
                 >
                   <p className="text-white font-bold text-lg">AI Assistant</p>
-                  <p className="text-white/90 text-sm">Always here to help</p>
+                  <p className="text-gray-300 text-sm">Always here to help</p> 
                 </motion.div>
               )}
               {isOpen && (
@@ -244,3 +244,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </motion.aside>
   );
 };
+   

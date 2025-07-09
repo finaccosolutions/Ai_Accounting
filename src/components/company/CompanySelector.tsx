@@ -133,13 +133,13 @@ export const CompanySelectorPage: React.FC<CompanySelectorPageProps> = ({ onComp
           className="text-center mb-8"
         >
           <div className="flex items-center justify-center mb-6">
-            <div className="w-20 h-20 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl flex items-center justify-center shadow-2xl">
-              <Building2 className="w-10 h-10 text-white" />
-            </div>
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-4">
-            {step === 'companies' ? 'Select Your Company' : 'Choose Financial Year'}
-          </h1>
+        <div className="w-20 h-20 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-3xl flex items-center justify-center shadow-2xl">
+          <Building2 className="w-10 h-10 text-white" />
+        </div>
+      </div>
+      <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-teal-800 bg-clip-text text-transparent mb-4">
+        {step === 'companies' ? 'Select Your Company' : 'Choose Financial Year'}
+      </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             {step === 'companies' 
               ? 'Choose a company to access your accounting dashboard and manage your financial data'
@@ -155,10 +155,10 @@ export const CompanySelectorPage: React.FC<CompanySelectorPageProps> = ({ onComp
           className="flex items-center justify-center mb-8"
         >
           <div className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg">
-            <div className={`flex items-center space-x-2 ${step === 'companies' ? 'text-blue-600' : 'text-gray-500'}`}>
-              <Building2 className="w-4 h-4" />
-              <span className="text-sm font-medium">Company</span>
-            </div>
+            <div className={`flex items-center space-x-2 ${step === 'companies' ? 'text-emerald-600' : 'text-gray-500'}`}>
+          <Building2 className="w-4 h-4" />
+          <span className="text-sm font-medium">Company</span>
+        </div>
             <ChevronRight className="w-4 h-4 text-gray-400" />
             <div className={`flex items-center space-x-2 ${step === 'financial-years' ? 'text-blue-600' : 'text-gray-400'}`}>
               <Calendar className="w-4 h-4" />
@@ -224,15 +224,15 @@ export const CompanySelectorPage: React.FC<CompanySelectorPageProps> = ({ onComp
                     whileHover={{ y: -4, scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleCompanySelect(company)}
-                    className="group cursor-pointer"
-                  >
-                    <Card className="p-6 h-full bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                          <Building2 className="w-6 h-6 text-white" />
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300" />
-                      </div>
+                className="group cursor-pointer"
+              >
+                <Card className="p-6 h-full bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                      <Building2 className="w-6 h-6 text-white" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all duration-300" />
+                  </div>
                       
                       <div className="space-y-3">
                         <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
@@ -288,13 +288,13 @@ export const CompanySelectorPage: React.FC<CompanySelectorPageProps> = ({ onComp
                     : 'Get started by creating your first company to access the accounting dashboard'
                   }
                 </p>
-                <Button 
-                  onClick={handleCreateCompany}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Company
-                </Button>
+                <Button
+              onClick={handleCreateCompany}
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Your First Company
+            </Button>
               </Card>
             )}
           </motion.div>

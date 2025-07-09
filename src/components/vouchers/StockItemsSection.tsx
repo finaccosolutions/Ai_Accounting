@@ -55,7 +55,7 @@ export const StockItemsSection: React.FC<StockItemsSectionProps> = ({
             Add Item
           </Button>
         </div>
-
+ 
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -92,7 +92,7 @@ export const StockItemsSection: React.FC<StockItemsSectionProps> = ({
                   <td className="py-3 px-2">
                     <Input
                       type="number"
-                      step="0.001"
+                      step="1"
                       value={entry.quantity || ''}
                       onChange={(e) => updateStockEntry(index, 'quantity', parseFloat(e.target.value) || 0)}
                       className="text-right text-sm"
@@ -102,7 +102,7 @@ export const StockItemsSection: React.FC<StockItemsSectionProps> = ({
                   <td className="py-3 px-2">
                     <Input
                       type="number"
-                      step="0.01"
+                      step="1"
                       value={entry.rate || ''}
                       onChange={(e) => updateStockEntry(index, 'rate', parseFloat(e.target.value) || 0)}
                       className="text-right text-sm"
@@ -112,7 +112,7 @@ export const StockItemsSection: React.FC<StockItemsSectionProps> = ({
                   <td className="py-3 px-2">
                     <Input
                       type="number"
-                      step="0.01"
+                      step="1"
                       value={entry.amount || ''}
                       readOnly
                       className="text-right bg-gray-50 text-sm"
@@ -124,7 +124,7 @@ export const StockItemsSection: React.FC<StockItemsSectionProps> = ({
                       <select
                         value={entry.godown_id || ''}
                         onChange={(e) => updateStockEntry(index, 'godown_id', e.target.value)}
-                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                       >
                         <option value="">Select Godown</option>
                         {godowns.map((godown) => (

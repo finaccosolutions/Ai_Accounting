@@ -70,7 +70,7 @@ export const PartyDetailsSection: React.FC<PartyDetailsSectionProps> = ({
               <select
                 value={voucher.place_of_supply || ''}
                 onChange={(e) => setVoucher(prev => ({ ...prev, place_of_supply: e.target.value }))}
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
               >
                 <option value="">Select State</option>
                 <option value="01">01 - Jammu and Kashmir</option>

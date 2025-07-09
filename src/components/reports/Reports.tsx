@@ -354,21 +354,21 @@ export const Reports: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <div className="flex items-center space-x-4">
-            <motion.div
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              className="w-16 h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl"
-            >
-              <BarChart3 className="w-8 h-8 text-white" />
-            </motion.div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2">
-                Reports & Analytics
-              </h1>
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between mb-8"
+      >
+        <div className="flex items-center space-x-4">
+          <motion.div
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            className="w-16 h-16 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl flex items-center justify-center shadow-xl"
+          >
+            <BarChart3 className="w-8 h-8 text-white" />
+          </motion.div>
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-teal-800 bg-clip-text text-transparent mb-2">
+              Reports & Analytics
+            </h1>
               <p className="text-gray-600 text-lg">Generate comprehensive business reports</p>
             </div>
           </div>
@@ -379,14 +379,14 @@ export const Reports: React.FC = () => {
                 type="date"
                 value={dateRange.from}
                 onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                className="w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                className="w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
               />
               <span className="text-gray-500">to</span>
               <Input
                 type="date"
                 value={dateRange.to}
                 onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                className="w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                className="w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
               />
             </div>
           </div>
@@ -418,7 +418,7 @@ export const Reports: React.FC = () => {
                             ? `bg-gradient-to-r ${category.color} text-white shadow-lg`
                             : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
                         }`}
-                      >
+                      > 
                         <div className="flex items-center space-x-3">
                           <Icon className="w-5 h-5" />
                           <span className="font-medium text-sm">{category.name}</span>
@@ -489,22 +489,22 @@ export const Reports: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {currentCategory?.reports.map((report) => (
                     <motion.div
-                      key={report.id}
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => generateReport(report.id)}
-                      className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {report.name}
-                          </h4>
-                          <p className="text-sm text-gray-600 mt-1">{report.description}</p>
-                        </div>
-                        <Eye className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                    key={report.id}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => generateReport(report.id)}
+                    className="p-4 border border-gray-200 rounded-xl hover:border-emerald-300 hover:shadow-lg transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 group-hover:text-emerald-600 transition-colors">
+                          {report.name}
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">{report.description}</p>
                       </div>
-                    </motion.div>
+                      <Eye className="w-5 h-5 text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                    </div>
+                  </motion.div>
                   ))}
                 </div>
               </Card>
@@ -526,7 +526,7 @@ export const Reports: React.FC = () => {
                         onClick={generateAiInsights}
                         variant="outline"
                         size="sm"
-                        className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
+                        className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200"
                       >
                         <Bot className="w-4 h-4 mr-2" />
                         AI Insights
@@ -552,11 +552,11 @@ export const Reports: React.FC = () => {
 
                 {/* AI Insights */}
                 {showAiInsights && aiInsights && (
-                  <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-6 h-6 text-white" />
-                      </div>
+                  <Card className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-gray-900 mb-2">AI Insights</h4>
                         <div className="text-sm text-gray-700 whitespace-pre-line">{aiInsights}</div>
@@ -598,7 +598,7 @@ const ReportContent: React.FC<{ reportData: any }> = ({ reportData }) => {
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Sales']} />
-              <Bar dataKey="sales" fill="#3B82F6" />
+              <Bar dataKey="sales" fill="#10B981" />
             </BarChart>
           </ResponsiveContainer>
         </div>

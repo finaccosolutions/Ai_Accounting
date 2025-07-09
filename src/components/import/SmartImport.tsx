@@ -106,10 +106,10 @@ export const SmartImport: React.FC = () => {
               className="w-full px-4 py-3 border-2 border-gray-200/60 rounded-xl shadow-sm focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 transition-all duration-300 bg-white/80 backdrop-blur-sm resize-none"
             />
             <Button
-              onClick={handleProcessTextCommand}
-              disabled={processing}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
-            >
+            onClick={handleProcessTextCommand}
+            disabled={processing}
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-600"
+          >
               {processing ? (
                 <Loader className="w-5 h-5 mr-2 animate-spin" />
               ) : (
@@ -340,7 +340,7 @@ export const SmartImport: React.FC = () => {
           </CollapsibleSection>
         )}
 
-        <Button className="w-full bg-gradient-to-r from-green-500 to-blue-600">
+        <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600">
           Confirm & Create Voucher
         </Button>
       </div>
@@ -355,21 +355,21 @@ export const SmartImport: React.FC = () => {
     >
       <div className="max-w-4xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <div className="flex items-center space-x-4">
-            <motion.div
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              className="w-16 h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl"
-            >
-              <Sparkles className="w-8 h-8 text-white" />
-            </motion.div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2">
-                Smart Import
-              </h1>
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between mb-8"
+      >
+        <div className="flex items-center space-x-4">
+          <motion.div
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            className="w-16 h-16 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl flex items-center justify-center shadow-xl"
+          >
+            <Sparkles className="w-8 h-8 text-white" />
+          </motion.div>
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-teal-800 bg-clip-text text-transparent mb-2">
+              Smart Import
+            </h1>
               <p className="text-gray-600 text-lg">
                 Leverage AI to effortlessly import and categorize your accounting data.
               </p>
@@ -412,8 +412,8 @@ export const SmartImport: React.FC = () => {
 
 // Helper component for displaying info cards
 const InfoCard: React.FC<{ label: string; value: string; icon: React.ElementType }> = ({ label, value, icon: Icon }) => (
-  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-center space-x-3">
-    <Icon className="w-5 h-5 text-blue-600" />
+  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200 flex items-center space-x-3">
+    <Icon className="w-5 h-5 text-emerald-600" />
     <div>
       <p className="text-sm text-gray-600">{label}</p>
       <p className="font-semibold text-gray-900">{value}</p>

@@ -87,12 +87,12 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
             Transaction Details
           </h3>
         </div>
-
+    
         {/* Common Ledger Section */}
-        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+        <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-medium text-gray-900 flex items-center">
-              <Calculator className="w-4 h-4 mr-2 text-blue-600" />
+              <Calculator className="w-4 h-4 mr-2 text-emerald-600" />
               Ledger Configuration
             </h4>
             <label className="flex items-center space-x-2 cursor-pointer">
@@ -159,7 +159,7 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={addStockEntry}
-                className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 title="Add Stock Item"
               >
                 <Plus className="w-5 h-5" />
@@ -208,11 +208,11 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
                           className="text-sm"
                         />
                       </td>
-                      <td className="py-3 px-2">
+                       <td className="py-3 px-2">
                         <NumberInput
                           value={entry.quantity || 0}
                           onChange={(value) => handleStockEntryChange(index, 'quantity', value)}
-                          step={0.001}
+                          step={1}
                           min={0}
                           placeholder="0"
                           className="text-right text-sm"
@@ -223,7 +223,7 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
                         <NumberInput
                           value={entry.rate || 0}
                           onChange={(value) => handleStockEntryChange(index, 'rate', value)}
-                          step={0.01}
+                          step={1}
                           min={0}
                           placeholder="0.00"
                           className="text-right text-sm"
@@ -233,7 +233,7 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
                       <td className="py-3 px-2">
                         <Input
                           type="number"
-                          step="0.01"
+                          step="1"
                           value={entry.amount || ''}
                           readOnly
                           className="text-right bg-gray-50 text-sm"
@@ -255,21 +255,21 @@ export const TransactionDetailsSection: React.FC<TransactionDetailsSectionProps>
                         </td>
                       )}
                       {selectedCompany?.enable_multi_godown && (
-                        <td className="py-3 px-2">
-                          <select
-                            value={entry.godown_id || ''}
-                            onChange={(e) => handleStockEntryChange(index, 'godown_id', e.target.value)}
-                            className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                          >
-                            <option value="">Select Godown</option>
-                            {godowns.map((godown) => (
-                              <option key={godown.id} value={godown.id}>
-                                {godown.name}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      )}
+                    <td className="py-3 px-2">
+                      <select
+                        value={entry.godown_id || ''}
+                        onChange={(e) => handleStockEntryChange(index, 'godown_id', e.target.value)}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                      >
+                        <option value="">Select Godown</option>
+                        {godowns.map((godown) => (
+                          <option key={godown.id} value={godown.id}>
+                            {godown.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  )}
                       {selectedCompany?.enable_batch_tracking && (
                         <td className="py-3 px-2">
                           <Input

@@ -277,11 +277,11 @@ export const CompanySettings: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Company Settings</h1>
           <p className="text-gray-600">Configure your company preferences and features</p>
         </div>
-        <Button 
-          onClick={handleSave}
-          disabled={loading}
-          className="bg-gradient-to-r from-blue-500 to-blue-600"
-        >
+        <Button
+        onClick={handleSave}
+        disabled={loading}
+        className="bg-gradient-to-r from-emerald-500 to-teal-600"
+      >
           {loading ? (
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
           ) : (
@@ -339,9 +339,9 @@ export const CompanySettings: React.FC = () => {
       </div>
 
       {/* Impact Summary */}
-      <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+      <Card className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
         <div className="flex items-start space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
             <AlertCircle className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1">

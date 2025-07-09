@@ -29,7 +29,7 @@ export const VoucherNarrationSection: React.FC<VoucherNarrationSectionProps> = (
           onChange={(e) => setVoucher(prev => ({ ...prev, narration: e.target.value }))}
           placeholder="Enter detailed description of the transaction..."
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
         />
       </Card>
     </motion.div>

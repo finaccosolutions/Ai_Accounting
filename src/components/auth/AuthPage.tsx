@@ -114,12 +114,12 @@ export const AuthPage: React.FC = () => {
         >
           <div className="text-center lg:text-left">
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl mb-6 shadow-2xl"
-            >
-              <Building2 className="w-10 h-10 text-white" />
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-3xl mb-6 shadow-2xl"
+          >
+            <Building2 className="w-10 h-10 text-white" />
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -128,13 +128,13 @@ export const AuthPage: React.FC = () => {
             </motion.div>
             
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4"
-            >
-              AccounTech
-            </motion.h1>
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-5xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent mb-4"
+          >
+            AccounTech
+          </motion.h1>
             
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -162,9 +162,9 @@ export const AuthPage: React.FC = () => {
                 whileHover={{ scale: 1.05, y: -5 }}
                 className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                  <feature.icon className="w-6 h-6 text-white" />
-                </div>
+                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <feature.icon className="w-6 h-6 text-white" />
+            </div>
                 <h3 className="font-bold text-gray-900 mb-2">{feature.title}</h3>
                 <p className="text-sm text-gray-600">{feature.description}</p>
               </motion.div>
@@ -200,14 +200,14 @@ export const AuthPage: React.FC = () => {
           <div className="w-full max-w-md">
             {/* Mobile Logo */}
             <div className="text-center mb-8 lg:hidden">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl mb-4 shadow-2xl"
-              >
-                <Building2 className="w-8 h-8 text-white" />
-              </motion.div>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl mb-4 shadow-2xl"
+          >
+            <Building2 className="w-8 h-8 text-white" />
+          </motion.div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 AccounTech
               </h1>
@@ -397,12 +397,12 @@ export const AuthPage: React.FC = () => {
                 </AnimatePresence>
 
                 <Button
-                  type="submit"
-                  disabled={loading}
-                  fullWidth
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold shadow-2xl hover:shadow-3xl"
-                >
+              type="submit"
+              disabled={loading}
+              fullWidth
+              size="lg"
+              className="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:via-teal-700 hover:to-green-700 text-white font-bold shadow-2xl hover:shadow-3xl"
+            >
                   {loading ? (
                     <div className="flex items-center justify-center">
                       <motion.div

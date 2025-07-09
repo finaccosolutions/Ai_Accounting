@@ -256,22 +256,22 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                     const isActive = voucher.voucher_type === type.value;
                     
                     return (
-                      <motion.button
-                        key={type.value}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        whileHover={{ scale: 1.1, rotate: 3 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleVoucherTypeChange(type.value)}
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
-                          isActive
-                            ? `bg-gradient-to-r ${type.color} text-white shadow-lg scale-105`
-                            : 'bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white'
-                        }`}
-                        title={type.label}
-                      >
-                        <Icon className="w-5 h-5" />
+                    <motion.button
+                      key={type.value}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      whileHover={{ scale: 1.1, rotate: 3 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleVoucherTypeChange(type.value)}
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
+                        isActive
+                          ? `bg-gradient-to-r ${type.color.replace('blue', 'emerald').replace('purple', 'teal').replace('pink', 'green')} text-white shadow-lg scale-105`
+                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                              }`}
+                      title={type.label}
+                    >
+                      <Icon className="w-5 h-5" />
                         {isActive && (
                           <motion.div
                             initial={{ scale: 0 }}
@@ -298,7 +298,7 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                       onClick={() => handleVoucherModeChange('item_invoice')}
                       className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg ${
                         voucher.mode === 'item_invoice'
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg scale-105'
                           : 'bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white'
                       }`}
                       title="Item Invoice"
@@ -505,10 +505,10 @@ export const EnhancedRightSidebar: React.FC<EnhancedRightSidebarProps> = ({
                                   onClick={() => handleVoucherModeChange(mode.value)}
                                   className={`w-full p-3 rounded-xl text-left transition-all duration-300 ${
                                     isActive
-                                      ? `bg-gradient-to-r ${mode.color} text-white shadow-lg scale-105`
-                                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                                  }`}
-                                >
+                                      ? `bg-gradient-to-r ${mode.color.replace('blue', 'emerald').replace('purple', 'teal').replace('pink', 'green')} text-white shadow-lg scale-105`
+                                : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                              }`}
+                            >
                                   <div className="flex items-center space-x-3">
                                     <Icon className="w-5 h-5" />
                                     <div className="flex-1">

@@ -197,17 +197,17 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
         shadowColor: 'shadow-red-200/50'
       },
       {
-        title: 'Net Profit',
-        value: `₹${netProfit.toLocaleString()}`,
-        change: netProfit > 0 ? '+18.7%' : '-5.2%',
-        changeValue: `${netProfit > 0 ? '+' : ''}₹${(netProfit * 0.187).toLocaleString()}`,
-        icon: DollarSign,
-        color: netProfit > 0 ? 'text-blue-600' : 'text-red-600',
-        bgGradient: netProfit > 0 ? 'from-blue-50 via-blue-100 to-indigo-100' : 'from-red-50 via-red-100 to-pink-100',
-        iconBg: netProfit > 0 ? 'from-blue-500 to-blue-600' : 'from-red-500 to-red-600',
-        trend: netProfit > 0 ? 'up' : 'down',
-        shadowColor: netProfit > 0 ? 'shadow-blue-200/50' : 'shadow-red-200/50'
-      },
+      title: 'Net Profit',
+      value: `₹${netProfit.toLocaleString()}`,
+      change: netProfit > 0 ? '+18.7%' : '-5.2%',
+      changeValue: `${netProfit > 0 ? '+' : ''}₹${(netProfit * 0.187).toLocaleString()}`,
+      icon: DollarSign,
+      color: netProfit > 0 ? 'text-emerald-600' : 'text-red-600',
+      bgGradient: netProfit > 0 ? 'from-emerald-50 via-emerald-100 to-teal-100' : 'from-red-50 via-red-100 to-pink-100',
+      iconBg: netProfit > 0 ? 'from-emerald-500 to-teal-600' : 'from-red-500 to-red-600',
+      trend: netProfit > 0 ? 'up' : 'down',
+      shadowColor: netProfit > 0 ? 'shadow-emerald-200/50' : 'shadow-red-200/50'
+  },
       {
         title: 'Cash Position',
         value: `₹${cashPosition.toLocaleString()}`,
@@ -278,7 +278,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
 
     // Generate pie chart data for transaction types
     const pieData = [
-      { name: 'Sales', value: salesVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0), color: '#3B82F6' },
+      { name: 'Sales', value: salesVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0), color: '#10B981' },
       { name: 'Receipts', value: receiptVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0), color: '#10B981' },
       { name: 'Purchases', value: purchaseVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0), color: '#F59E0B' },
       { name: 'Payments', value: paymentVouchers.reduce((sum, v) => sum + (v.total_amount || 0), 0), color: '#EF4444' }
@@ -286,7 +286,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
 
     // Asset vs Liability breakdown
     const assetLiability = [
-      { name: 'Current Assets', value: totalAssets * 0.6, color: '#3B82F6' },
+      { name: 'Current Assets', value: totalAssets * 0.6, color: '#10B981' },
       { name: 'Fixed Assets', value: totalAssets * 0.4, color: '#1E40AF' },
       { name: 'Current Liabilities', value: totalLiabilities * 0.7, color: '#EF4444' },
       { name: 'Long-term Liabilities', value: totalLiabilities * 0.3, color: '#DC2626' }
@@ -409,7 +409,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="relative mb-8"
             >
-              <div className="w-32 h-32 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto shadow-2xl">
+              <div className="w-32 h-32 bg-gradient-to-r from-emerald-500 via-teal-600 to-green-600 rounded-full flex items-center justify-center mx-auto shadow-2xl">
                 <Building2 className="w-16 h-16 text-white" />
               </div>
               <motion.div
@@ -423,7 +423,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6"
+              className="text-4xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent mb-6"
             >
               Welcome to AccounTech! 🎉
             </motion.h2>
@@ -455,15 +455,15 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                   { icon: Activity, text: 'Real-time insights', color: 'text-orange-600' }
                 ].map((feature, index) => (
                   <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 + index * 0.1 }}
-                    className="flex items-center bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-md hover:shadow-lg transition-all duration-300"
-                  >
-                    <div className={`w-10 h-10 ${feature.color} bg-gradient-to-r from-current to-current opacity-10 rounded-xl flex items-center justify-center mr-4`}>
-                      <feature.icon className={`w-5 h-5 ${feature.color}`} />
-                    </div>
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + index * 0.1 }}
+                className="flex items-center bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                <div className={`w-10 h-10 ${feature.color} bg-gradient-to-r from-current to-current opacity-10 rounded-xl flex items-center justify-center mr-4`}>
+                  <feature.icon className={`w-5 h-5 ${feature.color}`} />
+                </div>
                     <span className="font-medium">{feature.text}</span>
                   </motion.div>
                 ))}
@@ -504,7 +504,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="relative"
               >
-                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 rounded-3xl flex items-center justify-center shadow-2xl">
+                <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 via-teal-600 to-green-600 rounded-3xl flex items-center justify-center shadow-2xl">
                   <BarChart3 className="w-10 h-10 text-white" />
                 </div>
                 <motion.div
@@ -517,13 +517,13 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
               </motion.div>
               <div>
                 <motion.h1
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-2"
-                >
-                  Financial Dashboard
-                </motion.h1>
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-teal-800 bg-clip-text text-transparent mb-2"
+            >
+              Financial Dashboard
+            </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -554,10 +554,13 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                 <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Button size="md" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                <Download className="w-4 h-4 mr-2" />
-                Export Report
-              </Button>
+              <Button size="md" className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
+            <Download className="w-4 h-4 mr-2" />
+            Export Report
+          </Button><Button size="md" className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
+            <Download className="w-4 h-4 mr-2" />
+            Export Report
+          </Button>
             </div>
           </div>
         </Card>
@@ -568,7 +571,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"
+            className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full"
           />
         </div>
       ) : (
@@ -652,7 +655,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                       }}
                       formatter={(value: any) => [`₹${value.toLocaleString()}`, '']}
                     />
-                    <Bar dataKey="revenue" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="revenue" fill="#10B981" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="expenses" fill="#EF4444" radius={[4, 4, 0, 0]} />
                     <Line type="monotone" dataKey="profit" stroke="#10B981" strokeWidth={3} />
                   </ComposedChart>
@@ -729,31 +732,31 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Top Customers */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-            >
-              <Card className="p-6 bg-white/90 backdrop-blur-xl border-0 shadow-2xl">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">Top Customers</h3>
-                    <p className="text-sm text-gray-500">By revenue contribution</p>
-                  </div>
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="space-y-4">
-                  {dashboardData.topCustomers?.slice(0, 5).map((customer: any, index: number) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                      className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl hover:bg-blue-100/50 transition-colors"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                          {index + 1}
-                        </div>
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <Card className="p-6 bg-white/90 backdrop-blur-xl border-0 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Top Customers</h3>
+                <p className="text-sm text-gray-500">By revenue contribution</p>
+              </div>
+              <Users className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div className="space-y-4">
+              {dashboardData.topCustomers?.slice(0, 5).map((customer: any, index: number) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  className="flex items-center justify-between p-3 bg-emerald-50/50 rounded-xl hover:bg-emerald-100/50 transition-colors"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {index + 1}
+                    </div>
                         <div>
                           <p className="font-medium text-gray-900 text-sm">{customer.name}</p>
                           <p className="text-xs text-gray-500">{customer.transactions} transactions</p>
@@ -896,7 +899,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                           <td className="py-4 px-4">
                             <div className="flex items-center space-x-3">
                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${
-                                activity.type === 'sales' ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
+                                activity.type === 'sales' ? 'bg-gradient-to-r from-emerald-500 to-teal-600' :
                                 activity.type === 'purchase' ? 'bg-gradient-to-r from-green-500 to-green-600' :
                                 activity.type === 'receipt' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' :
                                 activity.type === 'payment' ? 'bg-gradient-to-r from-red-500 to-red-600' :
@@ -913,8 +916,8 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({ currentModul
                             </div>
                           </td>
                           <td className="py-4 px-4">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${
-                              activity.type === 'sales' ? 'bg-blue-100 text-blue-800' :
+                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                            activity.type === 'sales' ? 'bg-emerald-100 text-emerald-800' :
                               activity.type === 'purchase' ? 'bg-green-100 text-green-800' :
                               activity.type === 'receipt' ? 'bg-emerald-100 text-emerald-800' :
                               activity.type === 'payment' ? 'bg-red-100 text-red-800' :

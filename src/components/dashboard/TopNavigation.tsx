@@ -144,8 +144,8 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
       className="w-full bg-white/95 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 shadow-xl"
     >
       {/* Animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-purple-50/30 to-pink-50/50 opacity-60" />
-      
+      <div className="absolute inset-0 bg-gradient-to-r from-emerald-50/50 via-teal-50/30 to-green-50/50 opacity-60" />
+
       <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex items-center justify-between h-16">
           {/* Left side - Logo and Menu */}
@@ -187,12 +187,12 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="w-14 h-14 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mr-4 shadow-2xl"
+                className="w-14 h-14 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl flex items-center justify-center mr-4 shadow-2xl"
               >
                 <Calculator className="h-8 w-8 text-white" />
               </motion.div>
               <div className="hidden sm:block">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent">
                   AccounTech
                 </h1>
                 <p className="text-xs text-gray-500 -mt-1 flex items-center">
@@ -213,21 +213,21 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             >
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search vouchers, ledgers, reports, or ask AI..."
-                className="w-full pl-12 pr-20 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl focus:ring-4 focus:ring-blue-100/50 focus:border-blue-400 focus:bg-white transition-all duration-300 text-sm shadow-lg focus:shadow-xl placeholder-gray-400"
-              />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={onToggleAIChat}
-                  className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <Sparkles className="w-4 h-4" />
-                </motion.button>
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search vouchers, ledgers, reports, or ask AI..."
+            className="w-full pl-12 pr-20 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl focus:ring-4 focus:ring-emerald-100/50 focus:border-teal-400 focus:bg-white transition-all duration-300 text-sm shadow-lg focus:shadow-xl placeholder-gray-400"
+          />
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={onToggleAIChat}
+              className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <Sparkles className="w-4 h-4" />
+            </motion.button>
                 <kbd className="px-3 py-1 text-xs text-gray-500 bg-gray-100/80 backdrop-blur-sm rounded-lg border border-gray-200/50">⌘K</kbd>
               </div>
 
@@ -253,10 +253,10 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                             setSearchQuery('');
                           }}
                           className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all duration-200 text-left group"
-                        >
-                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                            <action.icon className="w-4 h-4 text-white" />
-                          </div>
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <action.icon className="w-4 h-4 text-white" />
+                      </div>
                           <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{action.label}</span>
                         </motion.button>
                       ))}
@@ -280,8 +280,8 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setAccountsDropdownOpen(!accountsDropdownOpen)}
-                className="flex items-center space-x-3 px-4 py-3 bg-white/90 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl hover:bg-white focus:ring-4 focus:ring-blue-100/50 focus:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-xl"
-              >
+            className="flex items-center space-x-3 px-4 py-3 bg-white/90 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl hover:bg-white focus:ring-4 focus:ring-emerald-100/50 focus:border-teal-400 transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
                 <Building2 className="h-5 w-5 text-gray-600" />
                 <div className="text-left">
                   <p className="text-sm font-semibold text-gray-900 truncate max-w-32">
@@ -327,20 +327,20 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                             whileHover={{ scale: 1.02, x: 4 }}
                             className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 ${
                               selectedCompany?.id === company.id
-                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-2 border-blue-200 shadow-lg'
-                                : 'hover:bg-gray-50 border-2 border-transparent'
-                            }`}
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                selectedCompany?.id === company.id 
-                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
-                                  : 'bg-gray-100'
-                              }`}>
-                                <Building2 className={`w-5 h-5 ${
-                                  selectedCompany?.id === company.id ? 'text-white' : 'text-gray-600'
-                                }`} />
-                              </div>
+                                ? 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-2 border-teal-200 shadow-lg'
+                              : 'hover:bg-gray-50 border-2 border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            selectedCompany?.id === company.id
+                              ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
+                              : 'bg-gray-100'
+                          }`}>
+                            <Building2 className={`w-5 h-5 ${
+                              selectedCompany?.id === company.id ? 'text-white' : 'text-gray-600'
+                            }`} />
+                          </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-semibold truncate">{company.name}</p>
                                 {company.gstin && (
@@ -411,15 +411,15 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             </div>
 
             {/* Enhanced Quick Actions */}
-            <motion.button 
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onToggleAIChat}
-              className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-xl hover:shadow-2xl"
-              title="AI Assistant"
-            >
-              <Zap className="h-5 w-5" />
-            </motion.button>
+            <motion.button
+          whileHover={{ scale: 1.05, rotate: 5 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onToggleAIChat}
+          className="p-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-xl hover:shadow-2xl"
+          title="AI Assistant"
+        >
+          <Zap className="h-5 w-5" />
+        </motion.button>
 
             {/* Enhanced Theme Toggle */}
             <motion.button 
@@ -489,11 +489,11 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-200/50"
-              >
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-xl">
-                  <User className="h-5 w-5 text-white" />
-                </div>
+            className="flex items-center space-x-3 p-3 rounded-2xl hover:bg-white/80 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-200/50"
+          >
+            <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-xl">
+              <User className="h-5 w-5 text-white" />
+            </div>
                 <div className="hidden sm:block text-left">
                   <p className="text-sm font-semibold text-gray-900">
                     {userProfile?.name || userProfile?.email?.split('@')[0]}
@@ -516,11 +516,11 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                     className="absolute right-0 mt-2 w-80 bg-white/95 backdrop-blur-xl border-2 border-gray-200/60 rounded-2xl shadow-2xl z-50"
                   >
                     {/* Enhanced Profile Header */}
-                    <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-purple-50">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-xl">
-                          <User className="h-8 w-8 text-white" />
-                        </div>
+                    <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-xl">
+                      <User className="h-8 w-8 text-white" />
+                    </div>
                         <div className="flex-1">
                           <p className="font-bold text-gray-900 text-lg">
                             {userProfile?.name || 'User'}
@@ -579,15 +579,15 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
         </div>
 
         {/* Enhanced Mobile Company Selector */}
-        <div className="lg:hidden px-4 pb-3 border-t border-gray-200/50 bg-gradient-to-r from-blue-50/30 to-purple-50/30">
-          <div className="flex items-center space-x-3">
-            <div className="flex-1">
-              <motion.button
+        <div className="lg:hidden px-4 pb-3 border-t border-gray-200/50 bg-gradient-to-r from-emerald-50/30 to-teal-50/30">
+      <div className="flex items-center space-x-3">
+        <div className="flex-1">
+          <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setAccountsDropdownOpen(!accountsDropdownOpen)}
-                className="w-full flex items-center space-x-3 px-4 py-3 bg-white/90 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl hover:bg-white focus:ring-4 focus:ring-blue-100/50 focus:border-blue-400 transition-all duration-300 shadow-lg"
-              >
+            className="w-full flex items-center space-x-3 px-4 py-3 bg-white/90 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl hover:bg-white focus:ring-4 focus:ring-emerald-100/50 focus:border-teal-400 transition-all duration-300 shadow-lg"
+          >
                 <Building2 className="h-5 w-5 text-gray-600" />
                 <span className="text-sm font-semibold text-gray-900 truncate">
                   {selectedCompany ? selectedCompany.name : 'Select Company'}

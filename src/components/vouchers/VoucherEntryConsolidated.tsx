@@ -553,11 +553,11 @@ export const VoucherEntryConsolidated: React.FC = () => {
       </AnimatePresence>
 
       <div className="max-w-md mx-auto">
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-32 h-32 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl"
+          className="w-32 h-32 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl"
         >
           <Bot className="w-16 h-16 text-white" />
           <motion.div
@@ -566,14 +566,14 @@ export const VoucherEntryConsolidated: React.FC = () => {
             className="absolute w-40 h-40 border-4 border-purple-300 border-t-transparent rounded-full"
           />
         </motion.div>
-        <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-purple-800 bg-clip-text text-transparent mb-4">
+        <h3 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-800 bg-clip-text text-transparent mb-4">
           AI-Assisted Voucher Creation
         </h3>
         <p className="text-gray-600 mb-8 text-lg">
           Let our advanced AI help you create vouchers by understanding your natural language commands.
         </p>
         
-        <div className="bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 rounded-2xl p-6 mb-8 border border-purple-200">
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 rounded-2xl p-6 mb-8 border border-emerald-200">
           <h4 className="font-semibold text-gray-900 mb-4 flex items-center justify-center">
             <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
             Try these smart commands:
@@ -602,16 +602,16 @@ export const VoucherEntryConsolidated: React.FC = () => {
 
         <div className="space-y-4">
           <textarea
-            placeholder="Describe the transaction you want to create..."
-            rows={4}
-            className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none shadow-sm"
-          />
-          <motion.button
+          placeholder="Describe the transaction you want to create..."
+          rows={4}
+          className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none shadow-sm"
+        />
+        <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleAiAssistedClick}
             disabled={aiProcessing}
-            className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 hover:from-purple-600 hover:via-pink-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 hover:from-emerald-600 hover:via-teal-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
           >
             {aiProcessing ? (
               <div className="flex items-center justify-center">
@@ -770,12 +770,12 @@ export const VoucherEntryConsolidated: React.FC = () => {
             <div className="flex items-center space-x-4">
               <motion.div
                 whileHover={{ scale: 1.05, rotate: 5 }}
-                className="w-16 h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl"
+                className="w-16 h-16 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl flex items-center justify-center shadow-xl"
               >
                 <Layers className="w-8 h-8 text-white" />
               </motion.div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent mb-2">
                   {currentVoucherType?.label || 'Voucher Entry'}
                 </h1>
                 <p className="text-slate-600 text-lg flex items-center">
@@ -840,7 +840,7 @@ export const VoucherEntryConsolidated: React.FC = () => {
                     onClick={() => setEntryMode(mode.id as any)}
                     className={`p-6 rounded-2xl border-2 transition-all duration-300 text-left relative overflow-hidden ${
                       isActive
-                        ? `bg-gradient-to-br ${mode.bgColor} border-current shadow-2xl`
+                        ? `bg-gradient-to-br ${mode.bgColor} border-emerald-500 shadow-2xl`
                         : 'bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300 shadow-lg hover:shadow-xl'
                     }`}
                   >
@@ -855,8 +855,8 @@ export const VoucherEntryConsolidated: React.FC = () => {
                     )}
                     <div className="flex items-center space-x-4 mb-4">
                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
-                        isActive 
-                          ? `bg-gradient-to-r ${mode.color}` 
+                        isActive
+                          ? `bg-gradient-to-r ${mode.color.replace('indigo', 'emerald').replace('purple', 'teal')}`
                           : 'bg-gray-100'
                       }`}>
                         <Icon className={`w-7 h-7 ${isActive ? 'text-white' : 'text-gray-600'}`} />

@@ -254,21 +254,21 @@ export const AuditPanel: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <div className="flex items-center space-x-4">
-            <motion.div
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              className="w-16 h-16 bg-gradient-to-r from-red-600 via-orange-600 to-yellow-600 rounded-2xl flex items-center justify-center shadow-xl"
-            >
-              <Shield className="w-8 h-8 text-white" />
-            </motion.div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-red-800 to-orange-800 bg-clip-text text-transparent mb-2">
-                Audit Panel
-              </h1>
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between mb-8"
+      >
+        <div className="flex items-center space-x-4">
+          <motion.div
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            className="w-16 h-16 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl flex items-center justify-center shadow-xl"
+          >
+            <Shield className="w-8 h-8 text-white" />
+          </motion.div>
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-teal-800 bg-clip-text text-transparent mb-2">
+              Audit Panel
+            </h1>
               <p className="text-gray-600 text-lg">
                 Comprehensive audit and compliance tools with AI assistance.
               </p>

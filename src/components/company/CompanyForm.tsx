@@ -712,13 +712,13 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ onBack, onSuccess }) =
               Back
             </Button>
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl">
-                <Building2 className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                  Create New Company
-                </h1>
+          <div className="w-16 h-16 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl flex items-center justify-center shadow-xl">
+            <Building2 className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-teal-800 bg-clip-text text-transparent">
+              Create New Company
+            </h1>
                 <p className="text-gray-600">Set up your company profile and accounting preferences</p>
               </div>
             </div>
@@ -742,12 +742,12 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ onBack, onSuccess }) =
                 <div key={step.id} className="flex items-center flex-1">
                   <div className="flex items-center space-x-3">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                      isActive 
-                        ? `bg-gradient-to-r ${step.color} text-white shadow-lg scale-110` 
-                        : isCompleted
-                        ? 'bg-green-500 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-400'
-                    }`}>
+                  isActive
+                    ? `bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg scale-110`
+                    : isCompleted
+                    ? 'bg-green-500 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-400'
+                }`}>
                       {isCompleted ? (
                         <CheckCircle className="w-6 h-6" />
                       ) : (
@@ -823,12 +823,12 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ onBack, onSuccess }) =
             
             {currentStep < steps.length ? (
               <Button
-                onClick={nextStep}
-                disabled={!validateStep(currentStep)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600"
-              >
-                Next Step
-              </Button>
+            onClick={nextStep}
+            disabled={!validateStep(currentStep)}
+            className="bg-gradient-to-r from-emerald-500 to-teal-600"
+          >
+            Next Step
+          </Button>
             ) : (
               <Button
                 onClick={handleSubmit}

@@ -210,23 +210,23 @@ export const LedgerForm: React.FC<LedgerFormProps> = ({
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
-        >
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between mb-8"
+      >
+        <div className="flex items-center space-x-4">
+          <Button onClick={onCancel} variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
           <div className="flex items-center space-x-4">
-            <Button onClick={onCancel} variant="outline" size="sm" className="bg-white/80 backdrop-blur-sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl">
-                <BookOpen className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-                  {editingItem ? 'Edit Ledger' : 'Create New Ledger'}
-                </h1>
+            <div className="w-16 h-16 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-2xl flex items-center justify-center shadow-xl">
+              <BookOpen className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-teal-800 bg-clip-text text-transparent">
+                {editingItem ? 'Edit Ledger' : 'Create New Ledger'}
+              </h1>
                 <p className="text-gray-600">Manage your chart of accounts</p>
               </div>
             </div>
@@ -253,18 +253,18 @@ export const LedgerForm: React.FC<LedgerFormProps> = ({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Ledger Info */}
           <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900 flex items-center">
-                <BookOpen className="w-5 h-5 mr-2 text-blue-600" />
-                Basic Ledger Information
-              </h3>
-              <motion.button
-                type="button"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => toggleSection('basicInfo')}
-                className="w-6 h-6 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors"
-              >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-900 flex items-center">
+            <BookOpen className="w-5 h-5 mr-2 text-emerald-600" />
+            Basic Ledger Information
+          </h3>
+          <motion.button
+            type="button"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => toggleSection('basicInfo')}
+            className="w-6 h-6 rounded-full flex items-center justify-center text-gray-600 hover:text-emerald-600 transition-colors"
+          >
                 {expandedSections.basicInfo ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </motion.button>
             </div>

@@ -30,12 +30,12 @@ export const VoucherHeader: React.FC<VoucherHeaderProps> = ({ voucher, setVouche
               Voucher Number
             </label>
             <Input
-              value={voucher.voucher_number}
-              onChange={(e) => setVoucher(prev => ({ ...prev, voucher_number: e.target.value }))}
-              placeholder="Auto-generated"
-              className="bg-gray-50/80 border-gray-200"
-            />
-          </div>
+          value={voucher.voucher_number}
+          onChange={(e) => setVoucher(prev => ({ ...prev, voucher_number: e.target.value }))}
+          placeholder="Auto-generated"
+          className="bg-gray-50/80 border-gray-200"
+        />
+      </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -81,7 +81,7 @@ export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
         />
         <ChevronDown 
           className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${
@@ -97,7 +97,7 @@ export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
               <button
                 key={item.id}
                 onClick={() => handleSelect(item)}
-                className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                className="w-full text-left px-4 py-3 hover:bg-emerald-50 transition-colors border-b border-gray-100 last:border-b-0"
               >
                 {renderItem ? renderItem(item) : (
                   <div className="font-medium text-gray-900">{item[displayField]}</div>

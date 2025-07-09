@@ -96,11 +96,11 @@ export const ContraEntrySection: React.FC<ContraEntrySectionProps> = ({
           className="flex items-center justify-center mb-8"
         >
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500 rounded-2xl flex items-center justify-center shadow-lg">
               <ArrowRightLeft className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent">
                 Contra Entry
               </h3>
               <p className="text-gray-600">Cash/Bank Transfer Management</p>
@@ -206,15 +206,15 @@ export const ContraEntrySection: React.FC<ContraEntrySectionProps> = ({
 
           {/* Transfer Arrow */}
           <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-            className="flex justify-center"
-          >
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-xl">
-              <ArrowDown className="w-8 h-8 text-white animate-bounce" />
-            </div>
-          </motion.div>
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.6 }}
+        className="flex justify-center"
+      >
+        <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500 rounded-full flex items-center justify-center shadow-xl">
+          <ArrowDown className="w-8 h-8 text-white animate-bounce" />
+        </div>
+      </motion.div>
 
           {/* Credit Section */}
           <motion.div

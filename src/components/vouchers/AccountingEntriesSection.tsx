@@ -55,7 +55,7 @@ export const AccountingEntriesSection: React.FC<AccountingEntriesSectionProps> =
             whileHover={{ scale: 1.1, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             onClick={addEntry}
-            className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
+            className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all duration-300"
             title="Add Entry"
           >
             <Plus className="w-5 h-5" />
@@ -185,9 +185,9 @@ export const AccountingEntriesSection: React.FC<AccountingEntriesSectionProps> =
             </div>
           )}
           {isBalanced && totalDebit > 0 && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center">
-              <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-              <p className="text-green-600 text-sm">
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center">
+              <CheckCircle className="w-5 h-5 text-emerald-600 mr-2" />
+              <p className="text-emerald-600 text-sm">
                 Voucher is balanced - Ready to save
               </p>
             </div>

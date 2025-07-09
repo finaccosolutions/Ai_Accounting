@@ -287,9 +287,9 @@ export const MasterManagement: React.FC = () => {
       </div>
 
       {/* AI Assistant */}
-      <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-0">
+      <Card className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-0">
         <div className="flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -310,7 +310,7 @@ export const MasterManagement: React.FC = () => {
           <Button
             onClick={handleAiCommand}
             disabled={aiProcessing || !aiCommand.trim()}
-            className="bg-gradient-to-r from-blue-500 to-purple-600"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600"
           >
             {aiProcessing ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -340,7 +340,7 @@ export const MasterManagement: React.FC = () => {
                         ? `bg-gradient-to-r ${master.color} text-white shadow-lg`
                         : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
                     }`}
-                  >
+                  > 
                     <div className="flex items-center space-x-3">
                       <Icon className="w-5 h-5" />
                       <div>
