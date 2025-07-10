@@ -659,3 +659,8 @@
 .shadow-glow-green {
   box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
 }
+/* Custom font size for very small text */
+.text-xxs {
+  font-size: 0.65rem; /* Adjust as needed */
+  line-height: 0.85rem; /* Adjust as needed */
+}

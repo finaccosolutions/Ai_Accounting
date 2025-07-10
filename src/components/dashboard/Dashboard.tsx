@@ -1,3 +1,4 @@
+// src/components/dashboard/Dashboard.tsx
 import React, { useState, useEffect } from 'react';  
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,8 +14,7 @@ export const Dashboard: React.FC = () => {
   const { userProfile } = useAuth();
   const { selectedCompany, selectedFinancialYear } = useApp();
   const [currentModule, setCurrentModule] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Default to collapsed state
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [showCompanyForm, setShowCompanyForm] = useState(false);
   const [showCompanySelector, setShowCompanySelector] = useState(true);
@@ -29,7 +29,9 @@ export const Dashboard: React.FC = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
       if (mobile) {
-        setSidebarOpen(false);
+        setSidebarCollapsed(true); // Collapse sidebar on mobile by default
+      } else {
+        // On desktop, sidebarCollapsed state is maintained
       }
     };
 
@@ -47,21 +49,12 @@ export const Dashboard: React.FC = () => {
     }
   }, [selectedCompany, selectedFinancialYear]);
 
-  const toggleSidebar = () => {
-    if (isMobile) {
-      setSidebarOpen(!sidebarOpen);
-    } else {
-      if (sidebarOpen) {
-        setSidebarCollapsed(!sidebarCollapsed);
-      } else {
-        setSidebarOpen(true);
-        setSidebarCollapsed(false);
-      }
-    }
-  };
-
   const toggleAIChat = () => {
     setAiChatOpen(!aiChatOpen);
+  };
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(prev => !prev);
   };
 
   const handleCreateCompany = () => {
@@ -79,7 +72,9 @@ export const Dashboard: React.FC = () => {
 
   // Show company selector page if no company/financial year selected
   if (showCompanySelector && !showCompanyForm) {
-    return <CompanySelectorPage onCompanySelected={handleCompanySelected} />;
+    return (
+      <CompanySelectorPage onCompanySelected={handleCompanySelected} />
+    );
   }
 
   // Show company form in full screen
@@ -98,9 +93,6 @@ export const Dashboard: React.FC = () => {
     <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Top Navigation */}
       <TopNavigation
-        sidebarOpen={sidebarOpen}
-        sidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={toggleSidebar}
         onToggleAIChat={toggleAIChat}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -109,29 +101,41 @@ export const Dashboard: React.FC = () => {
         setDarkMode={setDarkMode}
         isMobile={isMobile}
         onCreateCompany={handleCreateCompany}
+        sidebarCollapsed={sidebarCollapsed} // Pass sidebarCollapsed state
+        toggleSidebar={toggleSidebar} // Pass toggle function
       />
 
       {/* Main Layout */}
       <div className="flex relative">
         {/* Sidebar */}
-        <AnimatePresence>
-          {sidebarOpen && (
-            <Sidebar 
-              currentModule={currentModule}
-              setCurrentModule={setCurrentModule}
-              isOpen={!sidebarCollapsed}
-              onToggleAIChat={toggleAIChat}
-            />
-          )}
-        </AnimatePresence>
+        {/* Sidebar is always mounted on desktop, conditionally on mobile */}
+        {isMobile ? (
+          <AnimatePresence>
+            {!sidebarCollapsed && ( // Only show if not collapsed on mobile
+              <Sidebar 
+                currentModule={currentModule}
+                setCurrentModule={setCurrentModule}
+                onToggleAIChat={toggleAIChat}
+                isCollapsed={sidebarCollapsed}
+              />
+            )}
+          </AnimatePresence>
+        ) : (
+          <Sidebar 
+            currentModule={currentModule}
+            setCurrentModule={setCurrentModule}
+            onToggleAIChat={toggleAIChat}
+            isCollapsed={sidebarCollapsed} // Pass collapsed state
+          />
+        )}
 
         {/* Mobile Overlay */}
-        {isMobile && sidebarOpen && (
+        {isMobile && !sidebarCollapsed && ( // Show overlay if sidebar is expanded on mobile
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => setSidebarCollapsed(true)} // Collapse sidebar on overlay click
             className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           />
         )}
@@ -140,7 +144,7 @@ export const Dashboard: React.FC = () => {
         <motion.main 
           layout
           className={`flex-1 transition-all duration-300 ${
-            isMobile ? 'ml-0' : sidebarOpen ? (sidebarCollapsed ? 'ml-16' : 'ml-80') : 'ml-0'
+            isMobile ? 'ml-0' : (sidebarCollapsed ? 'ml-[80px]' : 'ml-[240px]') // Dynamic margin for desktop sidebar
           } ${aiChatOpen ? 'mr-96' : 'mr-0'}`}
         >
           <div className="p-4 lg:p-6">
