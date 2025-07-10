@@ -1,5 +1,5 @@
 // src/components/dashboard/Dashboard.tsx
-import React, { useState, useEffect } from 'react';  
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useApp } from '../../contexts/AppContext';
@@ -10,7 +10,12 @@ import { DashboardContent } from './DashboardContent';
 import { AIChat } from './AIChat';
 import { TopNavigation } from './TopNavigation';
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  darkMode: boolean;
+  setDarkMode: (dark: boolean) => void;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ darkMode, setDarkMode }) => {
   const { userProfile } = useAuth();
   const { selectedCompany, selectedFinancialYear } = useApp();
   const [currentModule, setCurrentModule] = useState('dashboard');
@@ -21,7 +26,6 @@ export const Dashboard: React.FC = () => {
   const [notifications, setNotifications] = useState(3);
   const [isMobile, setIsMobile] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [darkMode, setDarkMode] = useState(false);
 
   // Check for mobile screen size
   useEffect(() => {

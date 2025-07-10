@@ -1,4 +1,3 @@
-// src/components/dashboard/TopNavigation.tsx
 import React, { useState, useEffect } from 'react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -7,7 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { Company, FinancialYear } from '../../types';
 import { Button } from '../ui/Button';
 import { 
-  Calculator, 
+  Building2,
   Bell,
   Search,
   Settings,
@@ -21,12 +20,11 @@ import {
   HelpCircle,
   Moon,
   Sun,
-  Building2,
   Calendar,
   Star,
   Activity,
-  Menu, // Added Menu icon for toggle
-  ChevronLeft // Added ChevronLeft for toggle
+  Menu,
+  ChevronLeft
 } from 'lucide-react';
 
 interface TopNavigationProps {
@@ -38,8 +36,8 @@ interface TopNavigationProps {
   setDarkMode: (dark: boolean) => void;
   isMobile: boolean;
   onCreateCompany: () => void;
-  sidebarCollapsed: boolean; // New prop
-  toggleSidebar: () => void; // New prop
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
 }
 
 export const TopNavigation: React.FC<TopNavigationProps> = ({
@@ -51,8 +49,8 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
   setDarkMode,
   isMobile,
   onCreateCompany,
-  sidebarCollapsed, // Destructure new prop
-  toggleSidebar // Destructure new prop
+  sidebarCollapsed,
+  toggleSidebar
 }) => {
   const { signOut, userProfile } = useAuth();
   const { selectedCompany, selectedFinancialYear } = useApp();
@@ -60,6 +58,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
   const [accountsDropdownOpen, setAccountsDropdownOpen] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [financialYears, setFinancialYears] = useState<FinancialYear[]>([]);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
@@ -101,14 +100,10 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
   };
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileDropdownOpen) {
@@ -117,13 +112,17 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
       if (accountsDropdownOpen) {
         setAccountsDropdownOpen(false);
       }
+      // Only collapse search if it's expanded and click is outside the search area
+      if (isSearchExpanded && !(event.target as HTMLElement).closest('.search-container')) {
+        setIsSearchExpanded(false);
+        setSearchQuery(''); // Clear search query when collapsing
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [profileDropdownOpen, accountsDropdownOpen]);
+  }, [profileDropdownOpen, accountsDropdownOpen, isSearchExpanded, setSearchQuery]);
 
-  // Quick actions for search
   const quickActions = [
     { label: 'Create Sales Voucher', action: () => {}, icon: Plus },
     { label: 'Add New Ledger', action: () => {}, icon: Plus },
@@ -142,13 +141,13 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
       className="w-full bg-gradient-to-br from-gray-800 to-gray-900 border-b border-gray-700 sticky top-0 z-50 shadow-xl"
     >
       <div className="w-full h-16 flex items-center relative z-10">
-        {/* Left section - Toggle and Logo */}
-        <div className="flex items-center h-full" style={{ width: sidebarCollapsed ? '80px' : '240px' }}>
+        {/* Left section - Toggle, Logo, Company Selector, and Search */}
+        <div className="flex items-center h-full pl-4" style={{ width: '240px' }}> {/* Increased padding-left */}
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={toggleSidebar}
-            className="h-full w-20 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300"
+            className="h-full w-12 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300" // Reduced width
             title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
           >
             {sidebarCollapsed ? <Menu className="h-6 w-6" /> : <ChevronLeft className="h-6 w-6" />}
@@ -158,105 +157,40 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 ml-2" // Added margin-left
           >
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="w-10 h-10 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-lg flex items-center justify-center shadow-md" // Adjusted size
+              className="w-10 h-10 bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 rounded-lg flex items-center justify-center shadow-md"
             >
-              <Calculator className="h-5 w-5 text-white" /> {/* Adjusted icon size */}
+              <Building2 className="h-5 w-5 text-white" />
             </motion.div>
-            {!sidebarCollapsed && (
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent"> {/* Adjusted font size */}
-                  AccounTech
-                </h1>
-                <p className="text-sm text-gray-300 -mt-1 flex items-center"> {/* Adjusted font size */}
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  AI-Powered Accounting
-                </p>
-              </div>
-            )}
-          </motion.div>
-        </div>
-
-        {/* Center - Enhanced Search */}
-        <div className="flex-1 flex items-center justify-center px-4">
-          <motion.div 
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="relative w-full max-w-lg" // Adjusted max-width
-          >
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search vouchers, ledgers, reports, or ask AI..."
-              className="w-full pl-12 pr-20 py-2 bg-gray-700/50 backdrop-blur-sm border-2 border-gray-600/60 rounded-2xl focus:ring-4 focus:ring-emerald-100/50 focus:border-teal-400 focus:bg-gray-700 transition-all duration-300 text-sm shadow-lg focus:shadow-xl placeholder-gray-400 text-white" // py-2 for consistent height
-            />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-              <kbd className="px-3 py-1 text-xs text-gray-300 bg-gray-700/50 backdrop-blur-sm rounded-lg border border-gray-600/50">⌘K</kbd>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 bg-clip-text text-transparent">
+                AccounTech
+              </h1>
+              <p className="text-sm text-gray-300 -mt-1 flex items-center">
+                <Sparkles className="w-3 h-3 mr-1" />
+                AI-Powered Accounting
+              </p>
             </div>
-
-            {/* Enhanced Search Dropdown */}
-            {searchQuery && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-gray-800/95 backdrop-blur-xl border-2 border-gray-700/60 rounded-2xl shadow-2xl z-50 max-h-64 overflow-y-auto"
-              >
-                {filteredActions.length > 0 ? (
-                  <div className="p-3">
-                    <p className="text-xs text-gray-400 px-3 py-2 font-semibold">Quick Actions</p>
-                    {filteredActions.map((action, index) => (
-                      <motion.button
-                        key={index}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        whileHover={{ backgroundColor: '#374151' }}
-                        onClick={() => {
-                          action.action();
-                          setSearchQuery('');
-                        }}
-                        className="w-full flex items-center space-x-3 px-4 py-2 rounded-xl hover:bg-gray-700 transition-all duration-200 text-left group"
-                      >
-                        <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                          <action.icon className="w-4 h-4 text-white" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-200 group-hover:text-white">{action.label}</span>
-                      </motion.button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-6 text-center text-gray-400 text-sm">
-                    <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    No results found
-                  </div>
-                )}
-              </motion.div>
-            )}
           </motion.div>
         </div>
 
-        {/* Right side - Enhanced Actions */}
-        <div className="flex items-center space-x-2 px-4">
+        {/* Center section (now holds company selector and search) */}
+        <div className="flex-1 flex items-center justify-start px-4 space-x-4"> {/* Adjusted to justify-start */}
           {/* Enhanced Accounts Dropdown */}
-          <div className="hidden lg:block relative">
+          <div className="relative">
             <motion.button
               whileHover={{ scale: 1.02, y: -1 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setAccountsDropdownOpen(!accountsDropdownOpen)}
-              className="flex items-center space-x-2 px-3 py-2 bg-gray-700/50 backdrop-blur-sm border-2 border-gray-600/60 rounded-2xl hover:bg-gray-700 focus:ring-4 focus:ring-emerald-100/50 focus:border-teal-400 transition-all duration-300 shadow-lg hover:shadow-xl" // py-2 for consistent height
+              className="flex items-center space-x-2 px-3 py-2 bg-gray-700/50 backdrop-blur-sm border-2 border-gray-600/60 rounded-2xl hover:bg-gray-700 focus:ring-4 focus:ring-emerald-100/50 focus:border-teal-400 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
-              <Building2 className="h-4 w-4 text-gray-300" /> {/* Adjusted icon size */}
+              <Building2 className="h-4 w-4 text-gray-300" />
               <div className="text-left">
-                <p className="text-xs font-semibold text-white truncate max-w-28"> {/* Adjusted font size */}
+                <p className="text-xs font-semibold text-white truncate max-w-28">
                   {selectedCompany ? selectedCompany.name : 'Select Company'}
                 </p>
                 {selectedFinancialYear && (
@@ -278,7 +212,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -10 }}
                   transition={{ duration: 0.3 }}
-                  className="absolute right-0 mt-2 w-96 bg-gray-800/95 backdrop-blur-xl border-2 border-gray-700/60 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto"
+                  className="absolute left-0 mt-2 w-96 bg-gray-800/95 backdrop-blur-xl border-2 border-gray-700/60 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto"
                 >
                   {/* Company Section */}
                   <div className="p-4 border-b border-gray-700">
@@ -349,8 +283,8 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-2">
                                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                                  selectedFinancialYear?.id === fy.id 
-                                    ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                                  selectedFinancialYear?.id === fy.id
+                                    ? 'bg-gradient-to-r from-green-500 to-green-600'
                                     : 'bg-gray-700'
                                 }`}>
                                   <Calendar className={`w-4 h-4 ${
@@ -382,12 +316,92 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             </AnimatePresence>
           </div>
 
+          {/* Enhanced Search */}
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="relative search-container w-64" // Fixed width for search bar
+          >
+            {!isSearchExpanded ? (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsSearchExpanded(true)}
+                className="w-10 h-10 rounded-full bg-gray-700/50 backdrop-blur-sm flex items-center justify-center text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-300 shadow-lg"
+                title="Search"
+              >
+                <Search className="h-5 w-5" />
+              </motion.button>
+            ) : (
+              <>
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onBlur={() => setIsSearchExpanded(false)}
+                  placeholder="Search..."
+                  className="w-full pl-12 pr-20 py-2 bg-gray-700/50 backdrop-blur-sm border-2 border-gray-600/60 rounded-2xl focus:ring-4 focus:ring-emerald-100/50 focus:border-teal-400 focus:bg-gray-700 transition-all duration-300 text-sm shadow-lg focus:shadow-xl placeholder-gray-400 text-white"
+                  autoFocus
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                  <kbd className="px-3 py-1 text-xs text-gray-300 bg-gray-700/50 backdrop-blur-sm rounded-lg border border-gray-600/50">⌘K</kbd>
+                </div>
+
+                {searchQuery && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-gray-800/95 backdrop-blur-xl border-2 border-gray-700/60 rounded-2xl shadow-2xl z-50 max-h-64 overflow-y-auto"
+                  >
+                    {filteredActions.length > 0 ? (
+                      <div className="p-3">
+                        <p className="text-xs text-gray-400 px-3 py-2 font-semibold">Quick Actions</p>
+                        {filteredActions.map((action, index) => (
+                          <motion.button
+                            key={index}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            whileHover={{ backgroundColor: '#374151' }}
+                            onClick={() => {
+                              action.action();
+                              setSearchQuery('');
+                              setIsSearchExpanded(false);
+                            }}
+                            className="w-full flex items-center space-x-3 px-4 py-2 rounded-xl hover:bg-gray-700 transition-all duration-200 text-left group"
+                          >
+                            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                              <action.icon className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="text-sm font-medium text-gray-200 group-hover:text-white">{action.label}</span>
+                          </motion.button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center text-gray-400 text-sm">
+                        <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        No results found
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </>
+            )}
+          </motion.div>
+        </div>
+
+        {/* Right side - User Actions */}
+        <div className="flex items-center space-x-2 px-4">
           {/* Enhanced Theme Toggle */}
           <motion.button 
             whileHover={{ scale: 1.05, rotate: 180 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700" // py-2 for consistent height
+            className="p-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700"
             title="Toggle Theme"
           >
             <AnimatePresence mode="wait">
@@ -419,7 +433,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="relative p-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700" // py-2 for consistent height
+            className="relative p-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700"
             title="Notifications"
           >
             <Bell className="h-5 w-5" />
@@ -438,7 +452,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           <motion.button 
             whileHover={{ scale: 1.05, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
-            className="p-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700" // py-2 for consistent height
+            className="p-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700"
             title="Help & Support"
           >
             <HelpCircle className="h-5 w-5" />
@@ -450,9 +464,9 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center space-x-2 p-2 rounded-2xl hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700" // p-2 for consistent height
+              className="flex items-center space-x-2 p-2 rounded-2xl hover:bg-white/10 backdrop-blur-sm transition-all duration-300 shadow-lg hover:shadow-xl border border-gray-700"
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-xl"> {/* Adjusted size */}
+              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-xl">
                 <User className="h-5 w-5 text-white" />
               </div>
               <div className="hidden sm:block text-left">
@@ -477,7 +491,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                   className="absolute right-0 mt-2 w-80 bg-gray-800/95 backdrop-blur-xl border-2 border-gray-700/60 rounded-2xl shadow-2xl z-50"
                 >
                   {/* Enhanced Profile Header */}
-                  <div className="p-4 border-b border-gray-700 bg-gradient-to-r from-emerald-700 to-teal-800"> {/* Adjusted padding */}
+                  <div className="p-4 border-b border-gray-700 bg-gradient-to-r from-emerald-700 to-teal-800">
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-xl">
                         <User className="h-6 w-6 text-white" />
@@ -502,7 +516,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                   </div>
                   
                   {/* Enhanced Menu Items */}
-                  <div className="p-3"> {/* Adjusted padding */}
+                  <div className="p-3">
                     {[
                       { icon: User, label: 'Profile Settings', color: 'hover:bg-blue-700/20' },
                       { icon: Settings, label: 'Preferences', color: 'hover:bg-purple-700/20' },
@@ -514,7 +528,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="w-full flex items-center space-x-3 px-4 py-2 text-left rounded-xl transition-all duration-200 hover:bg-gray-700 group" // Adjusted padding
+                        className="w-full flex items-center space-x-3 px-4 py-2 text-left rounded-xl transition-all duration-200 hover:bg-gray-700 group"
                       >
                         <item.icon className="h-5 w-5 text-gray-300 group-hover:text-white" />
                         <span className="text-sm font-medium text-gray-200 group-hover:text-white">{item.label}</span>
@@ -526,7 +540,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
                       onClick={handleSignOut}
-                      className="w-full flex items-center space-x-3 px-4 py-2 text-left rounded-xl hover:bg-red-700/20 text-red-400 transition-all duration-200 group" // Adjusted padding
+                      className="w-full flex items-center space-x-3 px-4 py-2 text-left rounded-xl hover:bg-red-700/20 text-red-400 transition-all duration-200 group"
                     >
                       <LogOut className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
                       <span className="text-sm font-medium">Sign Out</span>
@@ -538,7 +552,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Mobile Company Selector */}
+        {/* Enhanced Mobile Company Selector (remains hidden on desktop) */}
         <div className="lg:hidden px-4 pb-3 border-t border-gray-700 bg-gradient-to-r from-gray-800/30 to-gray-900/30">
           <div className="flex items-center space-x-3">
             <div className="flex-1">
@@ -546,7 +560,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setAccountsDropdownOpen(!accountsDropdownOpen)}
-                className="w-full flex items-center space-x-3 px-3 py-2 bg-gray-700/50 backdrop-blur-sm border-2 border-gray-600/60 rounded-2xl hover:bg-gray-700 focus:ring-4 focus:ring-emerald-100/50 focus:border-teal-400 transition-all duration-300 shadow-lg" // py-2 for consistent height
+                className="w-full flex items-center space-x-3 px-3 py-2 bg-gray-700/50 backdrop-blur-sm border-2 border-gray-600/60 rounded-2xl hover:bg-gray-700 focus:ring-4 focus:ring-emerald-100/50 focus:border-teal-400 transition-all duration-300 shadow-lg"
               >
                 <Building2 className="h-5 w-5 text-gray-300" />
                 <span className="text-sm font-semibold text-white truncate">
@@ -561,7 +575,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
               whileHover={{ scale: 1.05, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
               onClick={onCreateCompany}
-              className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-xl hover:shadow-2xl" // p-2 for consistent height
+              className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-xl hover:shadow-2xl"
               title="Create New Company"
             >
               <Plus className="w-5 h-5" />

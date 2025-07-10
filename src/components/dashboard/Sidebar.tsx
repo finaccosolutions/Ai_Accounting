@@ -31,7 +31,7 @@ interface SidebarProps {
   currentModule: string;
   setCurrentModule: (module: string) => void;
   onToggleAIChat: () => void;
-  isCollapsed: boolean; // New prop
+  isCollapsed: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -49,10 +49,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <motion.aside
       initial={{ x: -300, opacity: 0 }}
-      animate={{ x: 0, opacity: 1, width: isCollapsed ? '80px' : '240px' }} // Dynamic width
+      animate={{ x: 0, opacity: 1, width: isCollapsed ? '80px' : '240px' }}
       exit={{ x: -300, opacity: 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-0 h-screen bg-gradient-to-br from-gray-800 to-gray-900 border-r border-gray-700 z-40 shadow-2xl"
+      className="fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-to-br from-gray-900 to-gray-950 border-r border-gray-800 z-40 shadow-2xl"
     >
       {/* Animated Background Pattern */}
       <div className="absolute inset-0 opacity-10">
@@ -70,10 +70,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       </div>
 
-      <div className="flex flex-col h-full relative z-10 pt-16"> {/* Added pt-16 for top navigation */}
+      <div className="flex flex-col h-full relative z-10">
         {/* Navigation */}
         <div className="flex-1 p-3 overflow-y-auto custom-scrollbar">
-          <nav className="space-y-2">
+          <nav className="space-y-0">
             {filteredMenuItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = currentModule === item.id;
@@ -84,21 +84,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  whileHover={{ scale: 1.02, x: isCollapsed ? 0 : 6 }}
+                  whileHover={{ scale: 1.0, x: isCollapsed ? 0 : 0 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setCurrentModule(item.id)}
-                  className={`w-full h-12 flex items-center relative overflow-hidden rounded-2xl transition-all duration-300 border border-gray-700 ${
+                  className={`w-full h-20 flex items-center relative overflow-hidden transition-all duration-300 border-b border-gray-800 ${ // Increased height, removed rounded-md, added bottom border
                     isActive
                       ? 'bg-white/10 shadow-md'
-                      : 'hover:bg-white/10 hover:border-gray-600'
-                  }`}
+                      : 'hover:bg-white/10 hover:border-gray-700' // Adjusted hover border
+                  } ${index === filteredMenuItems.length - 1 ? 'last:border-b-0' : ''}`}
                   title={isCollapsed ? item.label : undefined}
                 >
                   {/* Active indicator */}
                   {isActive && (
                     <motion.div
                       layoutId="activeIndicator"
-                      className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 via-teal-500 to-green-500 rounded-r-full"
+                      className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 via-teal-500 to-green-500" // Removed rounded-r-sm
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     />
                   )}
@@ -106,16 +106,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {/* Hover glow effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                  <div className={`flex items-center relative z-10 ${isCollapsed ? 'justify-center w-full' : 'space-x-3 px-2'}`}> {/* Adjusted px-2 */}
+                  <div className={`flex items-center relative z-10 ${isCollapsed ? 'justify-center w-full' : 'space-x-3 px-4'}`}> {/* Increased horizontal padding */}
                     <motion.div
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      className={`relative p-2 rounded-2xl transition-all duration-300 ${
-                        isActive
-                          ? `bg-gradient-to-r ${item.color} shadow-lg`
-                          : 'bg-white/10 group-hover:bg-white/20'
-                      }`}
+                      whileHover={{ scale: 1.0, rotate: 0 }} // Removed scale and rotate effect on hover
+                      className={`relative p-3 transition-all duration-300`} // Removed rounded-md
                     >
-                      <Icon className={`w-4 h-4 transition-colors duration-300 ${ // Adjusted icon size
+                      <Icon className={`w-6 h-6 transition-colors duration-300 ${ // Increased icon size
                         isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'
                       }`} />
 
@@ -124,37 +120,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <motion.div
                           animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
                           transition={{ duration: 2, repeat: Infinity }}
-                          className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${item.color} blur-md`}
+                          className={`absolute inset-0 bg-gradient-to-r ${item.color} blur-md`} // Removed rounded-md
                         />
                       )}
                     </motion.div>
 
-                    {!isCollapsed && ( // Only render text and arrow when not collapsed
+                    {!isCollapsed && (
                       <>
                         <motion.div
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.1 }}
-                          className="flex-1 text-left" // This div takes remaining space
+                          className="flex-1 text-left"
                         >
-                          <span className={`font-medium text-xs transition-colors duration-300 ${ // Adjusted font size
+                          <span className={`font-medium text-base transition-colors duration-300 ${
                             isActive ? 'text-white' : 'text-gray-200 group-hover:text-white'
                           }`}>
                             {item.label}
                           </span>
-                          <p className={`text-xxs transition-colors duration-300 ${ // Adjusted font size
+                          <p className={`text-xs transition-colors duration-300 ${
                             isActive ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300'
                           }`}>
                             {item.description}
                           </p>
                         </motion.div>
 
-                        {/* ChevronRight icon, now outside the text div but still within the main flex container */}
                         <motion.div
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.1 }}
-                          className="w-6 h-6 flex items-center justify-center ml-auto" // Use ml-auto to push it to the end
+                          className="w-6 h-6 flex items-center justify-center ml-auto"
                         >
                           <ChevronRight className={`w-4 h-4 transition-all duration-300 ${
                             isActive
@@ -174,11 +169,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Enhanced AI Assistant */}
         <div className={`p-3 border-t border-gray-700 ${isCollapsed ? 'px-2' : 'px-6'}`}>
           <motion.button
-            whileHover={{ scale: 1.02, y: -2 }}
+            whileHover={{ scale: 1.0, y: 0 }}
             whileTap={{ scale: 0.98 }}
             onClick={onToggleAIChat}
-            className={`w-full relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-600 to-green-600 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group h-auto py-2 ${ // Adjusted height and padding
-              isCollapsed ? '' : '' 
+            className={`w-full relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-600 to-green-600 shadow-xl hover:shadow-2xl transition-all duration-300 group h-auto py-4 ${ // Increased vertical padding, removed rounded-md
+              isCollapsed ? '' : ''
             }`}
             title={isCollapsed ? 'AI Assistant' : undefined}
           >
@@ -199,9 +194,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <motion.div
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className={`bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg w-10 h-10`} // Adjusted size
+                className={`bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg w-10 h-10`} // Removed rounded-md
               >
-                <Bot className={`text-white w-5 h-5`} /> {/* Adjusted icon size */}
+                <Bot className={`text-white w-5 h-5`} />
               </motion.div>
               {!isCollapsed && (
                 <motion.div
@@ -210,8 +205,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   transition={{ delay: 0.1 }}
                   className="flex-1 text-left"
                 >
-                  <p className="text-white font-bold text-base">AI Assistant</p> {/* Adjusted font size */}
-                  <p className="text-gray-300 text-xs">Always here to help</p> {/* Adjusted font size */}
+                  <p className="text-white font-bold text-base">AI Assistant</p>
+                  <p className="text-gray-300 text-xs">Always here to help</p>
                 </motion.div>
               )}
               {!isCollapsed && (
